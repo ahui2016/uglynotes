@@ -20,7 +20,7 @@ func redirectToHome(c *fiber.Ctx) error {
 }
 
 func homePage(c *fiber.Ctx) error {
-	return c.SendFile("./static/index.html")
+	return c.SendFile("./static/new-note.html")
 }
 
 func loginHandler(c *fiber.Ctx) error {

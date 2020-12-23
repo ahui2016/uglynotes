@@ -15,3 +15,8 @@
     text-decoration: none;
     background-color: lightgray;
 }
+
+.markdown-preview {
+    width: 480px;
+    background-color: lightyellow;
+}
