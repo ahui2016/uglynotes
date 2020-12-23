@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
@@ -32,4 +34,5 @@ func main() {
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
 
+	log.Fatal(app.Listen(defaultAddress))
 }

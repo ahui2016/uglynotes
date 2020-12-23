@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>Login .. uglynotes</title>
+
+    <script src="https://unpkg.com/jquery"></script>
+    <script src="https://unpkg.com/dayjs"></script>
+    <script src="/public/util.js"></script>
+  </head>
+  <body>
+    <p>uglynotes .. Login</p>
+
+    <!-- 默认的提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <form autocomplete="off">
+      <label>
+        password
+        <input type="password" id="password" autofocus required>
+      </label>
+      <input type="submit" value="login" id="submit">
+    </form>
+
+    <script>
+const pw_input = $('#password');
+const submit_btn = $('#submit')
+
+submit_btn.click(event => {
+  event.preventDefault();
+    let password = pw_input.val();
+    if (password == '') {
+        insertInfoAlert('请输入密码');
+        pw_input.focus();
+        return;
+    }
+    
+    let form = new FormData();
+    form.append('password', password);
+
+    ajaxPost(form, '/login', submit_btn, function() {
+      submit_btn.prop('disabled', true);
+      window.location.reload();
+    });
+});
+
+    </script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+.alert-info {
+    color: blue;
+}
+
+.alert-danger {
+    color: red;
+}
+
+.alert-dismiss {
+    text-decoration: underline;
+}
+
+.alert-dismiss:hover {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: lightgray;
+}
