@@ -1,5 +1,13 @@
+body {
+    background-color: #EEE
+}
 .alert-info {
     color: blue;
+}
+
+.alert-success {
+    color: green;
+    background-color: white;
 }
 
 .alert-danger {

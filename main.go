@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/ahui2016/uglynotes/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
@@ -12,7 +13,7 @@ func main() {
 
 	app := fiber.New(fiber.Config{
 		BodyLimit:    maxBodySize,
-		Concurrency:  5,
+		Concurrency:  10,
 		ErrorHandler: errorHandler,
 	})
 
@@ -32,6 +33,10 @@ func main() {
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
+
+	app.Post("/new-note", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"id": model.RandomID()})
+	})
 
 	log.Fatal(app.Listen(defaultAddress))
 }

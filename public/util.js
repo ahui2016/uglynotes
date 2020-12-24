@@ -40,7 +40,7 @@ function ajaxPost(form, url, btn, onload, onloadend) {
   };
   xhr.addEventListener('load', function() {
     if (this.status == 200) {
-      if (onload) onload();
+      if (onload) onload(this);
     } else {
         let errMsg = !this.response ? this.status : this.response.message;
         insertErrorAlert(errMsg);
@@ -50,7 +50,27 @@ function ajaxPost(form, url, btn, onload, onloadend) {
     if (btn) {
       btn.prop('disabled', false);
     }
-    if (onloadend) onloadend();
+    if (onloadend) onloadend(this);
   });
   xhr.send(form);
+}
+
+// 把标签文本框内的字符串转化为数组。
+function getTags(tagsElem) {
+  if (!tagsElem) {
+    tagsElem = $('#tags');
+  }
+  let trimmed = $('#tags').val().replace(/[#;,，\n]/g, ' ').trim();
+  if (trimmed.length == 0) {
+    return [];
+  }
+  return trimmed.split(/ +/);
+}
+
+// 把标签数组转化为字符串。
+function addPrefix(arr, prefix) {
+  if (arr == null) {
+    return '';
+  }
+  return arr.map(x => prefix + x).join(' ');
 }

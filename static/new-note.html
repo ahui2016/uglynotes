@@ -18,17 +18,47 @@
   </head>
   <body>
     <p>uglynotes .. New Note</p>
-    
+
+    <!-- 成功提示 -->
+    <p id="success" class="alert-success" style="display: none;">
+      <span class="alert-time"></span>
+      <span>新笔记创建成功:</span>
+      <a id="new-note-url"></a>
+    </p>
+
+    <!-- 默认的提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
     <form autocomplete="off">
       <p>
         <input type="radio" id="plaintext" name="note-type" value="plaintext" checked>
-        <label for="plaintext">plaintext</label>
+        <label for="plaintext" id="plaintext-label">plaintext</label>
         <input type="radio" id="markdown" name="note-type" value="markdown">
         <label for="markdown">markdown</label>
         <a id="preview-btn" href="#" style="display: none;">preview</a>
-        <textarea id="contents" cols="60" rows="10" style="display: block;"></textarea>
+        <a id="edit-btn" href="#" style="display: none;">edit</a>
+        <textarea id="contents" cols="60" rows="10" autofocus
+          style="display: block;"></textarea>
       </p>
-      <div id="preview" class="markdown-preview"></div>
+      <div id="preview" class="markdown-preview" style="display: none;"></div>
       <p>
         <label for="tags" style="display: block;">Tags:</label>
         <textarea id="tags" cols="60" rows="2"></textarea>
@@ -39,17 +69,71 @@
     </form>
 
     <script>
+const previewBtn = $('#preview-btn');
+const editBtn = $('#edit-btn');
+const plaintextBtn = $('#plaintext');
+const plaintextLabel = $('#plaintext-label');
+const preview = $('#preview');
+const textarea = $('#contents');
+const submit_btn = $('#submit');
+
+let tags;
 
 $('input[name="note-type"]').change(() => {
-  $('#preview-btn').toggle();
+  previewBtn.toggle();
 });
 
-$('#preview-btn').click(event => {
+// 自动在标签前加井号，同时更新全局变量。
+$('#tags').blur(() => {
+    tags = getTags();
+    $('#tags').val(addPrefix(tags, '#'));
+});
+
+previewBtn.click(event => {
   event.preventDefault();
   const markdown = $('#contents').val();
   const dirty = marked(markdown);
   const clean = DOMPurify.sanitize(dirty);
-  $('#preview').html(clean);
+  preview.show().html(clean);
+  textarea.hide();
+  previewBtn.hide();
+  editBtn.show();
+  plaintextBtn.hide();
+  plaintextLabel.hide();
+});
+
+editBtn.click(event => {
+  textarea.show();
+  preview.hide();
+  plaintextBtn.show();
+  plaintextLabel.show();
+  previewBtn.show();
+  editBtn.hide();
+});
+
+submit_btn.click(event => {
+  event.preventDefault();
+  let contents = textarea.val().trim();
+  if (contents == '') {
+    insertInfoAlert('笔记内容不可空白');
+    textarea.focus();
+    return;
+  }
+  
+  let form = new FormData();
+  form.append('note-type', $('input[name="note-type"]:checked').val());
+  form.append('contents', textarea.val());
+  form.append('tags', getTags());
+
+  ajaxPost(form, '/new-note', submit_btn, function(that) {
+    insertSuccessAlert('新笔记创建成功');
+    $('#success').show().find('.alert-time')
+      .text(dayjs().format('HH:mm:ss'));
+    $('#new-note-url')
+      .text(that.response.id)
+      .attr('href', that.response.id);
+    $('form').hide();
+  });
 });
 
     </script>
