@@ -1,3 +1,5 @@
+// 创建历史版本的间隔时间
+const delayOfHistory = 1000 * 10
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {
@@ -24,6 +26,17 @@ function insertAlert(type, msg, where) {
   alertElem.find('.alert-dismiss').click(event => {
     $(event.currentTarget).parent().remove();
   });
+  alertElem.insertAfter(where);
+}
+
+// 插入历史版本提示
+function insertHistoryAlert(history_id, where) {
+  let alertElem = $('#alert-history-tmpl').contents().clone();
+  alertElem.find('.alert-time').text(dayjs().format('HH:mm:ss'));
+  alertElem.find('.history-url')
+    .text(history_id)
+    .attr('href', '/note/history?id='+history_id);
+  if (!where) where = '#alert-insert-after-here';
   alertElem.insertAfter(where);
 }
 

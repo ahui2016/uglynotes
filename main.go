@@ -34,8 +34,17 @@ func main() {
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
 
-	app.Post("/new-note", func(c *fiber.Ctx) error {
+	app.Post("/note/new", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"id": model.RandomID()})
+	})
+	app.Post("/note/type/update", func(c *fiber.Ctx) error {
+		return c.SendStatus(200)
+	})
+	app.Post("/note/tags/update", func(c *fiber.Ctx) error {
+		return c.SendStatus(200)
+	})
+	app.Post("/note/contents/update", func(c *fiber.Ctx) error {
+		return c.JSON(fiber.Map{"id": model.RandomID()}) // history_id
 	})
 
 	log.Fatal(app.Listen(defaultAddress))

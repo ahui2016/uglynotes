@@ -19,34 +19,6 @@
   <body>
     <p>uglynotes .. New Note</p>
 
-    <!-- 成功提示 -->
-    <p id="success" class="alert-success" style="display: none;">
-      <span class="alert-time"></span>
-      <span>新笔记创建成功:</span>
-      <a id="new-note-url"></a>
-    </p>
-
-    <!-- 默认的提示位置 -->
-    <template id="alert-insert-after-here"></template>
-
-    <!-- 普通提示 -->
-    <template id="alert-info-tmpl">
-      <p class="alert-info">
-        <span class="alert-time"></span>
-        <span class="alert-message"></span>
-        <span class="alert-dismiss" title="dismiss">(&times;)</span>
-      </p>
-    </template>
-
-    <!-- 错误提示 -->
-    <template id="alert-danger-tmpl">
-      <p class="alert-danger">
-        <span class="alert-time"></span>
-        <span class="alert-message"></span>
-        <span class="alert-dismiss" title="dismiss">(&times;)</span>
-      </p>
-    </template>
-
     <form autocomplete="off">
       <p>
         <input type="radio" id="plaintext" name="note-type" value="plaintext" checked>
@@ -63,10 +35,58 @@
         <label for="tags" style="display: block;">Tags:</label>
         <textarea id="tags" cols="60" rows="2"></textarea>
       </p>
-      <p>
+      <p id="submit-block">
         <input type="submit" value="submit" id="submit">
       </p>
+      <p id="update-block" style="display: none;">
+        <button id="update">update</button>
+        <button id="delete">delete</button>
+        <span id="confirm-block" style="display: none; color: red;">
+          delete this note?
+          <button id="yes">Yes</button>
+          <button id="no">No</button>
+        </span>
+      </p>
     </form>
+
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert-success">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 历史版本成功提示 -->
+    <template id="alert-history-tmpl">
+      <p class="alert-history">
+        <span class="alert-time"></span>
+        <span class="alert-message">笔记更新成功，同时产生历史版本:</span>
+        <a class="history-url" target="_blank"></a>
+      </p>
+    </template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
 
     <script>
 const previewBtn = $('#preview-btn');
@@ -75,9 +95,18 @@ const plaintextBtn = $('#plaintext');
 const plaintextLabel = $('#plaintext-label');
 const preview = $('#preview');
 const textarea = $('#contents');
+const tagsElem = $('#tags');
 const submit_btn = $('#submit');
+const submit_block = $('#submit-block');
+const update_block = $('#update-block');
+const update_btn = $('#update');
+const delete_btn = $('#delete');
 
+let note_id = '';
 let tags;
+let oldContents = '';
+let oldTags = '';
+let oldNoteType = '';
 
 $('input[name="note-type"]').change(() => {
   previewBtn.toggle();
@@ -111,30 +140,94 @@ editBtn.click(event => {
   editBtn.hide();
 });
 
-submit_btn.click(event => {
-  event.preventDefault();
+submit_btn.click(submit);
+update_btn.click(update);
+
+function submit(event) {
+  if (event) event.preventDefault();
+  
   let contents = textarea.val().trim();
   if (contents == '') {
     insertInfoAlert('笔记内容不可空白');
-    textarea.focus();
     return;
   }
-  
+
   let form = new FormData();
-  form.append('note-type', $('input[name="note-type"]:checked').val());
-  form.append('contents', textarea.val());
+  form.append('id', note_id);
+  const note_type = $('input[name="note-type"]:checked').val();
+  form.append('note-type', note_type);
+  form.append('contents', contents);
   form.append('tags', getTags());
 
-  ajaxPost(form, '/new-note', submit_btn, function(that) {
+  ajaxPost(form, '/note/new', submit_btn, function(that) {
+    note_id = that.response.id;
+    oldNoteType = note_type;
+    oldContents = contents;
+    oldTags = tagsElem.val();
+    submit_block.hide();
+    update_block.show();
     insertSuccessAlert('新笔记创建成功');
-    $('#success').show().find('.alert-time')
-      .text(dayjs().format('HH:mm:ss'));
-    $('#new-note-url')
-      .text(that.response.id)
-      .attr('href', that.response.id);
-    $('form').hide();
   });
-});
+}
+
+function update(event) {
+  if (event) event.preventDefault();
+  
+  const note_type = $('input[name="note-type"]:checked').val();
+  if (note_type != oldNoteType) {
+    let form = new FormData();
+    form.append('id', note_id);
+    form.append('note-type', note_type)
+    ajaxPost(form, '/note/type/update', update_btn, function() {
+      oldNoteType = note_type;
+      insertInfoAlert('笔记类型已更新: ' + note_type);
+    });
+  }
+
+  const tagsString = tagsElem.val();
+  if (tagsString != oldTags) {
+    let form = new FormData();
+    form.append('id', note_id);
+    form.append('tags', getTags());
+    ajaxPost(form, '/note/tags/update', update_btn, function() {
+      oldTags = tagsString;
+      insertInfoAlert('笔记的标签已更新');
+    });
+  }
+
+  let contents = textarea.val().trim();
+  if (contents == '') {
+    insertInfoAlert('笔记内容不可空白');
+    return;
+  }
+
+  // 有 event 表示点击了按钮，这种情况要给用户提示。
+  // 如果没有 event 则是后台自动运行，不需要提示。
+  if (event && contents == oldContents) {
+    insertInfoAlert('笔记内容没有变化');
+    return;
+  }
+
+  if (contents != oldContents) {
+    let form = new FormData();
+    form.append('id', note_id);
+    form.append('contents', contents);
+    ajaxPost(form, '/note/contents/update', update_btn, function(that) {
+      oldContents = contents;
+      insertHistoryAlert(that.response.id);
+    });
+  }
+}
+
+function submitOrUpdate() {
+  if (!note_id) {
+    submit();
+  } else {
+    update();
+  }
+}
+
+// window.setInterval()
 
     </script>
   </body>

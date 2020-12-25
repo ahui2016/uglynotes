@@ -2,12 +2,16 @@ body {
     background-color: #EEE
 }
 .alert-info {
-    color: blue;
+    color: steelblue;
 }
 
 .alert-success {
     color: green;
     background-color: white;
+}
+
+.alert-history {
+    color: green;
 }
 
 .alert-danger {
