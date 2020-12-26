@@ -1,5 +1,5 @@
 // 创建历史版本的间隔时间
-const delayOfAutoUpdate = 1000 * 10
+const delayOfAutoUpdate = 1000 * 100
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {

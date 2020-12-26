@@ -1,6 +1,8 @@
 body {
-    background-color: #EEE
+    background-color: #EEE;
+    font-family: "Palatino Linotype", Palatino, Palladio, Baskerville, sans-serif;
 }
+
 .alert-info {
     color: steelblue;
 }
@@ -31,4 +33,9 @@ body {
 .markdown-preview {
     width: 480px;
     background-color: lightyellow;
+}
+
+#preview {
+    word-wrap: break-word;
+    word-break: break-word;
 }

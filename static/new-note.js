@@ -7,9 +7,12 @@ const textarea = $('#contents');
 const tagsElem = $('#tags');
 const submit_btn = $('#submit');
 const submit_block = $('#submit-block');
+const confirm_block = $('#confirm-block');
 const update_block = $('#update-block');
 const update_btn = $('#update');
 const delete_btn = $('#delete');
+const yes_btn = $('#yes');
+const no_btn = $('#no');
 
 let note_id = '';
 let tags;
@@ -27,10 +30,33 @@ $('#tags').blur(() => {
     $('#tags').val(addPrefix(tags, '#'));
 });
 
+delete_btn.click(event => {
+  event.preventDefault();
+  delete_btn.hide();
+  confirm_block.show();
+});
+
+no_btn.click(event => {
+  event.preventDefault();
+  confirm_block.hide();
+  delete_btn.show();
+});
+
+yes_btn.click(event => {
+  event.preventDefault();
+  let form = new FormData();
+  form.append('id', note_id);
+  ajaxPost(form, '/note/delete', yes_btn, function() {
+    $('.alert').hide();
+    $('form').hide();
+    insertSuccessAlert('笔记已删除');
+  });
+});
+
 previewBtn.click(event => {
   event.preventDefault();
-  const markdown = $('#contents').val();
-  const dirty = marked(markdown);
+  const contents = $('#contents').val().trim();
+  const dirty = marked(contents);
   const clean = DOMPurify.sanitize(dirty);
   preview.show().html(clean);
   textarea.hide();
