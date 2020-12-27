@@ -9,11 +9,11 @@ body {
 
 .alert-success {
     color: green;
-    background-color: white;
 }
 
 .alert-history {
     color: green;
+    background-color: white;
 }
 
 .alert-danger {

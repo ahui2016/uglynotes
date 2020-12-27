@@ -1,5 +1,5 @@
 // 创建历史版本的间隔时间
-const delayOfAutoUpdate = 1000 * 100
+const delayOfAutoUpdate = 1000 * 10
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {
@@ -68,7 +68,7 @@ function ajaxPost(form, url, btn, onload, onloadend) {
   xhr.send(form);
 }
 
-// 把标签文本框内的字符串转化为数组。
+// 把标签文本框内的字符串转化为集合。
 function getTags(tagsElem) {
   if (!tagsElem) {
     tagsElem = $('#tags');
@@ -77,13 +77,19 @@ function getTags(tagsElem) {
   if (trimmed.length == 0) {
     return [];
   }
-  return trimmed.split(/ +/);
+  let arr = trimmed.split(/ +/);
+  return new Set(arr);
 }
 
-// 把标签数组转化为字符串。
-function addPrefix(arr, prefix) {
-  if (arr == null) {
-    return '';
-  }
+// 把集合数组转化为字符串。
+function addPrefix(aSet, prefix) {
+  if (!aSet) return '';
+  let arr = Array.from(aSet);
   return arr.map(x => prefix + x).join(' ');
+}
+
+function areSetsEqual(a, b) {
+  if (a.size !== b.size) return false;
+  for (const item of a) if (!b.has(item)) return false;
+  return true;
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 
 	"github.com/ahui2016/uglynotes/model"
@@ -44,7 +45,10 @@ func main() {
 		return c.SendStatus(200)
 	})
 	app.Post("/note/tags/update", func(c *fiber.Ctx) error {
-		return c.SendStatus(200)
+		var tags []string
+		err := json.Unmarshal([]byte(c.FormValue("tags")), &tags)
+		log.Print(tags)
+		return err
 	})
 	app.Post("/note/contents/update", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"id": model.RandomID()}) // history_id

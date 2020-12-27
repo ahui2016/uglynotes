@@ -15,10 +15,11 @@ const yes_btn = $('#yes');
 const no_btn = $('#no');
 
 let note_id = '';
-let tags;
 let oldContents = '';
-let oldTags = '';
 let oldNoteType = '';
+let tags = new Set();
+let oldTags = new Set();
+let autoSubmitID;
 
 $('input[name="note-type"]').change(() => {
   previewBtn.toggle();
@@ -47,8 +48,10 @@ yes_btn.click(event => {
   let form = new FormData();
   form.append('id', note_id);
   ajaxPost(form, '/note/delete', yes_btn, function() {
+    note_id = '';
     $('.alert').hide();
     $('form').hide();
+    window.clearInterval(autoSubmitID);
     insertSuccessAlert('笔记已删除');
   });
 });
@@ -73,6 +76,7 @@ editBtn.click(event => {
   plaintextLabel.show();
   previewBtn.show();
   editBtn.hide();
+  textarea.focus();
 });
 
 submit_btn.click(submit);
@@ -94,13 +98,13 @@ function submit(event) {
   const note_type = $('input[name="note-type"]:checked').val();
   form.append('note-type', note_type);
   form.append('contents', contents);
-  form.append('tags', getTags());
+  form.append('tags', JSON.stringify(Array.from(tags)));
 
   ajaxPost(form, '/note/new', submit_btn, function(that) {
     note_id = that.response.id;
     oldNoteType = note_type;
     oldContents = contents;
-    oldTags = tagsElem.val();
+    oldTags = tags;
     submit_block.hide();
     update_block.show();
     insertSuccessAlert('新笔记创建成功');
@@ -117,18 +121,17 @@ function update(event) {
     form.append('note-type', note_type)
     ajaxPost(form, '/note/type/update', update_btn, function() {
       oldNoteType = note_type;
-      insertInfoAlert('笔记类型更新成功: ' + note_type);
+      insertSuccessAlert('笔记类型更新成功: ' + note_type);
     });
   }
 
-  const tagsString = tagsElem.val();
-  if (tagsString != oldTags) {
+  if (!areSetsEqual(tags, oldTags)) {
     let form = new FormData();
     form.append('id', note_id);
-    form.append('tags', getTags());
+    form.append('tags', JSON.stringify(Array.from(tags)));
     ajaxPost(form, '/note/tags/update', update_btn, function() {
-      oldTags = tagsString;
-      insertInfoAlert('笔记的标签更新成功');
+      oldTags = tags;
+      insertSuccessAlert('标签更新成功: ' + addPrefix(tags, ''));
     });
   }
 
@@ -162,5 +165,4 @@ function submitOrUpdate() {
   }
 }
 
-window.setInterval(submitOrUpdate, delayOfAutoUpdate);
-
+autoSubmitID = window.setInterval(submitOrUpdate, delayOfAutoUpdate);
