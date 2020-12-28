@@ -24,7 +24,7 @@ type (
 // DB .
 type DB struct {
 	path     string
-	capacity int64
+	capacity int
 	DB       *storm.DB
 	Sess     *session.Store
 
@@ -33,7 +33,7 @@ type DB struct {
 }
 
 // Open .
-func (db *DB) Open(maxAge time.Duration, cap int64, dbPath string) (err error) {
+func (db *DB) Open(maxAge time.Duration, cap int, dbPath string) (err error) {
 	if db.DB, err = storm.Open(dbPath); err != nil {
 		return err
 	}
@@ -70,16 +70,29 @@ func (db *DB) NewNote(noteType model.NoteType) *Note {
 
 // Insert .
 func (db *DB) Insert(note *Note) error {
-	if err := db.checkTotalSize(int64(note.Size)); err != nil {
+	if err := db.checkTotalSize(note.Size); err != nil {
 		return err
 	}
 	if err := db.checkExist(note.ID); err != nil {
 		return err
 	}
-	if err := db.DB.Save(note); err != nil {
+
+	tx, err := db.DB.Begin(true)
+	if err != nil {
 		return err
 	}
-	return db.increaseTotalSize(int64(note.Size))
+	defer tx.Rollback()
+
+	if err := tx.Save(note); err != nil {
+		return err
+	}
+	if err := addTags(tx, note.Tags, note.ID); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return db.increaseTotalSize(note.Size)
 }
 
 // 检查 ID 冲突
@@ -95,4 +108,36 @@ func (db *DB) getByID(id string) (*Note, error) {
 	var note Note
 	err := db.DB.One("ID", id, &note)
 	return &note, err
+}
+
+func addTags(tx storm.Node, tags []string, noteID string) error {
+	for _, tagName := range tags {
+		tag := new(Tag)
+		err := tx.One("Name", tagName, tag)
+		if err != nil && err != storm.ErrNotFound {
+			return err
+		}
+
+		// if not found, it's a new tag.
+		if err == storm.ErrNotFound {
+			aTag := model.NewTag(tagName, noteID)
+			if err := tx.Save(aTag); err != nil {
+				return err
+			}
+			continue
+		}
+
+		// if found (err == nil)
+		tag.Add(noteID)
+		if err := tx.Update(tag); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// AllNotes fetches all notes, sorted by "UpdatedAt".
+func (db *DB) AllNotes() (notes []Note, err error) {
+	err = db.DB.AllByIndex("UpdatedAt", &notes)
+	return
 }

@@ -1,5 +1,5 @@
 // 创建历史版本的间隔时间
-const delayOfAutoUpdate = 1000 * 10
+const delayOfAutoUpdate = 1000 * 1000
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {
@@ -68,6 +68,34 @@ function ajaxPost(form, url, btn, onload, onloadend) {
   xhr.send(form);
 }
 
+// 向服务器获取数据，在等待过程中 btn 会失效，避免重复提交。
+function ajaxGet(url, btn, onload, onloadend) {
+  if (btn) {
+    btn.prop('disabled', true);
+  }
+  let xhr = new XMLHttpRequest();
+  xhr.responseType = 'json';
+  xhr.open('GET', url);
+  xhr.onerror = function () {
+    window.alert('An error occurred during the transaction');
+  };
+  xhr.addEventListener('load', function() {
+    if (this.status == 200) {
+      if (onload) onload(this);
+    } else {
+        let errMsg = !this.response ? this.status : this.response.message;
+        insertErrorAlert(errMsg);
+    }
+  });
+  xhr.addEventListener('loadend', function() {
+    if (btn) {
+      btn.prop('disabled', false);
+    }
+    if (onloadend) onloadend(this);
+  });
+  xhr.send();
+}
+
 // 把标签文本框内的字符串转化为集合。
 function getTags(tagsElem) {
   if (!tagsElem) {
@@ -88,7 +116,7 @@ function addPrefix(aSet, prefix) {
   return arr.map(x => prefix + x).join(' ');
 }
 
-function areSetsEqual(a, b) {
+function setsAreEqual(a, b) {
   if (a.size !== b.size) return false;
   for (const item of a) if (!b.has(item)) return false;
   return true;

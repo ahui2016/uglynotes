@@ -35,6 +35,8 @@ func main() {
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
 
+	app.Get("/notes/all", allNotesHandler)
+
 	app.Post("/note/new", newNoteHandler)
 	app.Post("/note/delete", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)

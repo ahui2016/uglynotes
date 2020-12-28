@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ahui2016/uglynotes/database"
+	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/util"
 )
 
@@ -20,10 +21,10 @@ const (
 	maxAge = 99 * time.Hour * 24
 
 	// 单个文件上限
-	maxBodySize = 1024 * 32 // 32 KB
+	maxBodySize = model.SizeLimit
 
 	// 整个数据库上限
-	databaseCapacity = 1 << 20 // 1MB
+	databaseCapacity = 1 << 20 * 10 // 10MB
 )
 
 var (

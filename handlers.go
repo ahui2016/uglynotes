@@ -31,7 +31,7 @@ func redirectToHome(c *fiber.Ctx) error {
 }
 
 func homePage(c *fiber.Ctx) error {
-	return c.SendFile("./static/new-note.html")
+	return c.SendFile("./static/index.html")
 }
 
 func loginHandler(c *fiber.Ctx) error {
@@ -51,6 +51,14 @@ func loginHandler(c *fiber.Ctx) error {
 	return db.SessionSet(c)
 }
 
+func allNotesHandler(c *fiber.Ctx) error {
+	notes, err := db.AllNotes()
+	if err != nil {
+		return nil
+	}
+	return c.JSON(notes)
+}
+
 func newNoteHandler(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
@@ -59,8 +67,10 @@ func newNoteHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return jsonError(c, err.Error(), 400)
 	}
-	return c.JSON(note)
-
+	if err := db.Insert(note); err != nil {
+		return err
+	}
+	return c.JSON(note.ID)
 }
 
 func createNote(c *fiber.Ctx) (*Note, error) {

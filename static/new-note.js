@@ -100,8 +100,7 @@ function submit(event) {
   form.append('tags', JSON.stringify(Array.from(tags)));
 
   ajaxPost(form, '/note/new', submit_btn, function(that) {
-    console.log(that.response);
-    note_id = that.response['ID'];
+    note_id = that.response;
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
@@ -125,7 +124,7 @@ function update(event) {
     });
   }
 
-  if (!areSetsEqual(tags, oldTags)) {
+  if (!setsAreEqual(tags, oldTags)) {
     let form = new FormData();
     form.append('id', note_id);
     form.append('tags', JSON.stringify(Array.from(tags)));

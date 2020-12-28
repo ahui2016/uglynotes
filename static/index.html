@@ -4,13 +4,41 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="/public/style.css">
 
-    <title>Home .. uglynotes</title>
+    <title>Index .. uglynotes</title>
 
     <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
     <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
-    <script src="/public/util.js"></script>
+    <script src="/public/jquery-3.5.1.min.js"></script>
+    <script src="/public/dayjs.min.js"></script>
   </head>
   <body>
-    <p>uglynotes .. Home</p>
+    <p>uglynotes .. Index</p>
+
+    <p id="loading" class="alert-info">Loading...</p>
+
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <ul>
+      <template id="li-tmpl">
+        <li class="li">
+          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
+          <a class="title"></a><br>
+          <span class="tags"></span>
+        </li>
+      </template>
+    </ul>
+
+    <script src="/public/util.js"></script>
+    <script src="/static/index.js"></script>
   </body>
 </html>

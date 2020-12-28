@@ -56,16 +56,16 @@ func (db *DB) initTotalSize() (err error) {
 }
 
 // GetTotalSize .
-func (db *DB) GetTotalSize() (size int64, err error) {
+func (db *DB) GetTotalSize() (size int, err error) {
 	err = db.DB.Get(metadataBucket, totalSizeKey, &size)
 	return
 }
 
-func (db *DB) setTotalSize(size int64) error {
+func (db *DB) setTotalSize(size int) error {
 	return db.DB.Set(metadataBucket, totalSizeKey, size)
 }
 
-func (db *DB) checkTotalSize(addition int64) error {
+func (db *DB) checkTotalSize(addition int) error {
 	totalSize, err := db.GetTotalSize()
 	if err != nil {
 		return err
@@ -79,7 +79,7 @@ func (db *DB) checkTotalSize(addition int64) error {
 // increaseTotalSize 用于向数据库添加或删除单项内容时更新总体积。
 // 添加时，应先使用 db.checkTotalSize, 再使用 db.Save, 最后使才使用 db.increaseTotalSize
 // 删除时，应先获取即将删除项目的体积，再删除，最后使用 db.increaseTotalSize, 此时 addition 应为负数。
-func (db *DB) increaseTotalSize(addition int64) error {
+func (db *DB) increaseTotalSize(addition int) error {
 	totalSize, err := db.GetTotalSize()
 	if err != nil {
 		return err

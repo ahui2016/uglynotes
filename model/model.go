@@ -5,13 +5,16 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/ahui2016/uglynotes/stringset"
+	"github.com/ahui2016/uglynotes/util"
 )
 
 // ISO8601 需要根据服务器的具体时区来设定正确的时区
 const ISO8601 = "2006-01-02T15:04:05.999+00:00"
 
 // TitleLimit 限制标题的长度。
-const TitleLimit = 20
+const TitleLimit = 50
 
 // SizeLimit 限制每篇笔记的体积。
 const SizeLimit = 1 << 19 // 512 KB
@@ -75,6 +78,12 @@ func (note *Note) SetContents(contents string) error {
 	return nil
 }
 
+// SetTags 可以对标签进行除重。
+// 当不需要除重时可以直接操作 note.Tags
+func (note *Note) SetTags(tags []string) {
+	note.Tags = stringset.Unique(tags)
+}
+
 // History 数据表，用于保存笔记的历史记录。
 type History struct {
 	ID        string // primary key, random
@@ -92,11 +101,20 @@ type Tag struct {
 }
 
 // NewTag .
-func NewTag(name string) *Tag {
+func NewTag(name, noteID string) *Tag {
 	return &Tag{
 		Name:      name,
+		NoteIDs:   []string{noteID},
 		CreatedAt: TimeNow(),
 	}
+}
+
+// Add .
+func (tag *Tag) Add(noteID string) {
+	if util.HasString(tag.NoteIDs, noteID) {
+		return
+	}
+	tag.NoteIDs = append(tag.NoteIDs, noteID)
 }
 
 // TimeNow .
