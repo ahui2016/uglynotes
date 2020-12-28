@@ -62,9 +62,15 @@ func (db *DB) createIndexes() error {
 	return util.WrapErrors(err1, err2, err3)
 }
 
+// NewNote .
+func (db *DB) NewNote(noteType model.NoteType) *Note {
+	id := db.mustGetNextID()
+	return model.NewNote(id.String(), noteType)
+}
+
 // Insert .
 func (db *DB) Insert(note *Note) error {
-	if err := db.checkTotalSize(note.Size); err != nil {
+	if err := db.checkTotalSize(int64(note.Size)); err != nil {
 		return err
 	}
 	if err := db.checkExist(note.ID); err != nil {
@@ -73,7 +79,7 @@ func (db *DB) Insert(note *Note) error {
 	if err := db.DB.Save(note); err != nil {
 		return err
 	}
-	return db.increaseTotalSize(note.Size)
+	return db.increaseTotalSize(int64(note.Size))
 }
 
 // 检查 ID 冲突

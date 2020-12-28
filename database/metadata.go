@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
 )
 
@@ -14,16 +15,12 @@ const (
 	totalSizeKey   = "total-size-key"
 )
 
-func (db *DB) initFirstID() (err error) {
-	_, err = db.getCurrentID()
-	if err != nil && err != storm.ErrNotFound {
-		return
-	}
+func (db *DB) initFirstID() error {
+	_, err := db.getCurrentID()
 	if err == storm.ErrNotFound {
-		id := model.FirstID()
-		return db.DB.Set(metadataBucket, currentIdKey, id)
+		return db.DB.Set(metadataBucket, currentIdKey, model.FirstID())
 	}
-	return
+	return err
 }
 
 func (db *DB) getCurrentID() (id IncreaseID, err error) {
@@ -39,6 +36,12 @@ func (db *DB) getNextID() (nextID IncreaseID, err error) {
 	nextID = currentID.Increase()
 	err = db.DB.Set(metadataBucket, currentIdKey, &nextID)
 	return
+}
+
+func (db *DB) mustGetNextID() IncreaseID {
+	nextID, err := db.getNextID()
+	util.Panic(err)
+	return nextID
 }
 
 func (db *DB) initTotalSize() (err error) {

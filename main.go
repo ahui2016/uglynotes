@@ -35,9 +35,7 @@ func main() {
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
 
-	app.Post("/note/new", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"id": model.RandomID()})
-	})
+	app.Post("/note/new", newNoteHandler)
 	app.Post("/note/delete", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})

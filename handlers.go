@@ -1,6 +1,17 @@
 package main
 
-import "github.com/gofiber/fiber/v2"
+import (
+	"encoding/json"
+	"errors"
+	"strings"
+
+	"github.com/ahui2016/uglynotes/model"
+	"github.com/gofiber/fiber/v2"
+)
+
+type (
+	Note = model.Note
+)
 
 func errorHandler(c *fiber.Ctx, err error) error {
 	code := fiber.StatusInternalServerError
@@ -38,4 +49,36 @@ func loginHandler(c *fiber.Ctx) error {
 
 	passwordTry = 0
 	return db.SessionSet(c)
+}
+
+func newNoteHandler(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	note, err := createNote(c)
+	if err != nil {
+		return jsonError(c, err.Error(), 400)
+	}
+	return c.JSON(note)
+
+}
+
+func createNote(c *fiber.Ctx) (*Note, error) {
+	noteType := model.NewNoteType(c.FormValue("note-type"))
+	contents := strings.TrimSpace(c.FormValue("contents"))
+	if contents == "" {
+		return nil, errors.New("contents is empty")
+	}
+
+	note := db.NewNote(noteType)
+	if err := note.SetContents(contents); err != nil {
+		return nil, err
+	}
+
+	var tags []string
+	if err := json.Unmarshal([]byte(c.FormValue("tags")), &tags); err != nil {
+		return nil, err
+	}
+	note.Tags = tags
+	return note, nil
 }

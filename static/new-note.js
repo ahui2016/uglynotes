@@ -93,15 +93,15 @@ function submit(event) {
     return;
   }
 
-  let form = new FormData();
-  form.append('id', note_id);
+  const form = new FormData();
   const note_type = $('input[name="note-type"]:checked').val();
   form.append('note-type', note_type);
   form.append('contents', contents);
   form.append('tags', JSON.stringify(Array.from(tags)));
 
   ajaxPost(form, '/note/new', submit_btn, function(that) {
-    note_id = that.response.id;
+    console.log(that.response);
+    note_id = that.response['ID'];
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
