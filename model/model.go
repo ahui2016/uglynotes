@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
@@ -14,7 +15,7 @@ import (
 const ISO8601 = "2006-01-02T15:04:05.999+00:00"
 
 // TitleLimit 限制标题的长度。
-const TitleLimit = 50
+const TitleLimit = 100
 
 // SizeLimit 限制每篇笔记的体积。
 const SizeLimit = 1 << 19 // 512 KB
@@ -65,7 +66,7 @@ func NewNote(id string, noteType NoteType) *Note {
 func (note *Note) SetContents(contents string) error {
 	title := firstLineLimit(contents, TitleLimit)
 	if note.Type == Markdown {
-		if mdTitle := GetMarkdownTitle(title); mdTitle != "" {
+		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
 			title = mdTitle
 		}
 	}
@@ -122,18 +123,29 @@ func TimeNow() string {
 	return time.Now().Format(ISO8601)
 }
 
-// firstLineLimit 返回第一行，并限定长度，其中 s 必须事先 TrimSpace.
+// firstLineLimit 返回第一行，并限定长度，其中 s 必须事先 TrimSpace 并确保不是空字串。
+// 该函数会尽量确保最后一个字符是有效的 utf8 字符，但当第一行中的全部字符都无效时，
+// 则按原样返回每一行。
 func firstLineLimit(s string, limit int) string {
 	s += "\n"
-	i := strings.IndexRune(s, '\n')
-	s = s[:i]
-	if len(s) > limit {
-		s = s[:limit]
+	i := strings.Index(s, "\n")
+	firstLine := s[:i]
+	if len(firstLine) > limit {
+		firstLine = s[:limit]
 	}
-	return s
+	for len(firstLine) > 0 {
+		if utf8.ValidString(firstLine) {
+			break
+		}
+		firstLine = firstLine[:len(firstLine)-1]
+	}
+	if firstLine == "" {
+		return s[:i]
+	}
+	return firstLine
 }
 
-func GetMarkdownTitle(s string) string {
+func getMarkdownTitle(s string) string {
 	reTitle := regexp.MustCompile(`(^#{1,6}|>|1.|-|\*) (.+)`)
 	matches := reTitle.FindStringSubmatch(s)
 	// 这个 matches 要么为空，要么包含 3 个元素

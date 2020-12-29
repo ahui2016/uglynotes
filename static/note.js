@@ -10,11 +10,14 @@ ajaxPost(form, '/api/note', null, that => {
   $('#note-type').text(note.Type);
   $('#edit').attr('href', '/html/note/edit?id='+note.ID);
 
-  note.Tags.forEach(tag => {
-    const tagElem = $('#tag-tmpl').contents().clone();
-    tagElem.text(tag);
-    tagElem.insertAfter('#tag-tmpl');    
-  });
+  if (note.Tags.length > 0) {
+    $('#tags').show();
+    note.Tags.forEach(tag => {
+      const tagElem = $('#tag-tmpl').contents().clone();
+      tagElem.text(tag);
+      tagElem.insertAfter('#tag-tmpl');    
+    });  
+  }
 
   if (note.Type == 'Markdown') {
     $('#markdown-title').text(note.Title);
