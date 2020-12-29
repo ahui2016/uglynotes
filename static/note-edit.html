@@ -16,7 +16,12 @@
     <script src="/public/purify.min.js"></script>
   </head>
   <body>
-    <p>uglynotes .. New Note</p>
+    <p>uglynotes ..
+      <span id="where">New Note</span>
+      <span id="readonly-mode" style="display: none;">.. <a>readonly mode</a></span>
+    </p>
+
+    <p id="loading" class="alert-info">Loading...</p>
 
     <form autocomplete="off">
       <p>
@@ -88,6 +93,6 @@
     </template>
 
     <script src="/public/util.js"></script>
-    <script src="/static/new-note.js"></script>
+    <script src="/static/note-edit.js"></script>
   </body>
 </html>

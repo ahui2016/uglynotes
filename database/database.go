@@ -97,14 +97,14 @@ func (db *DB) Insert(note *Note) error {
 
 // 检查 ID 冲突
 func (db *DB) checkExist(id string) error {
-	_, err := db.getByID(id)
+	_, err := db.GetByID(id)
 	if err == nil {
 		return errors.New("id: " + id + " already exists")
 	}
 	return nil
 }
 
-func (db *DB) getByID(id string) (*Note, error) {
+func (db *DB) GetByID(id string) (*Note, error) {
 	var note Note
 	err := db.DB.One("ID", id, &note)
 	return &note, err

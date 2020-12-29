@@ -35,22 +35,27 @@ func main() {
 	app.Get("/home", homePage)
 	app.Post("/login", loginHandler)
 
-	app.Get("/notes/all", allNotesHandler)
+	htmlPage := app.Group("/html", checkLoginHTML)
+	htmlPage.Get("/note", notePage)
+	htmlPage.Get("/note/edit", noteEditPage)
 
-	app.Post("/note/new", newNoteHandler)
-	app.Post("/note/delete", func(c *fiber.Ctx) error {
+	api := app.Group("/api", checkLoginJSON)
+	api.Get("/notes/all", allNotesHandler)
+	api.Post("/note", getNoteHandler)
+	api.Post("/note/new", newNoteHandler)
+	api.Post("/note/delete", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
-	app.Post("/note/type/update", func(c *fiber.Ctx) error {
+	api.Post("/note/type/update", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
-	app.Post("/note/tags/update", func(c *fiber.Ctx) error {
+	api.Post("/note/tags/update", func(c *fiber.Ctx) error {
 		var tags []string
 		err := json.Unmarshal([]byte(c.FormValue("tags")), &tags)
 		log.Print(tags)
 		return err
 	})
-	app.Post("/note/contents/update", func(c *fiber.Ctx) error {
+	api.Post("/note/contents/update", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"id": model.RandomID()}) // history_id
 	})
 

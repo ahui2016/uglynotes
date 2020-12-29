@@ -34,6 +34,14 @@ func homePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/index.html")
 }
 
+func notePage(c *fiber.Ctx) error {
+	return c.SendFile("./static/note.html")
+}
+
+func noteEditPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-edit.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -57,6 +65,14 @@ func allNotesHandler(c *fiber.Ctx) error {
 		return nil
 	}
 	return c.JSON(notes)
+}
+
+func getNoteHandler(c *fiber.Ctx) error {
+	note, err := db.GetByID(c.FormValue("id"))
+	if err != nil {
+		return err
+	}
+	return c.JSON(note)
 }
 
 func newNoteHandler(c *fiber.Ctx) error {

@@ -10,7 +10,6 @@
     <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
     <script src="/public/jquery-3.5.1.min.js"></script>
     <script src="/public/dayjs.min.js"></script>
-    <script src="/public/util.js"></script>
   </head>
   <body>
     <p>uglynotes .. Login</p>
@@ -44,28 +43,7 @@
       <input type="submit" value="login" id="submit">
     </form>
 
-    <script>
-const pw_input = $('#password');
-const submit_btn = $('#submit');
-
-submit_btn.click(event => {
-  event.preventDefault();
-  let password = pw_input.val();
-  if (password == '') {
-    insertInfoAlert('请输入密码');
-    pw_input.focus();
-    return;
-  }
-  
-  let form = new FormData();
-  form.append('password', password);
-
-  ajaxPost(form, '/login', submit_btn, function() {
-    submit_btn.prop('disabled', true);
-    window.location.reload();
-  });
-});
-
-    </script>
+    <script src="/public/util.js"></script>
+    <script src="/public/login.js"></script>
   </body>
 </html>

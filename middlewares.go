@@ -31,7 +31,7 @@ func checkLoginHTML(c *fiber.Ctx) error {
 		if err := checkPasswordTry(c); err != nil {
 			return err
 		}
-		return c.SendFile("./static/login.html")
+		return c.SendFile("./public/login.html")
 	}
 	return c.Next()
 }

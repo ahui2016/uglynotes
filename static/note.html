@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>Note .. uglynotes</title>
+
+    <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
+    <script src="/public/jquery-3.5.1.min.js"></script>
+    <script src="/public/dayjs.min.js"></script>
+    <script src="/public/marked.min.js"></script>
+    <script src="/public/purify.min.js"></script>
+
+    <style>
+pre {
+  max-width: 600px;
+}
+.contents {
+  max-width: 600px;
+  min-width: 400px;
+}
+.tag {
+  background-color: palegreen;
+}
+#id {
+  text-transform: uppercase;
+}
+    </style>
+  </head>
+  <body>
+    <p>uglynotes .. Note [id:<span id="id"></span>] ..
+      <a id="edit">Edit</a> ..
+      <a id="history">History</a> ..
+      <a id="delete" href="#">Delete</a>
+      <span id="confirm-block" style="display: none; color: red;">
+        delete this note?
+        <button id="yes">Yes</button>
+        <button id="no">No</button>
+      </span>
+    </p>
+
+    <p id="loading" class="alert-info">Loading...</p>
+
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <div id="title-block">
+      <p style="font-size: smaller; color: #999;">Updated at: <span id="datetime"></span></p>
+      <p id="tags">
+        Tags:
+        <template id="tag-tmpl">
+          <span class="tag"></span>
+        </template>
+      </p>
+      <p style="color: #999;">Type: <span id="note-type"></span></p>
+    </div>
+
+    <div class="plaintext contents"></div>
+
+    <div class="markdown contents"></div>
+
+    <script src="/public/util.js"></script>
+    <script src="/static/note.js"></script>
+  </body>
+</html>

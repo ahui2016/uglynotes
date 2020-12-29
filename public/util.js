@@ -1,5 +1,5 @@
 // 创建历史版本的间隔时间
-const delayOfAutoUpdate = 1000 * 1000
+const delayOfAutoUpdate = 1000 * 10
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {
@@ -94,6 +94,12 @@ function ajaxGet(url, btn, onload, onloadend) {
     if (onloadend) onloadend(this);
   });
   xhr.send();
+}
+
+// 获取地址栏的参数。
+function getUrlParam(param) {
+  let loc = new URL(document.location);
+  return loc.searchParams.get(param);
 }
 
 // 把标签文本框内的字符串转化为集合。

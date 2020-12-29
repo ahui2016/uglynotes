@@ -39,13 +39,22 @@ pre {
 }
 
 .markdown-preview {
-    width: 480px;
+    max-width: 600px;
+    min-width: 400px;
     background-color: beige;
 }
 
 #preview {
     word-wrap: break-word;
     word-break: break-word;
+}
+
+.li {
+    margin: 20px 0 20px 0;
+}
+
+.li .id {
+    text-transform: uppercase;
 }
 
 .li .datetime {
