@@ -65,7 +65,7 @@ func NewNote(id string, noteType NoteType) *Note {
 func (note *Note) SetContents(contents string) error {
 	title := firstLineLimit(contents, TitleLimit)
 	if note.Type == Markdown {
-		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
+		if mdTitle := GetMarkdownTitle(title); mdTitle != "" {
 			title = mdTitle
 		}
 	}
@@ -133,7 +133,7 @@ func firstLineLimit(s string, limit int) string {
 	return s
 }
 
-func getMarkdownTitle(s string) string {
+func GetMarkdownTitle(s string) string {
 	reTitle := regexp.MustCompile(`(^#{1,6}|>|1.|-|\*) (.+)`)
 	matches := reTitle.FindStringSubmatch(s)
 	// 这个 matches 要么为空，要么包含 3 个元素

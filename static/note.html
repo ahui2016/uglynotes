@@ -16,13 +16,22 @@
     <style>
 pre {
   max-width: 600px;
+  background-color: whitesmoke;
+}
+.markdown {
+  background-color: whitesmoke;
+}
+.plaintext {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
 }
 .contents {
   max-width: 600px;
   min-width: 400px;
+  margin-bottom: 200px;
 }
 .tag {
-  background-color: palegreen;
+  background-color: lightgreen;
 }
 #id {
   text-transform: uppercase;
@@ -66,9 +75,9 @@ pre {
       <p style="color: #999;">Type: <span id="note-type"></span></p>
     </div>
 
-    <div class="plaintext contents"></div>
+    <pre class="plaintext contents" style="display: none;"></pre>
 
-    <div class="markdown contents"></div>
+    <div class="markdown contents" style="display: none;"></div>
 
     <script src="/public/util.js"></script>
     <script src="/static/note.js"></script>

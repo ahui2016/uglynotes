@@ -108,3 +108,12 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 	note.Tags = tags
 	return note, nil
 }
+
+func changeType(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id := c.FormValue("id")
+	noteType := model.NewNoteType(c.FormValue("note-type"))
+	return db.ChangeType(id, noteType)
+}

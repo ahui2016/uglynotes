@@ -20,10 +20,10 @@ ajaxPost(form, '/api/note', null, that => {
     $('#markdown-title').text(note.Title);
     const dirty = marked(note.Contents);
     const clean = DOMPurify.sanitize(dirty);
-    $('.markdown.contents').html(clean);
+    $('.markdown.contents').show().html(clean);
   } else {
     $('#plaintext-title').text(note.Title);
-    $('.plaintext.contents').text(note.Contents);
+    $('.plaintext.contents').show().text(note.Contents);
   }
 }, function() {
   //onloadend

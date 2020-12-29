@@ -1,3 +1,5 @@
+
+const loading = $('#loading');
 const previewBtn = $('#preview-btn');
 const editBtn = $('#edit-btn');
 const plaintextBtn = $('#plaintext');
@@ -24,6 +26,8 @@ let autoSubmitID;
 /* 开始初始化表单 */
 
 const param_id = getUrlParam('id');
+
+if (!param_id) loading.hide();
 
 if (param_id) {
   const form = new FormData();
@@ -57,17 +61,17 @@ if (param_id) {
       insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
       insertSuccessAlert('已进入编辑模式');
     } else {
-      console.log(this.status)
       $('.alert').hide();
       $('form').hide();
       window.clearInterval(autoSubmitID);
       let errMsg = !this.response ? this.status : this.response.message;
+      errMsg = `[id:${param_id}] ` + errMsg
       insertErrorAlert(errMsg);
     }
   }, function() {
     // onloadend
-    $('#loading').hide();
-    $('#where').text('Edit Note');  
+    loading.hide();
+    $('#where').text('Edit Note');
   });
 }
 
@@ -158,6 +162,10 @@ function submit(event) {
     oldTags = tags;
     submit_block.hide();
     update_block.show();
+    $('#readonly-mode')
+      .show()
+      .find('a').attr('href', '/html/note?id='+note_id);
+    $('#where').text('Edit Note');
     insertSuccessAlert('新笔记创建成功');
   });
 }

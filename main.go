@@ -46,9 +46,7 @@ func main() {
 	api.Post("/note/delete", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
-	api.Post("/note/type/update", func(c *fiber.Ctx) error {
-		return c.SendStatus(200)
-	})
+	api.Post("/note/type/update", changeType)
 	api.Post("/note/tags/update", func(c *fiber.Ctx) error {
 		var tags []string
 		err := json.Unmarshal([]byte(c.FormValue("tags")), &tags)

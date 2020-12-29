@@ -4,11 +4,11 @@ body {
 }
 
 code {
-    background-color: lightgoldenrodyellow;
+    background-color: beige;
 }
 
 pre {
-    background-color: lightgoldenrodyellow;
+    background-color: beige;
 }
 
 .alert-info {
@@ -41,7 +41,7 @@ pre {
 .markdown-preview {
     max-width: 600px;
     min-width: 400px;
-    background-color: beige;
+    background-color: whitesmoke;
 }
 
 #preview {

@@ -16,6 +16,7 @@ const maxHistory = 10
 
 type (
 	Note       = model.Note
+	NoteType   = model.NoteType
 	History    = model.History
 	Tag        = model.Tag
 	IncreaseID = model.IncreaseID
@@ -104,6 +105,7 @@ func (db *DB) checkExist(id string) error {
 	return nil
 }
 
+// GetByID .
 func (db *DB) GetByID(id string) (*Note, error) {
 	var note Note
 	err := db.DB.One("ID", id, &note)
@@ -140,4 +142,16 @@ func addTags(tx storm.Node, tags []string, noteID string) error {
 func (db *DB) AllNotes() (notes []Note, err error) {
 	err = db.DB.AllByIndex("UpdatedAt", &notes)
 	return
+}
+
+// ChangeType 同时也可能需要修改标题。
+func (db *DB) ChangeType(id string, noteType NoteType) error {
+	note, err := db.GetByID(id)
+	if err != nil {
+		return err
+	}
+	note.Type = noteType
+	// 这里可以优化性能，暂时先不优化。
+	note.SetContents(note.Contents)
+	return db.DB.Save(note)
 }
