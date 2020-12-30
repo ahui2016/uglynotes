@@ -225,7 +225,10 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 	if err := db.addHistory(tx, note, history); err != nil {
 		return "", err
 	}
-	err = tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return "", err
+	}
+	err = db.increaseTotalSize(note.Size)
 	return history.ID, err
 }
 
@@ -235,15 +238,31 @@ func (db *DB) addHistory(tx storm.Node, note Note, history *History) error {
 	length := len(note.Histories)
 	if length > historyLimit {
 		oldID := note.Histories[0]
-		if err := tx.DeleteStruct(&History{ID: oldID}); err != nil {
+		if err := db.deleteHistory(tx, oldID); err != nil {
 			return err
 		}
 		note.Histories = note.Histories[1:length]
+	}
+
+	// 原笔记的体积转移至历史，因此只新增新笔记的体积。
+	if err := db.checkTotalSize(note.Size); err != nil {
+		return err
 	}
 	if err := tx.Save(history); err != nil {
 		return err
 	}
 	return tx.Update(&note)
+}
+
+func (db *DB) deleteHistory(tx storm.Node, historyID string) error {
+	var oldHistory History
+	if err := tx.One("ID", historyID, &oldHistory); err != nil {
+		return err
+	}
+	if err := tx.DeleteStruct(&oldHistory); err != nil {
+		return err
+	}
+	return db.increaseTotalSize(-oldHistory.Size)
 }
 
 // NoteHistories .
