@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/ahui2016/uglynotes/model"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
@@ -47,16 +46,21 @@ func main() {
 		return c.SendStatus(200)
 	})
 	api.Post("/note/type/update", changeType)
-	api.Post("/note/tags/update", noteTagsUpdate)
-	api.Post("/note/contents/update", func(c *fiber.Ctx) error {
-		return c.JSON(fiber.Map{"id": model.RandomID()}) // history_id
-	})
+	api.Post("/note/tags/update", updateNoteTags)
+	api.Post("/note/contents/update", updateNoteContents)
 	api.Get("/tag/:name", func(c *fiber.Ctx) error {
 		tag, err := db.GetTag(c.Params("name"))
 		if err != nil {
 			return err
 		}
 		return c.JSON(tag)
+	})
+	api.Get("/note/:id/histories", func(c *fiber.Ctx) error {
+		histories, err := db.NoteHistories(c.Params("id"))
+		if err != nil {
+			return err
+		}
+		return c.JSON(histories)
 	})
 
 	log.Fatal(app.Listen(defaultAddress))

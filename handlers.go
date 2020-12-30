@@ -96,7 +96,7 @@ func newNoteHandler(c *fiber.Ctx) error {
 	if err := db.Insert(note); err != nil {
 		return err
 	}
-	return c.JSON(note.ID)
+	return jsonMessage(c, note.ID)
 }
 
 func createNote(c *fiber.Ctx) (*Note, error) {
@@ -128,7 +128,7 @@ func changeType(c *fiber.Ctx) error {
 	return db.ChangeType(id, noteType)
 }
 
-func noteTagsUpdate(c *fiber.Ctx) error {
+func updateNoteTags(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
@@ -168,4 +168,20 @@ func getTags(c *fiber.Ctx) ([]string, error) {
 	var tags []string
 	err = json.Unmarshal([]byte(tagsString), &tags)
 	return tags, err
+}
+
+func updateNoteContents(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id, err1 := getID(c)
+	contents, err2 := getFormValue(c, "contents")
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	historyID, err := db.UpdateNoteContents(id, contents)
+	if err != nil {
+		return err
+	}
+	return jsonMessage(c, historyID)
 }

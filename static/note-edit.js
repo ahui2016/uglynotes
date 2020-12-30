@@ -33,8 +33,8 @@ if (param_id) {
   const form = new FormData();
   form.append('id', param_id);
 
-  // init 函数定义在本文件末尾。
-  init(form, '/api/note', function() {
+  // initAjaxPost 函数定义在本文件末尾。
+  initAjaxPost(form, '/api/note', function() {
     if (this.status == 200) {
       const note = this.response;
       note_id = note.ID;
@@ -159,17 +159,18 @@ function submit(event) {
 
   if (!event) autoUpdateCount++;
   ajaxPost(form, '/api/note/new', submit_btn, function(that) {
-    note_id = that.response;
+    note_id = that.response.message;
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
     enterEditMode();
-    insertSuccessAlert('新笔记创建成功');
+    insertSuccessAlert('新笔记创建成功 id:' + note_id);
   });
 }
 
 function enterEditMode() {
   $('#where').text('Edit Note');
+  $('#head-buttons').show();
   $('#readonly-mode')
     .show()
     .attr('href', '/html/note?id='+note_id);
@@ -228,7 +229,7 @@ function update(event) {
     if (!event) autoUpdateCount++;
     ajaxPost(form, '/api/note/contents/update', update_btn, function(that) {
       oldContents = contents;
-      insertHistoryAlert(that.response.id);
+      insertHistoryAlert(that.response.message);
     });
   }
 }
@@ -250,8 +251,8 @@ function submitOrUpdate() {
 autoSubmitID = window.setInterval(submitOrUpdate, DelayOfAutoUpdate);
 
 
-// 初始化表单。
-function init(form, url, onload, onloadend) {
+// 用于初始化表单。
+function initAjaxPost(form, url, onload, onloadend) {
   let xhr = new XMLHttpRequest();
   xhr.responseType = 'json';
   xhr.open('POST', url);

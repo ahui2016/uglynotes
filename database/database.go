@@ -12,7 +12,9 @@ import (
 )
 
 const cookieName = "uglynotesCookie"
-const maxHistory = 10
+
+// historyLimit 限制每篇笔记可保留的历史上限。
+const historyLimit = 3
 
 type (
 	Note       = model.Note
@@ -202,5 +204,60 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 // GetTag .
 func (db *DB) GetTag(name string) (tag Tag, err error) {
 	err = db.DB.One("Name", name, &tag)
+	return
+}
+
+// UpdateNoteContents .
+func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err error) {
+	note, err := db.GetByID(id)
+	if err != nil {
+		return "", err
+	}
+	history := model.NewHistory(note.Contents, id)
+	note.SetContents(contents)
+
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return "", err
+	}
+	defer tx.Rollback()
+
+	if err := db.addHistory(tx, note, history); err != nil {
+		return "", err
+	}
+	err = tx.Commit()
+	return history.ID, err
+}
+
+// addHistory 添加新 history, 同时可能需要删除旧的 history.
+func (db *DB) addHistory(tx storm.Node, note Note, history *History) error {
+	note.AddHistory(history.ID)
+	length := len(note.Histories)
+	if length > historyLimit {
+		oldID := note.Histories[0]
+		if err := tx.DeleteStruct(&History{ID: oldID}); err != nil {
+			return err
+		}
+		note.Histories = note.Histories[1:length]
+	}
+	if err := tx.Save(history); err != nil {
+		return err
+	}
+	return tx.Update(&note)
+}
+
+// NoteHistories .
+func (db *DB) NoteHistories(id string) (histories []History, err error) {
+	note, err := db.GetByID(id)
+	if err != nil {
+		return nil, err
+	}
+	for _, historyID := range note.Histories {
+		var history History
+		if err := db.DB.One("ID", historyID, &history); err != nil {
+			return nil, err
+		}
+		histories = append(histories, history)
+	}
 	return
 }

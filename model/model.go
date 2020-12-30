@@ -44,7 +44,7 @@ type Note struct {
 	Contents  string
 	Size      int
 	Tags      []string // []Tag.Name
-	History   []string // []History.ID
+	Histories []string // []History.ID
 	CreatedAt string   `storm:"index"` // ISO8601
 	UpdatedAt string   `storm:"index"`
 	DeletedAt string   `storm:"index"`
@@ -88,6 +88,12 @@ func (note *Note) SetTags(tags []string) {
 	note.Tags = stringset.Unique(tags)
 }
 
+// AddHistory .
+func (note *Note) AddHistory(historyID string) {
+	// historyID 是随机的，可以认为不会重复。
+	note.Histories = append(note.Histories, historyID)
+}
+
 // History 数据表，用于保存笔记的历史记录。
 type History struct {
 	ID        string // primary key, random
@@ -95,6 +101,17 @@ type History struct {
 	Contents  string
 	Size      int
 	CreatedAt string `storm:"index"` // ISO8601
+}
+
+// NewHistory .
+func NewHistory(contents, noteID string) *History {
+	return &History{
+		ID:        RandomID(),
+		NoteID:    noteID,
+		Contents:  contents,
+		Size:      len(contents),
+		CreatedAt: TimeNow(),
+	}
 }
 
 // Tag .
@@ -139,12 +156,12 @@ func TimeNow() string {
 // 该函数会尽量确保最后一个字符是有效的 utf8 字符，但当第一行中的全部字符都无效时，
 // 则按原样返回每一行。
 func firstLineLimit(s string, limit int) string {
+	if len(s) > limit {
+		s = s[:limit]
+	}
 	s += "\n"
 	i := strings.Index(s, "\n")
 	firstLine := s[:i]
-	if len(firstLine) > limit {
-		firstLine = s[:limit]
-	}
 	for len(firstLine) > 0 {
 		if utf8.ValidString(firstLine) {
 			break
@@ -152,7 +169,7 @@ func firstLineLimit(s string, limit int) string {
 		firstLine = firstLine[:len(firstLine)-1]
 	}
 	if firstLine == "" {
-		return s[:i]
+		firstLine = s[:i]
 	}
 	return firstLine
 }
