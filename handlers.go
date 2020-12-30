@@ -6,11 +6,13 @@ import (
 	"strings"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/util"
 	"github.com/gofiber/fiber/v2"
 )
 
 type (
-	Note = model.Note
+	Note     = model.Note
+	NoteType = model.NoteType
 )
 
 func errorHandler(c *fiber.Ctx, err error) error {
@@ -68,7 +70,11 @@ func allNotesHandler(c *fiber.Ctx) error {
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
-	note, err := db.GetByID(c.FormValue("id"))
+	id, err := getID(c)
+	if err != nil {
+		return err
+	}
+	note, err := db.GetByID(id)
 	if err != nil {
 		return err
 	}
@@ -90,19 +96,16 @@ func newNoteHandler(c *fiber.Ctx) error {
 }
 
 func createNote(c *fiber.Ctx) (*Note, error) {
-	noteType := model.NewNoteType(c.FormValue("note-type"))
-	contents := strings.TrimSpace(c.FormValue("contents"))
-	if contents == "" {
-		return nil, errors.New("contents is empty")
+	noteType, err1 := getNoteType(c)
+	contents, err2 := getFormValue(c, "contents")
+	tags, err3 := getTags(c)
+
+	if err := util.WrapErrors(err1, err2, err3); err != nil {
+		return nil, err
 	}
 
 	note := db.NewNote(noteType)
 	if err := note.SetContents(contents); err != nil {
-		return nil, err
-	}
-
-	var tags []string
-	if err := json.Unmarshal([]byte(c.FormValue("tags")), &tags); err != nil {
 		return nil, err
 	}
 	note.Tags = tags
@@ -113,7 +116,52 @@ func changeType(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
-	id := c.FormValue("id")
-	noteType := model.NewNoteType(c.FormValue("note-type"))
+	id, err1 := getID(c)
+	noteType, err2 := getNoteType(c)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
 	return db.ChangeType(id, noteType)
+}
+
+func noteTagsUpdate(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id, err1 := getID(c)
+	tags, err2 := getTags(c)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return db.UpdateTags(id, tags)
+}
+
+// getFormValue gets the c.FormValue(key), trims its spaces,
+// and checks if it is empty or not.
+func getFormValue(c *fiber.Ctx, key string) (string, error) {
+	value := strings.TrimSpace(c.FormValue(key))
+	if value == "" {
+		return "", errors.New(key + " is empty")
+	}
+	return value, nil
+}
+
+func getID(c *fiber.Ctx) (string, error) {
+	return getFormValue(c, "id")
+}
+
+func getNoteType(c *fiber.Ctx) (NoteType, error) {
+	noteTypeString, err := getFormValue(c, "note-type")
+	noteType := model.NewNoteType(noteTypeString)
+	return noteType, err
+}
+
+func getTags(c *fiber.Ctx) ([]string, error) {
+	tagsString, err := getFormValue(c, "tags")
+	if err != nil {
+		return nil, err
+	}
+	var tags []string
+	err = json.Unmarshal([]byte(tagsString), &tags)
+	return tags, err
 }

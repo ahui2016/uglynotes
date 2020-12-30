@@ -106,10 +106,9 @@ func (db *DB) checkExist(id string) error {
 }
 
 // GetByID .
-func (db *DB) GetByID(id string) (*Note, error) {
-	var note Note
-	err := db.DB.One("ID", id, &note)
-	return &note, err
+func (db *DB) GetByID(id string) (note Note, err error) {
+	err = db.DB.One("ID", id, &note)
+	return note, err
 }
 
 func addTags(tx storm.Node, tags []string, noteID string) error {
@@ -138,6 +137,18 @@ func addTags(tx storm.Node, tags []string, noteID string) error {
 	return nil
 }
 
+func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
+	for _, tagName := range tagsToDelete {
+		tag := new(Tag)
+		if err := tx.One("Name", tagName, tag); err != nil {
+			return err
+		}
+		tag.Remove(noteID) // 每一个 tag 都与该 Note.ID 脱离关系
+		return tx.Update(tag)
+	}
+	return nil
+}
+
 // AllNotes fetches all notes, sorted by "UpdatedAt".
 func (db *DB) AllNotes() (notes []Note, err error) {
 	err = db.DB.AllByIndex("UpdatedAt", &notes)
@@ -153,5 +164,43 @@ func (db *DB) ChangeType(id string, noteType NoteType) error {
 	note.Type = noteType
 	// 这里可以优化性能，暂时先不优化。
 	note.SetContents(note.Contents)
-	return db.DB.Save(note)
+	return db.DB.Update(&note)
+}
+
+// UpdateTags .
+func (db *DB) UpdateTags(id string, tags []string) error {
+	note, err := db.GetByID(id)
+	if err != nil {
+		return err
+	}
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	toAdd, toDelete := util.SliceDifference(tags, note.Tags)
+
+	// 删除标签（从 tag.NoteIDs 里删除 id）
+	if err := deleteTags(tx, toDelete, note.ID); err != nil {
+		return err
+	}
+
+	// 添加标签（将 id 添加到 tag.NoteIDs 里）
+	if err := addTags(tx, toAdd, note.ID); err != nil {
+		return err
+	}
+
+	// 最后更新 note.Tags
+	note.Tags = tags
+	if err := tx.Update(&note); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// GetTag .
+func (db *DB) GetTag(name string) (tag Tag, err error) {
+	err = db.DB.One("Name", name, &tag)
+	return
 }

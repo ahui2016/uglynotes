@@ -1,5 +1,8 @@
 // 创建历史版本的间隔时间
-const delayOfAutoUpdate = 1000 * 10
+const DelayOfAutoUpdate = 1000 * 10
+
+// setInterval 自动运行次数的上限
+const AutoUpdateLimit = 3
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {

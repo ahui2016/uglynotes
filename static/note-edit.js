@@ -1,4 +1,3 @@
-
 const loading = $('#loading');
 const previewBtn = $('#preview-btn');
 const editBtn = $('#edit-btn');
@@ -22,6 +21,7 @@ let oldNoteType = 'plaintext';
 let tags = new Set();
 let oldTags = new Set();
 let autoSubmitID;
+let autoUpdateCount = 1;
 
 /* 开始初始化表单 */
 
@@ -87,18 +87,21 @@ tagsElem.blur(() => {
     tagsElem.val(addPrefix(tags, '#'));
 });
 
+// 删除按钮
 delete_btn.click(event => {
   event.preventDefault();
   delete_btn.hide();
   confirm_block.show();
 });
 
+// 取消删除
 no_btn.click(event => {
   event.preventDefault();
   confirm_block.hide();
   delete_btn.show();
 });
 
+// 确认删除
 yes_btn.click(event => {
   event.preventDefault();
   let form = new FormData();
@@ -112,6 +115,7 @@ yes_btn.click(event => {
   });
 });
 
+// 预览按钮
 previewBtn.click(event => {
   event.preventDefault();
   const contents = $('#contents').val().trim();
@@ -125,6 +129,7 @@ previewBtn.click(event => {
   plaintextLabel.hide();
 });
 
+// 编辑按钮
 editBtn.click(event => {
   textarea.show();
   preview.hide();
@@ -135,9 +140,11 @@ editBtn.click(event => {
   textarea.focus();
 });
 
+// 提交按钮和更新按钮
 submit_btn.click(submit);
 update_btn.click(update);
 
+// 创建新笔记
 function submit(event) {
   if (event) event.preventDefault();
   
@@ -155,6 +162,7 @@ function submit(event) {
   form.append('contents', contents);
   form.append('tags', JSON.stringify(Array.from(tags)));
 
+  if (!event) autoUpdateCount++;
   ajaxPost(form, '/api/note/new', submit_btn, function(that) {
     note_id = that.response;
     oldNoteType = note_type;
@@ -170,24 +178,31 @@ function submit(event) {
   });
 }
 
+// 更新
 function update(event) {
   if (event) event.preventDefault();
   
+  // 更新笔记类型
   const note_type = $('input[name="note-type"]:checked').val();
   if (note_type != oldNoteType) {
     const form = new FormData();
     form.append('id', note_id);
     form.append('note-type', note_type)
+
+    if (!event) autoUpdateCount++;
     ajaxPost(form, '/api/note/type/update', update_btn, function() {
       oldNoteType = note_type;
       insertSuccessAlert('笔记类型更新成功: ' + note_type);
     });
   }
 
+  // 更新标签
   if (!setsAreEqual(tags, oldTags)) {
     const form = new FormData();
     form.append('id', note_id);
     form.append('tags', JSON.stringify(Array.from(tags)));
+
+    if (!event) autoUpdateCount++;
     ajaxPost(form, '/api/note/tags/update', update_btn, function() {
       oldTags = tags;
       insertSuccessAlert('标签更新成功: ' + addPrefix(tags, ''));
@@ -205,10 +220,13 @@ function update(event) {
     return;
   }
 
+  // 更新笔记内容
   if (contents != oldContents) {
     const form = new FormData();
     form.append('id', note_id);
     form.append('contents', contents);
+
+    if (!event) autoUpdateCount++;
     ajaxPost(form, '/api/note/contents/update', update_btn, function(that) {
       oldContents = contents;
       insertHistoryAlert(that.response.id);
@@ -216,15 +234,21 @@ function update(event) {
   }
 }
 
+// 自动更新
 function submitOrUpdate() {
   if (!note_id) {
     submit();
   } else {
     update();
   }
+  if (autoUpdateCount > AutoUpdateLimit) {
+    insertErrorAlert('已达到自动更新次数上限，请手动更新或刷新页面。');
+    window.clearInterval(autoSubmitID);
+    return;
+  }
 }
 
-autoSubmitID = window.setInterval(submitOrUpdate, delayOfAutoUpdate);
+autoSubmitID = window.setInterval(submitOrUpdate, DelayOfAutoUpdate);
 
 
 // 初始化表单。

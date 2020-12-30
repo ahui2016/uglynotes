@@ -75,3 +75,25 @@ func StringIndex(slice []string, item string) int {
 	}
 	return -1
 }
+
+// SliceDifference 对比新旧 slice 的差异，并返回需要新增的项目与需要删除的项目。
+func SliceDifference(newSlice, oldSlice []string) (toAdd, toDelete []string) {
+	// newTags 里有，oldTags 里没有的，需要添加到数据库。
+	for _, newItem := range newSlice {
+		if !HasString(oldSlice, newItem) {
+			toAdd = append(toAdd, newItem)
+		}
+	}
+	// oldTags 里有，newTags 里没有的，需要从数据库中删除。
+	for _, oldItem := range oldSlice {
+		if !HasString(newSlice, oldItem) {
+			toDelete = append(toDelete, oldItem)
+		}
+	}
+	return
+}
+
+// DeleteFromSlice .
+func DeleteFromSlice(slice []string, i int) []string {
+	return append(slice[:i], slice[i+1:]...)
+}

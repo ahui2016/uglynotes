@@ -70,6 +70,9 @@ func (note *Note) SetContents(contents string) error {
 			title = mdTitle
 		}
 	}
+	if title == "" {
+		return errors.New("note title is empty")
+	}
 	note.Title = title
 	note.Contents = contents
 	note.Size = len(contents)
@@ -116,6 +119,15 @@ func (tag *Tag) Add(noteID string) {
 		return
 	}
 	tag.NoteIDs = append(tag.NoteIDs, noteID)
+}
+
+// Remove .
+func (tag *Tag) Remove(id string) {
+	i := util.StringIndex(tag.NoteIDs, id)
+	if i < 0 {
+		return
+	}
+	tag.NoteIDs = util.DeleteFromSlice(tag.NoteIDs, i)
 }
 
 // TimeNow .
