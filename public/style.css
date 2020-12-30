@@ -13,6 +13,11 @@ pre {
     margin-right: 1em;  
 }
 
+.head-buttons {
+    display: inline;
+    margin-left: 2em;
+}
+
 .alert-info {
     color: steelblue;
 }

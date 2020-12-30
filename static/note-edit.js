@@ -45,9 +45,6 @@ if (param_id) {
         previewBtn.show();
         oldNoteType = 'markdown';
       }
-      $('#readonly-mode')
-        .show()
-        .find('a').attr('href', '/html/note?id='+note.ID);
     
       textarea.val(note.Contents);
       oldContents = note.Contents;
@@ -56,8 +53,7 @@ if (param_id) {
       tags = new Set(note.Tags);
       oldTags = new Set(note.Tags);
 
-      submit_block.hide();
-      update_block.show();
+      enterEditMode();
       insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
       insertSuccessAlert('已进入编辑模式');
     } else {
@@ -71,7 +67,6 @@ if (param_id) {
   }, function() {
     // onloadend
     loading.hide();
-    $('#where').text('Edit Note');
   });
 }
 
@@ -168,14 +163,18 @@ function submit(event) {
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
-    submit_block.hide();
-    update_block.show();
-    $('#readonly-mode')
-      .show()
-      .find('a').attr('href', '/html/note?id='+note_id);
-    $('#where').text('Edit Note');
+    enterEditMode();
     insertSuccessAlert('新笔记创建成功');
   });
+}
+
+function enterEditMode() {
+  $('#where').text('Edit Note');
+  $('#readonly-mode')
+    .show()
+    .attr('href', '/html/note?id='+note_id);
+  submit_block.hide();
+  update_block.show();
 }
 
 // 更新

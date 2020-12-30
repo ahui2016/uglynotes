@@ -130,3 +130,15 @@ function setsAreEqual(a, b) {
   for (const item of a) if (!b.has(item)) return false;
   return true;
 }
+
+// 把文件大小换算为 KB 或 MB
+function fileSizeToString(fileSize, fixed) {
+  if (fixed == null) {
+    fixed = 2
+  }
+  const sizeMB = fileSize / 1024 / 1024;
+  if (sizeMB < 1) {
+      return `${(sizeMB * 1024).toFixed(fixed)} KB`;
+  }
+  return `${sizeMB.toFixed(fixed)} MB`;
+}

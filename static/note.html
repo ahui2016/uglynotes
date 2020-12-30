@@ -36,16 +36,21 @@
     </style>
   </head>
   <body>
-    <p>uglynotes .. Note [id:<span id="id"></span>] ..
-      <a id="edit">Edit</a> ..
-      <a id="history">History</a> ..
-      <a id="delete" href="#">Delete</a>
-      <span id="confirm-block" style="display: none; color: red;">
-        delete this note?
-        <button id="yes">Yes</button>
-        <button id="no">No</button>
-      </span>
-    </p>
+    <div><a href="/home">uglynotes</a> ..
+      Note [id:<span id="id"></span>]
+      <div class="head-buttons">
+        |
+        <a id="edit">Edit</a> |
+        <a id="history">History</a> |
+        <a id="delete" href="#">Delete</a>
+        <span id="confirm-block" style="display: none; color: red;">
+          delete this note?
+          <button id="yes">Yes</button>
+          <button id="no">No</button>
+        </span>  
+        |
+      </div>
+    </div>
 
     <p id="loading" class="alert-info">Loading...</p>
 
@@ -69,7 +74,10 @@
           <span class="tag"></span>
         </template>
       </p>
-      <p style="color: #999;">Type: <span id="note-type"></span></p>
+      <p style="color: #999;">
+        Type: <span id="note-type"></span>
+        <span style="font-size: smaller;">(size: <span id="size"></span>)</span>
+      </p>
     </div>
 
     <pre class="plaintext contents" style="display: none;"></pre>

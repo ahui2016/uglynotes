@@ -40,6 +40,10 @@ func notePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note.html")
 }
 
+func noteNewPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-edit.html")
+}
+
 func noteEditPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }

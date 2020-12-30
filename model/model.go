@@ -15,7 +15,7 @@ import (
 const ISO8601 = "2006-01-02T15:04:05.999+00:00"
 
 // TitleLimit 限制标题的长度。
-const TitleLimit = 100
+const TitleLimit = 200
 
 // SizeLimit 限制每篇笔记的体积。
 const SizeLimit = 1 << 19 // 512 KB

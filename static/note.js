@@ -8,6 +8,7 @@ ajaxPost(form, '/api/note', null, that => {
   $('#datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
   $('#id').text(note.ID);
   $('#note-type').text(note.Type);
+  $('#size').text(fileSizeToString(note.Size));
   $('#edit').attr('href', '/html/note/edit?id='+note.ID);
 
   if (note.Tags.length > 0) {

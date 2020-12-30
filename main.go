@@ -36,6 +36,7 @@ func main() {
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/note", notePage)
+	htmlPage.Get("/note/new", noteNewPage)
 	htmlPage.Get("/note/edit", noteEditPage)
 
 	api := app.Group("/api", checkLoginJSON)
