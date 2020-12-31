@@ -1,5 +1,4 @@
 ajaxGet('/api/notes/all', null, that => {
-  $('#loading').hide();
   that.response.forEach(note => {
     let updatedAt = dayjs(note.UpdatedAt);
     let item = $('#li-tmpl').contents().clone();
@@ -11,6 +10,9 @@ ajaxGet('/api/notes/all', null, that => {
     item.find('.tags').text(addPrefix(note.Tags, '#'));
     item.insertAfter('#li-tmpl');
   });
+}, () => {
+  // onloadend
+  $('#loading').hide();
 });
 
 ajaxGet("/api/notes/size", null, that => {

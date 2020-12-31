@@ -8,6 +8,7 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#note-type').text(note.Type);
   $('#size').text(fileSizeToString(note.Size));
   $('#edit').attr('href', '/html/note/edit?id='+note.ID);
+  $('#history').attr('href', '/html/note/history?id='+note.ID)
 
   if (note.Tags.length > 0) {
     $('#tags').show();

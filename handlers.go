@@ -1,6 +1,8 @@
 package main
 
 import (
+	"unicode/utf8"
+
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/gofiber/fiber/v2"
@@ -9,6 +11,7 @@ import (
 type (
 	Note     = model.Note
 	NoteType = model.NoteType
+	History  = model.History
 )
 
 func errorHandler(c *fiber.Ctx, err error) error {
@@ -48,6 +51,10 @@ func historyPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/history.html")
 }
 
+func noteHistoryPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-history.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -70,7 +77,14 @@ func allNotesHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return nil
 	}
+	trimContents(notes)
 	return c.JSON(notes)
+}
+
+func trimContents(notes []Note) {
+	for i := range notes {
+		notes[i].Contents = ""
+	}
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
@@ -181,4 +195,40 @@ func setProtected(c *fiber.Ctx) error {
 		return err
 	}
 	return db.SetProtected(historyID, protected)
+}
+
+func noteHistory(c *fiber.Ctx) error {
+	histories, err := db.NoteHistories(c.Params("id"))
+	if err != nil {
+		return err
+	}
+	shortHistories(histories)
+	return c.JSON(histories)
+}
+
+func shortHistories(histories []History) {
+	for i := range histories {
+		title := headLimit(histories[i].Contents, model.TitleLimit)
+		histories[i].Contents = title
+	}
+}
+
+// headLimit 返回 s 开头限定长度的内容，其中 s 必须事先 TrimSpace 并确保不是空字串。
+// 该函数会尽量确保最后一个字符是有效的 utf8 字符，但当限定长度的内容的全部字符都无效时，
+// 则按原样返回限定长度的内容。
+func headLimit(s string, limit int) (head string) {
+	head = s
+	if len(head) > limit {
+		head = s[:limit]
+	}
+	for len(head) > 0 {
+		if utf8.ValidString(head) {
+			break
+		}
+		head = head[:len(head)-1]
+	}
+	if head == "" {
+		head = s[:limit]
+	}
+	return head
 }

@@ -224,11 +224,22 @@ function update(event) {
     form.append('contents', contents);
 
     if (!event) autoUpdateCount++;
-    ajaxPut(form, '/api/note/contents', update_btn, function(that) {
+    ajaxPut(form, '/api/note/contents', update_btn, that => {
       oldContents = contents;
       insertHistoryAlert(that.response.message);
     });
   }
+}
+
+// 插入历史版本提示
+function insertHistoryAlert(history_id, where) {
+  let alertElem = $('#alert-history-tmpl').contents().clone();
+  alertElem.find('.alert-time').text(dayjs().format('HH:mm:ss'));
+  alertElem.find('.history-url')
+    .text(history_id)
+    .attr('href', '/html/history?id='+history_id);
+  if (!where) where = '#alert-insert-after-here';
+  alertElem.insertAfter(where);
 }
 
 // 自动更新

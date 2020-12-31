@@ -32,17 +32,6 @@ function insertAlert(type, msg, where) {
   alertElem.insertAfter(where);
 }
 
-// 插入历史版本提示
-function insertHistoryAlert(history_id, where) {
-  let alertElem = $('#alert-history-tmpl').contents().clone();
-  alertElem.find('.alert-time').text(dayjs().format('HH:mm:ss'));
-  alertElem.find('.history-url')
-    .text(history_id)
-    .attr('href', '/note/history?id='+history_id);
-  if (!where) where = '#alert-insert-after-here';
-  alertElem.insertAfter(where);
-}
-
 // 向服务器提交表单，在等待过程中 btn 会失效，避免重复提交。
 function ajaxDo(method, form, url, btn, onload, onloadend) {
   if (btn) {

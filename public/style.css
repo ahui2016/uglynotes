@@ -60,10 +60,6 @@ pre {
     margin: 20px 0 20px 0;
 }
 
-.li .id {
-    text-transform: uppercase;
-}
-
 .li .datetime {
     color: #999;
     font-size: smaller;

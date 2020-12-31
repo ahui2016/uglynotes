@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="/public/style.css">
 
-    <title>Index .. uglynotes</title>
+    <title>Note-History .. uglynotes</title>
 
     <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
     <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
@@ -12,16 +12,15 @@
     <script src="/public/dayjs.min.js"></script>
 
     <style>
-      
-.li .id {
-    text-transform: uppercase;
+.protected {
+  background-color: lightgreen;
 }
 
     </style>
   </head>
   <body>
-    <div>uglynotes .. Index
-      <div id="head-buttons">
+    <div>Note [<a id="note-id"></a>] .. Histories
+      <div id="head-buttons" style="display: none;">
         |
         <a href="/html/note/new">New Note</a>
         |
@@ -45,17 +44,24 @@
     <ul>
       <template id="li-tmpl">
         <li class="li">
-          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
+          [history id: <span class="id"></span>]
+          <span class="protected" style="display: none;">protected</span><br>
           <a class="title"></a><br>
-          <span class="tags"></span>
+          <span style="color: #999;">
+            <span class="datetime"></span>
+            (size: <span class="size"></span>)
+          </span>
         </li>
       </template>
     </ul>
 
-    <!-- 容量 -->
-    <p id="notes-size" style="color: #999;"></p>
+    <!-- 总体积 -->
+    <p style="color: #999;">
+      以上历史版本总体积:
+      <span id="history-size"></span>
+    </p>
 
     <script src="/public/util.js"></script>
-    <script src="/static/index.js"></script>
+    <script src="/static/note-history.js"></script>
   </body>
 </html>
