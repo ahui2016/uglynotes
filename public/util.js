@@ -44,13 +44,13 @@ function insertHistoryAlert(history_id, where) {
 }
 
 // 向服务器提交表单，在等待过程中 btn 会失效，避免重复提交。
-function ajaxPost(form, url, btn, onload, onloadend) {
+function ajaxDo(method, form, url, btn, onload, onloadend) {
   if (btn) {
     btn.prop('disabled', true);
   }
   let xhr = new XMLHttpRequest();
   xhr.responseType = 'json';
-  xhr.open('POST', url);
+  xhr.open(method, url);
   xhr.onerror = function () {
     window.alert('An error occurred during the transaction');
   };
@@ -68,35 +68,24 @@ function ajaxPost(form, url, btn, onload, onloadend) {
     }
     if (onloadend) onloadend(this);
   });
+  
+  if (method.toUpperCase() == 'GET') {
+    xhr.send();
+    return;
+  }
   xhr.send(form);
 }
 
-// 向服务器获取数据，在等待过程中 btn 会失效，避免重复提交。
+function ajaxPost(form, url, btn, onload, onloadend) {
+  ajaxDo('POST', form, url, btn, onload, onloadend);
+}
+
+function ajaxPut(form, url, btn, onload, onloadend) {
+  ajaxDo('PUT', form, url, btn, onload, onloadend);
+}
+
 function ajaxGet(url, btn, onload, onloadend) {
-  if (btn) {
-    btn.prop('disabled', true);
-  }
-  let xhr = new XMLHttpRequest();
-  xhr.responseType = 'json';
-  xhr.open('GET', url);
-  xhr.onerror = function () {
-    window.alert('An error occurred during the transaction');
-  };
-  xhr.addEventListener('load', function() {
-    if (this.status == 200) {
-      if (onload) onload(this);
-    } else {
-        let errMsg = !this.response ? this.status : this.response.message;
-        insertErrorAlert(errMsg);
-    }
-  });
-  xhr.addEventListener('loadend', function() {
-    if (btn) {
-      btn.prop('disabled', false);
-    }
-    if (onloadend) onloadend(this);
-  });
-  xhr.send();
+  ajaxDo('GET', null, url, btn, onload, onloadend);
 }
 
 // 获取地址栏的参数。

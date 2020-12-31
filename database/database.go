@@ -242,7 +242,7 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 
 // addHistory 添加新 history, 同时可能需要删除旧的 history.
 func addHistory(tx storm.Node, note Note, history *History) error {
-	histories, err := txNoteHistories(tx, note.ID)
+	histories, err := txUnprotectedHistories(tx, note.ID)
 	if err != nil {
 		return err
 	}
@@ -273,14 +273,25 @@ func deleteHistory(tx storm.Node, oldHistory History) error {
 
 // NoteHistories .
 func (db *DB) NoteHistories(noteID string) (histories []History, err error) {
-	return txNoteHistories(db.DB, noteID)
-}
-
-func txNoteHistories(tx storm.Node, noteID string) (histories []History, err error) {
-	err = tx.Select(q.Eq("NoteID", noteID)).
+	err = db.DB.Select(q.Eq("NoteID", noteID)).
 		OrderBy("CreatedAt").Find(&histories)
 	if err == storm.ErrNotFound {
 		err = nil
 	}
 	return
+}
+
+func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, err error) {
+	err = tx.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
+		OrderBy("CreatedAt").Find(&histories)
+	if err == storm.ErrNotFound {
+		err = nil
+	}
+	return
+}
+
+// SetProtected .
+func (db *DB) SetProtected(historyID string, protected bool) error {
+	return db.DB.UpdateField(
+		&History{ID: historyID}, "Protected", protected)
 }

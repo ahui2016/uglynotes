@@ -1,3 +1,5 @@
+let isProtected = false;
+
 const id = getUrlParam('id');
 const form = new FormData();
 form.append('id', id);
@@ -15,14 +17,25 @@ ajaxPost(form, '/api/history', null, that => {
   const protected = $('#protected');
   const protectBtn = $('#protect');
   const unprotectBtn = $('#unprotect');
-  protectBtn.click(protectToggle);
-  unprotectBtn.click(protectToggle);
+  protectBtn.click(setProtected);
+  unprotectBtn.click(setProtected);
   if (history.Protected) protectToggle();
 
   function protectToggle() {
+    isProtected = !isProtected;
     protected.toggle();
     protectBtn.toggle();
     unprotectBtn.toggle();
+  }
+
+  function setProtected(event) {
+    const form = new FormData();
+    form.append("id", history.ID);
+    form.append("protected", !isProtected);
+    ajaxPut(
+        form, '/api/history/protected', $(event.currentTarget), () => {
+      protectToggle();
+    });
   }
 
   const plaintext = $('.plaintext.contents');

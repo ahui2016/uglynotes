@@ -1,10 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"errors"
-	"strings"
-
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/gofiber/fiber/v2"
@@ -144,36 +140,6 @@ func updateNoteTags(c *fiber.Ctx) error {
 	return db.UpdateTags(id, tags)
 }
 
-// getFormValue gets the c.FormValue(key), trims its spaces,
-// and checks if it is empty or not.
-func getFormValue(c *fiber.Ctx, key string) (string, error) {
-	value := strings.TrimSpace(c.FormValue(key))
-	if value == "" {
-		return "", errors.New(key + " is empty")
-	}
-	return value, nil
-}
-
-func getID(c *fiber.Ctx) (string, error) {
-	return getFormValue(c, "id")
-}
-
-func getNoteType(c *fiber.Ctx) (NoteType, error) {
-	noteTypeString, err := getFormValue(c, "note-type")
-	noteType := model.NewNoteType(noteTypeString)
-	return noteType, err
-}
-
-func getTags(c *fiber.Ctx) ([]string, error) {
-	tagsString, err := getFormValue(c, "tags")
-	if err != nil {
-		return nil, err
-	}
-	var tags []string
-	err = json.Unmarshal([]byte(tagsString), &tags)
-	return tags, err
-}
-
 func updateNoteContents(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
@@ -211,4 +177,16 @@ func getHistoryHandler(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(history)
+}
+
+func setProtected(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	historyID, err1 := getID(c)
+	protected, err2 := getProtected(c)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return db.SetProtected(historyID, protected)
 }

@@ -60,6 +60,7 @@ func main() {
 		return c.JSON(histories)
 	})
 	api.Post("/history", getHistoryHandler)
+	api.Put("/history/protected", setProtected)
 
 	api.Get("/tag/:name", func(c *fiber.Ctx) error {
 		tag, err := db.GetTag(c.Params("name"))
