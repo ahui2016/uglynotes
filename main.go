@@ -37,6 +37,7 @@ func main() {
 	htmlPage.Get("/note", notePage)
 	htmlPage.Get("/note/new", noteNewPage)
 	htmlPage.Get("/note/edit", noteEditPage)
+	htmlPage.Get("/history", historyPage)
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/notes/all", allNotesHandler)
@@ -58,6 +59,7 @@ func main() {
 		}
 		return c.JSON(histories)
 	})
+	api.Post("/history", getHistoryHandler)
 
 	api.Get("/tag/:name", func(c *fiber.Ctx) error {
 		tag, err := db.GetTag(c.Params("name"))

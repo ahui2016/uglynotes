@@ -93,6 +93,7 @@ type History struct {
 	NoteID    string `storm:"index"`
 	Contents  string
 	Size      int
+	Protected bool
 	CreatedAt string `storm:"index"` // ISO8601
 }
 

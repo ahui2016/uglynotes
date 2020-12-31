@@ -28,7 +28,13 @@
   margin-bottom: 200px;
 }
 .tag {
-  background-color: lightgreen;
+  padding: 0 .5em 0 .5em;
+  color: #EEE;
+  background-color: #999;
+}
+.tag:hover {
+  cursor: pointer;
+  background-color: #666;
 }
 #id {
   text-transform: uppercase;
@@ -69,7 +75,7 @@
     <div id="title-block">
       <p style="font-size: smaller; color: #999;">Updated at: <span id="datetime"></span></p>
       <p id="tags" style="display: none;">
-        Tags:
+        <span style="color: #999;">Tags:</span>
         <template id="tag-tmpl">
           <span class="tag"></span>
         </template>

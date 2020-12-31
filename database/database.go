@@ -209,6 +209,12 @@ func (db *DB) GetTag(name string) (tag Tag, err error) {
 	return
 }
 
+// GetHistory .
+func (db *DB) GetHistory(id string) (history History, err error) {
+	err = db.DB.One("ID", id, &history)
+	return
+}
+
 // UpdateNoteContents .
 func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err error) {
 	note, err := db.GetByID(id)

@@ -48,6 +48,10 @@ func noteEditPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
 
+func historyPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/history.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -195,4 +199,16 @@ func notesSizeHandler(c *fiber.Ctx) error {
 		"totalSize": size,
 		"capacity":  databaseCapacity,
 	})
+}
+
+func getHistoryHandler(c *fiber.Ctx) error {
+	id, err := getID(c)
+	if err != nil {
+		return err
+	}
+	history, err := db.GetHistory(id)
+	if err != nil {
+		return err
+	}
+	return c.JSON(history)
 }

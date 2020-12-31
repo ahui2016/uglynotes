@@ -21,12 +21,10 @@ ajaxPost(form, '/api/note', null, that => {
   }
 
   if (note.Type == 'Markdown') {
-    $('#markdown-title').text(note.Title);
     const dirty = marked(note.Contents);
     const clean = DOMPurify.sanitize(dirty);
     $('.markdown.contents').show().html(clean);
   } else {
-    $('#plaintext-title').text(note.Title);
     $('.plaintext.contents').show().text(note.Contents);
   }
 }, function() {
