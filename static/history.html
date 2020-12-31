@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>History .. uglynotes</title>
+
+    <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
+    <script src="/public/jquery-3.5.1.min.js"></script>
+    <script src="/public/dayjs.min.js"></script>
+    <script src="/public/marked.min.js"></script>
+    <script src="/public/purify.min.js"></script>
+
+    <style>
+.plaintext {
+  white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  background-color: whitesmoke;
+}
+.markdown {
+  background-color: whitesmoke;
+}
+.contents {
+  max-width: 600px;
+  min-width: 400px;
+  margin-bottom: 200px;
+}
+.tag {
+  padding: 0 .5em 0 .5em;
+  color: #EEE;
+  background-color: #999;
+}
+.tag:hover {
+  cursor: pointer;
+  background-color: #666;
+}
+#id {
+  text-transform: uppercase;
+}
+#protected {
+  background-color: lightgreen;
+}
+    </style>
+  </head>
+  <body>
+    <div>Note [<a id="note-id"></a>] .. History
+      <span id="protected" style="display: none;">PROTECTED</span>
+      <div id="head-buttons">
+        |
+        <button id="protect">Protect</button>
+        <button id="unprotect" style="display: none;">Unprotect</button> |
+        <a id="delete" href="#">Delete</a>
+        <span id="confirm-block" style="display: none; color: red;">
+          delete this note?
+          <button id="yes">Yes</button>
+          <button id="no">No</button>
+        </span>  
+        |
+      </div>
+    </div>
+
+    <p id="loading" class="alert-info">Loading...</p>
+
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <div id="title-block">
+      <p style="font-size: smaller; color: #999;">
+        History ID: <span id="history-id"></span><br>
+        Created at: <span id="datetime"></span><br>
+        Size: <span id="size"></span>
+      </p>
+    </div>
+
+    <div>
+      Display as
+      <input type="radio" id="plaintext-btn" name="note-type" value="plaintext" checked>
+      <label for="plaintext-btn" id="plaintext-label">plaintext</label>
+      <input type="radio" id="markdown-btn" name="note-type" value="markdown">
+      <label for="markdown-btn">markdown</label>
+    </div>
+
+    <pre class="plaintext contents"></pre>
+
+    <div class="markdown contents" style="display: none;"></div>
+
+    <script src="/public/util.js"></script>
+    <script src="/static/history.js"></script>
+  </body>
+</html>
