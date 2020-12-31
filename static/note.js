@@ -1,8 +1,6 @@
 const id = getUrlParam('id');
-const form = new FormData();
-form.append('id', id);
 
-ajaxPost(form, '/api/note', null, that => {
+ajaxGet('/api/note/'+id, null, that => {
   const note = that.response;
   const updatedAt = dayjs(note.UpdatedAt);
   $('#datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));

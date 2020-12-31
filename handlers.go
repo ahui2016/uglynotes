@@ -74,11 +74,7 @@ func allNotesHandler(c *fiber.Ctx) error {
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
-	id, err := getID(c)
-	if err != nil {
-		return err
-	}
-	note, err := db.GetByID(id)
+	note, err := db.GetByID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -168,11 +164,7 @@ func notesSizeHandler(c *fiber.Ctx) error {
 }
 
 func getHistoryHandler(c *fiber.Ctx) error {
-	id, err := getID(c)
-	if err != nil {
-		return err
-	}
-	history, err := db.GetHistory(id)
+	history, err := db.GetHistory(c.Params("id"))
 	if err != nil {
 		return err
 	}

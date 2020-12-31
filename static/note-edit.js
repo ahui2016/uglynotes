@@ -30,11 +30,8 @@ const param_id = getUrlParam('id');
 if (!param_id) loading.hide();
 
 if (param_id) {
-  const form = new FormData();
-  form.append('id', param_id);
-
-  // initAjaxPost 函数定义在本文件末尾。
-  initAjaxPost(form, '/api/note', function() {
+  // initAjaxGet 函数定义在本文件末尾。
+  initAjaxGet('/api/note/'+param_id, function() {
     if (this.status == 200) {
       const note = this.response;
       note_id = note.ID;
@@ -158,7 +155,7 @@ function submit(event) {
   form.append('tags', JSON.stringify(Array.from(tags)));
 
   if (!event) autoUpdateCount++;
-  ajaxPost(form, '/api/note/new', submit_btn, function(that) {
+  ajaxPost(form, '/api/note', submit_btn, function(that) {
     note_id = that.response.message;
     oldNoteType = note_type;
     oldContents = contents;
@@ -190,7 +187,7 @@ function update(event) {
     form.append('note-type', note_type)
 
     if (!event) autoUpdateCount++;
-    ajaxPost(form, '/api/note/type/update', update_btn, function() {
+    ajaxPut(form, '/api/note/type', update_btn, function() {
       oldNoteType = note_type;
       insertSuccessAlert('笔记类型更新成功: ' + note_type);
     });
@@ -203,7 +200,7 @@ function update(event) {
     form.append('tags', JSON.stringify(Array.from(tags)));
 
     if (!event) autoUpdateCount++;
-    ajaxPost(form, '/api/note/tags/update', update_btn, function() {
+    ajaxPut(form, '/api/note/tags', update_btn, function() {
       oldTags = tags;
       insertSuccessAlert('标签更新成功: ' + addPrefix(tags, ''));
     });
@@ -227,7 +224,7 @@ function update(event) {
     form.append('contents', contents);
 
     if (!event) autoUpdateCount++;
-    ajaxPost(form, '/api/note/contents/update', update_btn, function(that) {
+    ajaxPut(form, '/api/note/contents', update_btn, function(that) {
       oldContents = contents;
       insertHistoryAlert(that.response.message);
     });
@@ -252,10 +249,10 @@ autoSubmitID = window.setInterval(submitOrUpdate, DelayOfAutoUpdate);
 
 
 // 用于初始化表单。
-function initAjaxPost(form, url, onload, onloadend) {
+function initAjaxGet(url, onload, onloadend) {
   let xhr = new XMLHttpRequest();
   xhr.responseType = 'json';
-  xhr.open('POST', url);
+  xhr.open('GET', url);
   xhr.onerror = function () {
     window.alert('An error occurred during the transaction');
   };
@@ -263,5 +260,5 @@ function initAjaxPost(form, url, onload, onloadend) {
   xhr.addEventListener('loadend', function() {
     if (onloadend) onloadend(this);
   });
-  xhr.send(form);
+  xhr.send();
 }

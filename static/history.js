@@ -1,10 +1,8 @@
 let isProtected = false;
 
 const id = getUrlParam('id');
-const form = new FormData();
-form.append('id', id);
 
-ajaxPost(form, '/api/history', null, that => {
+ajaxGet('/api/history/'+id, null, that => {
   const history = that.response;
   const createdAt = dayjs(history.CreatedAt);
   $('#datetime').text(createdAt.format('YYYY-MM-DD HH:mm:ss'));

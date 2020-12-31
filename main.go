@@ -43,14 +43,14 @@ func main() {
 	api.Get("/notes/all", allNotesHandler)
 	api.Get("/notes/size", notesSizeHandler)
 
-	api.Post("/note", getNoteHandler)
-	api.Post("/note/new", newNoteHandler)
-	api.Post("/note/delete", func(c *fiber.Ctx) error {
+	api.Get("/note/:id", getNoteHandler)
+	api.Post("/note", newNoteHandler)
+	api.Delete("/note", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
-	api.Post("/note/type/update", changeType)
-	api.Post("/note/tags/update", updateNoteTags)
-	api.Post("/note/contents/update", updateNoteContents)
+	api.Put("/note/type", changeType)
+	api.Put("/note/tags", updateNoteTags)
+	api.Put("/note/contents", updateNoteContents)
 
 	api.Get("/note/:id/histories", func(c *fiber.Ctx) error {
 		histories, err := db.NoteHistories(c.Params("id"))
@@ -59,7 +59,7 @@ func main() {
 		}
 		return c.JSON(histories)
 	})
-	api.Post("/history", getHistoryHandler)
+	api.Get("/history/:id", getHistoryHandler)
 	api.Put("/history/protected", setProtected)
 
 	api.Get("/tag/:name", func(c *fiber.Ctx) error {
