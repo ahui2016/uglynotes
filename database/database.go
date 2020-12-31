@@ -8,6 +8,7 @@ import (
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
+	"github.com/asdine/storm/v3/q"
 	"github.com/gofiber/fiber/v2/middleware/session"
 )
 
@@ -48,8 +49,9 @@ func (db *DB) Open(maxAge time.Duration, cap int, dbPath string) (err error) {
 	})
 	err1 := db.createIndexes()
 	err2 := db.initFirstID()
-	err3 := db.initTotalSize()
-	return util.WrapErrors(err1, err2, err3)
+	err3 := db.initCapacity()
+	err4 := db.initTotalSize()
+	return util.WrapErrors(err1, err2, err3, err4)
 }
 
 // Close 只是 db.DB.Close(), 不清空 db 里的其它部分。
@@ -222,30 +224,32 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 	}
 	defer tx.Rollback()
 
-	if err := db.addHistory(tx, note, history); err != nil {
+	if err := addHistory(tx, note, history); err != nil {
 		return "", err
 	}
-	if err := tx.Commit(); err != nil {
+	if err := txIncreaseTotalSize(tx, note.Size); err != nil {
 		return "", err
 	}
-	err = db.increaseTotalSize(note.Size)
+	err = tx.Commit()
 	return history.ID, err
 }
 
 // addHistory 添加新 history, 同时可能需要删除旧的 history.
-func (db *DB) addHistory(tx storm.Node, note Note, history *History) error {
-	note.AddHistory(history.ID)
-	length := len(note.Histories)
+func addHistory(tx storm.Node, note Note, history *History) error {
+	histories, err := txNoteHistories(tx, note.ID)
+	if err != nil {
+		return err
+	}
+	length := len(histories)
 	if length > historyLimit {
-		oldID := note.Histories[0]
-		if err := db.deleteHistory(tx, oldID); err != nil {
+		oldHistory := histories[0]
+		if err := deleteHistory(tx, oldHistory); err != nil {
 			return err
 		}
-		note.Histories = note.Histories[1:length]
 	}
 
 	// 原笔记的体积转移至历史，因此只新增新笔记的体积。
-	if err := db.checkTotalSize(note.Size); err != nil {
+	if err := txCheckTotalSize(tx, note.Size); err != nil {
 		return err
 	}
 	if err := tx.Save(history); err != nil {
@@ -254,29 +258,23 @@ func (db *DB) addHistory(tx storm.Node, note Note, history *History) error {
 	return tx.Update(&note)
 }
 
-func (db *DB) deleteHistory(tx storm.Node, historyID string) error {
-	var oldHistory History
-	if err := tx.One("ID", historyID, &oldHistory); err != nil {
-		return err
-	}
+func deleteHistory(tx storm.Node, oldHistory History) error {
 	if err := tx.DeleteStruct(&oldHistory); err != nil {
 		return err
 	}
-	return db.increaseTotalSize(-oldHistory.Size)
+	return txIncreaseTotalSize(tx, -oldHistory.Size)
 }
 
 // NoteHistories .
-func (db *DB) NoteHistories(id string) (histories []History, err error) {
-	note, err := db.GetByID(id)
-	if err != nil {
-		return nil, err
-	}
-	for _, historyID := range note.Histories {
-		var history History
-		if err := db.DB.One("ID", historyID, &history); err != nil {
-			return nil, err
-		}
-		histories = append(histories, history)
+func (db *DB) NoteHistories(noteID string) (histories []History, err error) {
+	return txNoteHistories(db.DB, noteID)
+}
+
+func txNoteHistories(tx storm.Node, noteID string) (histories []History, err error) {
+	err = tx.Select(q.Eq("NoteID", noteID)).
+		OrderBy("CreatedAt").Find(&histories)
+	if err == storm.ErrNotFound {
+		err = nil
 	}
 	return
 }

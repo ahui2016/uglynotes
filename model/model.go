@@ -44,7 +44,6 @@ type Note struct {
 	Contents  string
 	Size      int
 	Tags      []string // []Tag.Name
-	Histories []string // []History.ID
 	CreatedAt string   `storm:"index"` // ISO8601
 	UpdatedAt string   `storm:"index"`
 	DeletedAt string   `storm:"index"`
@@ -86,12 +85,6 @@ func (note *Note) SetContents(contents string) error {
 // 当不需要除重时可以直接操作 note.Tags
 func (note *Note) SetTags(tags []string) {
 	note.Tags = stringset.Unique(tags)
-}
-
-// AddHistory .
-func (note *Note) AddHistory(historyID string) {
-	// historyID 是随机的，可以认为不会重复。
-	note.Histories = append(note.Histories, historyID)
 }
 
 // History 数据表，用于保存笔记的历史记录。

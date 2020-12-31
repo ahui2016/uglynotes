@@ -40,6 +40,8 @@ func main() {
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/notes/all", allNotesHandler)
+	api.Get("/notes/size", notesSizeHandler)
+
 	api.Post("/note", getNoteHandler)
 	api.Post("/note/new", newNoteHandler)
 	api.Post("/note/delete", func(c *fiber.Ctx) error {
@@ -48,19 +50,21 @@ func main() {
 	api.Post("/note/type/update", changeType)
 	api.Post("/note/tags/update", updateNoteTags)
 	api.Post("/note/contents/update", updateNoteContents)
-	api.Get("/tag/:name", func(c *fiber.Ctx) error {
-		tag, err := db.GetTag(c.Params("name"))
-		if err != nil {
-			return err
-		}
-		return c.JSON(tag)
-	})
+
 	api.Get("/note/:id/histories", func(c *fiber.Ctx) error {
 		histories, err := db.NoteHistories(c.Params("id"))
 		if err != nil {
 			return err
 		}
 		return c.JSON(histories)
+	})
+
+	api.Get("/tag/:name", func(c *fiber.Ctx) error {
+		tag, err := db.GetTag(c.Params("name"))
+		if err != nil {
+			return err
+		}
+		return c.JSON(tag)
 	})
 
 	log.Fatal(app.Listen(defaultAddress))

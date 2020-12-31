@@ -185,3 +185,14 @@ func updateNoteContents(c *fiber.Ctx) error {
 	}
 	return jsonMessage(c, historyID)
 }
+
+func notesSizeHandler(c *fiber.Ctx) error {
+	size, err := db.GetTotalSize()
+	if err != nil {
+		return err
+	}
+	return c.JSON(fiber.Map{
+		"totalSize": size,
+		"capacity":  databaseCapacity,
+	})
+}
