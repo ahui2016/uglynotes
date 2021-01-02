@@ -222,7 +222,7 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 		return "", err
 	}
 	history := model.NewHistory(note.Contents, id)
-	note.SetContents(contents)
+	note.SetContentsNow(contents)
 
 	tx, err := db.DB.Begin(true)
 	if err != nil {

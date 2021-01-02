@@ -60,6 +60,20 @@ func NewNote(id string, noteType NoteType) *Note {
 	}
 }
 
+// SetContentsNow combines SetContents and UpdatedAtNow.
+func (note *Note) SetContentsNow(contents string) error {
+	if err := note.SetContents(contents); err != nil {
+		return err
+	}
+	note.UpdatedAtNow()
+	return nil
+}
+
+// UpdatedAtNow updates note.UpdatedAt to TimeNow().
+func (note *Note) UpdatedAtNow() {
+	note.UpdatedAt = TimeNow()
+}
+
 // SetContents 在填充内容的同时设置 size, 并根据笔记类型设置标题。
 // 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
 func (note *Note) SetContents(contents string) error {

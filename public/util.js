@@ -73,6 +73,10 @@ function ajaxPut(form, url, btn, onload, onloadend) {
   ajaxDo('PUT', form, url, btn, onload, onloadend);
 }
 
+function ajaxDelete(form, url, btn, onload, onloadend) {
+  ajaxDo('DELETE', form, url, btn, onload, onloadend);
+}
+
 function ajaxGet(url, btn, onload, onloadend) {
   ajaxDo('GET', null, url, btn, onload, onloadend);
 }

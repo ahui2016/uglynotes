@@ -46,7 +46,7 @@ func main() {
 
 	api.Get("/note/:id", getNoteHandler)
 	api.Post("/note", newNoteHandler)
-	api.Delete("/note", func(c *fiber.Ctx) error {
+	api.Delete("/note/:id", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
 	api.Put("/note/type", changeType)

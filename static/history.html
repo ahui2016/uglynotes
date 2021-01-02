@@ -45,15 +45,15 @@
     </style>
   </head>
   <body>
-    <div>Note [<a id="note-id"></a>] .. History
-      <span id="protected" style="display: none;">PROTECTED</span>
+    <div>Note [<span id="note-id"></span>] .. 
+      <a id="histories">History</a>
       <div id="head-buttons">
         |
         <button id="protect">Protect</button>
         <button id="unprotect" style="display: none;">Unprotect</button> |
         <a id="delete" href="#">Delete</a>
         <span id="confirm-block" style="display: none; color: red;">
-          delete this note?
+          delete this history?
           <button id="yes">Yes</button>
           <button id="no">No</button>
         </span>  
@@ -66,6 +66,15 @@
     <!-- 默认提示位置 -->
     <template id="alert-insert-after-here"></template>
 
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert alert-success">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
     <!-- 错误提示 -->
     <template id="alert-danger-tmpl">
       <p class="alert alert-danger">
@@ -77,13 +86,14 @@
 
     <div id="title-block">
       <p style="font-size: smaller; color: #999;">
-        History ID: <span id="history-id"></span><br>
+        History ID: <span id="history-id"></span>
+        <span id="protected" style="display: none;">PROTECTED</span><br>
         Created at: <span id="datetime"></span><br>
         Size: <span id="size"></span>
       </p>
     </div>
 
-    <div>
+    <div id="display-options">
       Display as
       <input type="radio" id="plaintext-btn" name="note-type" value="plaintext" checked>
       <label for="plaintext-btn" id="plaintext-label">plaintext</label>

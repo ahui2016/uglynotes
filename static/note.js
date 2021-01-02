@@ -1,5 +1,10 @@
 const id = getUrlParam('id');
 
+const confirm_block = $('#confirm-block');
+const delete_btn = $('#delete');
+const yes_btn = $('#yes');
+const no_btn = $('#no');
+
 ajaxGet('/api/note/'+id, null, that => {
   const note = that.response;
   const updatedAt = dayjs(note.UpdatedAt);
@@ -30,4 +35,32 @@ ajaxGet('/api/note/'+id, null, that => {
   //onloadend
   $('#loading').hide();
 });
-  
+
+
+// 删除按钮
+delete_btn.click(event => {
+  event.preventDefault();
+  delete_btn.hide();
+  confirm_block.show();
+});
+
+// 取消删除
+no_btn.click(event => {
+  event.preventDefault();
+  confirm_block.hide();
+  delete_btn.show();
+});
+
+// 确认删除
+yes_btn.click(event => {
+  event.preventDefault();
+  let form = new FormData();
+  form.append('id', id);
+  ajaxDelete(form, '/api/note/'+id, yes_btn, function() {
+    $('.alert').hide();
+    $('#head-buttons').hide();
+    $('#title-block').hide();
+    $('.contents').hide();
+    insertSuccessAlert(`笔记 id:${id} 已删除`);
+  });
+});

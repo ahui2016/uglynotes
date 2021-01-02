@@ -15,7 +15,7 @@ const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
 
-let note_id = '';
+let id = '';
 let oldContents = '';
 let oldNoteType = 'plaintext';
 let tags = new Set();
@@ -34,7 +34,7 @@ if (param_id) {
   initAjaxGet('/api/note/'+param_id, function() {
     if (this.status == 200) {
       const note = this.response;
-      note_id = note.ID;
+      id = note.ID;
     
       if (note.Type == 'Markdown') {
         plaintextBtn.prop('checked', false);
@@ -97,13 +97,14 @@ no_btn.click(event => {
 yes_btn.click(event => {
   event.preventDefault();
   let form = new FormData();
-  form.append('id', note_id);
-  ajaxPost(form, '/api/note/delete', yes_btn, function() {
-    note_id = '';
+  form.append('id', id);
+  ajaxDelete(form, '/api/note/'+id, yes_btn, function() {
     $('.alert').hide();
     $('form').hide();
+    $('#head-buttons').hide();
     window.clearInterval(autoSubmitID);
-    insertSuccessAlert('笔记已删除');
+    insertSuccessAlert(`笔记 id:${id} 已删除`);
+    id = '';
   });
 });
 
@@ -156,12 +157,12 @@ function submit(event) {
 
   if (!event) autoUpdateCount++;
   ajaxPost(form, '/api/note', submit_btn, function(that) {
-    note_id = that.response.message;
+    id = that.response.message;
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
     enterEditMode();
-    insertSuccessAlert('新笔记创建成功 id:' + note_id);
+    insertSuccessAlert('新笔记创建成功 id:' + id);
   });
 }
 
@@ -170,7 +171,7 @@ function enterEditMode() {
   $('#head-buttons').show();
   $('#readonly-mode')
     .show()
-    .attr('href', '/html/note?id='+note_id);
+    .attr('href', '/html/note?id='+id);
   submit_block.hide();
   update_block.show();
 }
@@ -183,7 +184,7 @@ function update(event) {
   const note_type = $('input[name="note-type"]:checked').val();
   if (note_type != oldNoteType) {
     const form = new FormData();
-    form.append('id', note_id);
+    form.append('id', id);
     form.append('note-type', note_type)
 
     if (!event) autoUpdateCount++;
@@ -196,7 +197,7 @@ function update(event) {
   // 更新标签
   if (!setsAreEqual(tags, oldTags)) {
     const form = new FormData();
-    form.append('id', note_id);
+    form.append('id', id);
     form.append('tags', JSON.stringify(Array.from(tags)));
 
     if (!event) autoUpdateCount++;
@@ -220,7 +221,7 @@ function update(event) {
   // 更新笔记内容
   if (contents != oldContents) {
     const form = new FormData();
-    form.append('id', note_id);
+    form.append('id', id);
     form.append('contents', contents);
 
     if (!event) autoUpdateCount++;
@@ -244,7 +245,7 @@ function insertHistoryAlert(history_id, where) {
 
 // 自动更新
 function submitOrUpdate() {
-  if (!note_id) {
+  if (!id) {
     submit();
   } else {
     update();
