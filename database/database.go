@@ -295,3 +295,53 @@ func (db *DB) SetProtected(historyID string, protected bool) error {
 	return db.DB.UpdateField(
 		&History{ID: historyID}, "Protected", protected)
 }
+
+// GetByTag returns notes without contents.
+func (db *DB) GetByTag(name string) (notes []Note, err error) {
+	tag, err := db.GetTag(name)
+	if err != nil {
+		return
+	}
+	for i := range tag.NoteIDs {
+		var note Note
+		note, err = db.GetByID(tag.NoteIDs[i])
+		if err != nil {
+			return
+		}
+		note.Contents = ""
+		notes = append(notes, note)
+	}
+	return
+}
+
+// RenameTag .
+func (db *DB) RenameTag(oldName, newName string) error {
+	tag, err := db.GetTag(oldName)
+	if err != nil {
+		return err
+	}
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := renameTag(tx, tag, newName); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func renameTag(tx storm.Node, tag Tag, newName string) error {
+	for _, noteID := range tag.NoteIDs {
+		var note Note
+		if err := tx.One("ID", noteID, &note); err != nil {
+			return err
+		}
+		note.RenameTag(tag.Name, newName)
+		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
+			return err
+		}
+	}
+	return tx.UpdateField(&tag, "Name", newName)
+}

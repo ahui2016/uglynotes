@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"net/url"
 	"strings"
 
 	"github.com/ahui2016/uglynotes/model"
@@ -48,4 +49,8 @@ func getProtected(c *fiber.Ctx) (protected bool, err error) {
 		protected = true
 	}
 	return
+}
+
+func getParams(c *fiber.Ctx, key string) (string, error) {
+	return url.QueryUnescape(c.Params(key))
 }

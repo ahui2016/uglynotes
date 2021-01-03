@@ -39,6 +39,7 @@ func main() {
 	htmlPage.Get("/note/edit", noteEditPage)
 	htmlPage.Get("/history", historyPage)
 	htmlPage.Get("/note/history", noteHistoryPage)
+	htmlPage.Get("/tag", tagPage)
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/notes/all", allNotesHandler)
@@ -57,13 +58,8 @@ func main() {
 	api.Get("/history/:id", getHistoryHandler)
 	api.Put("/history/protected", setProtected)
 
-	api.Get("/tag/:name", func(c *fiber.Ctx) error {
-		tag, err := db.GetTag(c.Params("name"))
-		if err != nil {
-			return err
-		}
-		return c.JSON(tag)
-	})
+	api.Get("/tag/:name/notes", getNotesByTag)
+	api.Put("/tag", renameTag)
 
 	log.Fatal(app.Listen(defaultAddress))
 }

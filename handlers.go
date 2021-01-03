@@ -55,6 +55,10 @@ func noteHistoryPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-history.html")
 }
 
+func tagPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/tag.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -231,4 +235,28 @@ func headLimit(s string, limit int) (head string) {
 		head = s[:limit]
 	}
 	return head
+}
+
+func renameTag(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	oldName, err1 := getFormValue(c, "old-name")
+	newName, err2 := getFormValue(c, "new-name")
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return db.RenameTag(oldName, newName)
+}
+
+func getNotesByTag(c *fiber.Ctx) error {
+	tagName, err := getParams(c, "name")
+	if err != nil {
+		return err
+	}
+	notes, err := db.GetByTag(tagName)
+	if err != nil {
+		return err
+	}
+	return c.JSON(notes)
 }

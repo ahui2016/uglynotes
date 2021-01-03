@@ -101,6 +101,11 @@ func (note *Note) SetTags(tags []string) {
 	note.Tags = stringset.Unique(tags)
 }
 
+// RenameTag .
+func (note *Note) RenameTag(oldName, newName string) {
+	note.Tags = stringset.AddAndDelete(note.Tags, oldName, newName)
+}
+
 // History 数据表，用于保存笔记的历史记录。
 type History struct {
 	ID        string // primary key, random

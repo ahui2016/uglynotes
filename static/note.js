@@ -19,8 +19,10 @@ ajaxGet('/api/note/'+id, null, that => {
     $('#tags').show();
     note.Tags.forEach(tag => {
       const tagElem = $('#tag-tmpl').contents().clone();
-      tagElem.text(tag);
-      tagElem.insertAfter('#tag-tmpl');    
+      tagElem
+        .text(tag)
+        .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
+      tagElem.insertBefore('#tag-tmpl');    
     });  
   }
 
@@ -38,18 +40,16 @@ ajaxGet('/api/note/'+id, null, that => {
 
 
 // 删除按钮
-delete_btn.click(event => {
-  event.preventDefault();
-  delete_btn.hide();
-  confirm_block.show();
-});
+delete_btn.click(delete_toggle);
 
 // 取消删除
-no_btn.click(event => {
+no_btn.click(delete_toggle);
+
+function delete_toggle(event) {
   event.preventDefault();
-  confirm_block.hide();
-  delete_btn.show();
-});
+  delete_btn.toggle();
+  confirm_block.toggle();
+}
 
 // 确认删除
 yes_btn.click(event => {
