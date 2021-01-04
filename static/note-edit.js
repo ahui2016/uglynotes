@@ -236,7 +236,7 @@ function insertHistoryAlert(history_id, where) {
   alertElem.find('.alert-time').text(dayjs().format('HH:mm:ss'));
   alertElem.find('.history-url')
     .text(history_id)
-    .attr('href', '/html/history?id='+history_id);
+    .attr('href', `/html/history?id=${history.ID}&noteid=${id}`);
   if (!where) where = '#alert-insert-after-here';
   alertElem.insertAfter(where);
 }

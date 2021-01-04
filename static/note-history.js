@@ -21,8 +21,8 @@ ajaxGet(`/api/note/${id}/history`, null, that => {
     item.find('.datetime').text(createdAt.format('MMM D, HH:mm'));
     item.find('.size').text(fileSizeToString(history.Size));
     item.find('.title')
-      .attr('href', '/html/history?id='+history.ID)
-      .text(history.Contents);
+      .text(history.Contents)
+      .attr('href', `/html/history?id=${history.ID}&noteid=${id}`);
   });
 
   $('#history-size')

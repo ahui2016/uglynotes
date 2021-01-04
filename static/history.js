@@ -8,7 +8,7 @@ const plaintext = $('.plaintext.contents');
 const markdown = $('.markdown.contents');
 
 const id = getUrlParam('id');
-let note_id;
+const note_id = getUrlParam('noteid');
 
 ajaxGet('/api/history/'+id, null, that => {
   const history = that.response;
@@ -17,10 +17,7 @@ ajaxGet('/api/history/'+id, null, that => {
   $('#note-id').text('id:'+history.NoteID);
   $('#history-id').text(history.ID);
   $('#size').text(fileSizeToString(history.Size));
-  if (!note_id) {
-    note_id = history.NoteID;
-    $('#histories').attr('href', '/html/note/history?id='+note_id);
-  }
+  $('#histories').attr('href', '/html/note/history?id='+note_id);
 
   const protected = $('#protected');
   const protectBtn = $('#protect');
@@ -52,12 +49,24 @@ ajaxGet('/api/history/'+id, null, that => {
   const clean = DOMPurify.sanitize(dirty);
   markdown.html(clean);
   
+  ajaxGet('/api/note/'+note_id, null, that => {
+    const current_contents = that.response.Contents;
+    const diffString = Diff.createPatch(
+      " ", current_contents, history.Contents
+    );
+    const diffJson = Diff2Html.parse(diffString);
+    const diffHtml = Diff2Html.html(diffJson, { 
+      drawFileList: false 
+    });
+    $('.diff.contents').html(diffHtml);
+  });
 }, function() {
   //onloadend
   $('#loading').hide();
 });
 
-$('input[name="note-type"]').change(() => {
+$('input[name="note-type"]').change(event => {
+  const value = event.currentTarget.value;
   plaintext.toggle();
   markdown.toggle();
 });

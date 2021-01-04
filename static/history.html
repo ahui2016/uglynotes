@@ -12,6 +12,13 @@
     <script src="/public/dayjs.min.js"></script>
     <script src="/public/marked.min.js"></script>
     <script src="/public/purify.min.js"></script>
+    <script src="/public/diff.js"></script>
+    <script src="/public/diff2html.min.js"></script>
+
+    <!-- <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script> -->
+    <!-- <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script> -->
+    <!-- <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" /> -->
+    <link rel="stylesheet" href="/public/diff2html.min.css">
 
     <style>
 .plaintext {
@@ -99,11 +106,15 @@
       <label for="plaintext-btn" id="plaintext-label">plaintext</label>
       <input type="radio" id="markdown-btn" name="note-type" value="markdown">
       <label for="markdown-btn">markdown</label>
+      <input type="radio" id="diff-btn" name="note-type" value="diff">
+      <label for="diff-btn">diff</label>
     </div>
 
     <pre class="plaintext contents"></pre>
 
     <div class="markdown contents" style="display: none;"></div>
+
+    <div class="diff contents" style="display: none;"></div>
 
     <script src="/public/util.js"></script>
     <script src="/static/history.js"></script>
