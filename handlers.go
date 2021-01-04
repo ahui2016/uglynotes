@@ -59,6 +59,10 @@ func tagPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tag.html")
 }
 
+func tagsPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/tags.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -76,7 +80,7 @@ func loginHandler(c *fiber.Ctx) error {
 	return db.SessionSet(c)
 }
 
-func allNotesHandler(c *fiber.Ctx) error {
+func getAllNotes(c *fiber.Ctx) error {
 	notes, err := db.AllNotes()
 	if err != nil {
 		return nil
@@ -259,4 +263,20 @@ func getNotesByTag(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(notes)
+}
+
+func getAllTags(c *fiber.Ctx) error {
+	tags, err := db.AllTags()
+	if err != nil {
+		return nil
+	}
+	return c.JSON(tags)
+}
+
+func allTagsByDate(c *fiber.Ctx) error {
+	tags, err := db.AllTagsByDate()
+	if err != nil {
+		return nil
+	}
+	return c.JSON(tags)
 }

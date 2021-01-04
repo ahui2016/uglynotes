@@ -4,6 +4,8 @@ const confirm_block = $('#confirm-block');
 const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
+const plaintext = $('.plaintext.contents');
+const markdown = $('.markdown.contents');
 
 const id = getUrlParam('id');
 let note_id;
@@ -44,24 +46,21 @@ ajaxGet('/api/history/'+id, null, that => {
     });
   }
 
-  const plaintext = $('.plaintext.contents');
   plaintext.text(history.Contents);
 
-  const markdown = $('.markdown.contents');
   const dirty = marked(history.Contents);
   const clean = DOMPurify.sanitize(dirty);
   markdown.html(clean);
-
-  $('input[name="note-type"]').change(() => {
-    plaintext.toggle();
-    markdown.toggle();
-  });
   
 }, function() {
   //onloadend
   $('#loading').hide();
 });
 
+$('input[name="note-type"]').change(() => {
+  plaintext.toggle();
+  markdown.toggle();
+});
 
 // 删除按钮
 delete_btn.click(delete_toggle);

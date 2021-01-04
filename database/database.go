@@ -159,6 +159,18 @@ func (db *DB) AllNotes() (notes []Note, err error) {
 	return
 }
 
+// AllTags fetches all tags, sorted by "Name".
+func (db *DB) AllTags() (tags []Tag, err error) {
+	err = db.DB.AllByIndex("Name", &tags)
+	return
+}
+
+// AllTagsByDate fetches all tags, sorted by "CreatedAt".
+func (db *DB) AllTagsByDate() (tags []Tag, err error) {
+	err = db.DB.AllByIndex("CreatedAt", &tags)
+	return
+}
+
 // ChangeType 同时也可能需要修改标题。
 func (db *DB) ChangeType(id string, noteType NoteType) error {
 	note, err := db.GetByID(id)

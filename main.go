@@ -40,9 +40,10 @@ func main() {
 	htmlPage.Get("/history", historyPage)
 	htmlPage.Get("/note/history", noteHistoryPage)
 	htmlPage.Get("/tag", tagPage)
+	htmlPage.Get("/tags", tagsPage)
 
 	api := app.Group("/api", checkLoginJSON)
-	api.Get("/notes/all", allNotesHandler)
+	api.Get("/notes/all", getAllNotes)
 	api.Get("/notes/size", notesSizeHandler)
 
 	api.Get("/note/:id", getNoteHandler)
@@ -58,6 +59,8 @@ func main() {
 	api.Get("/history/:id", getHistoryHandler)
 	api.Put("/history/protected", setProtected)
 
+	api.Get("/tags/all", getAllTags)
+	api.Get("/tags/all-by-date", allTagsByDate)
 	api.Get("/tag/:name/notes", getNotesByTag)
 	api.Put("/tag", renameTag)
 

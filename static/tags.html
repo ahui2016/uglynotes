@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <link rel="stylesheet" href="/public/style.css">
 
-    <title>Index .. uglynotes</title>
+    <title>Tags .. uglynotes</title>
 
     <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
     <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
@@ -20,13 +20,8 @@
     </style>
   </head>
   <body>
-    <div>uglynotes .. Index
-      <div id="head-buttons">
-        |
-        <a href="/html/note/new">New Note</a> |
-        <a href="/html/tags">Tags</a>
-        |
-      </div>
+    <div>
+        <a href="/home">uglynotes</a> .. Tags
     </div>
 
     <p id="loading" class="alert-info">Loading...</p>
@@ -43,20 +38,37 @@
       </p>
     </template>
 
-    <ul>
-      <template id="li-tmpl">
-        <li class="li">
-          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
-          <a class="title"></a><br>
-          <span class="tags"></span>
-        </li>
-      </template>
+    <div id="sort-by" style="margin: 1em 0 1em 0;">
+      Sort by
+      <input type="radio" id="by-date" name="sort-by" value="by-date" checked>
+      <label for="by-date">date</label>
+      <input type="radio" id="by-name" name="sort-by" value="by-name">
+      <label for="by-name">name</label>
+    </div>
+
+    <template id="li-tmpl">
+      <li class="li">
+        <span class="datetime"></span><br>
+        <a class="name"></a> (<span class="count"></span>)
+      </li>
+    </template>
+
+    <ul id="sort-by-name" style="display: none;">
+      <div></div>
+    </ul>
+
+    <ul id="sort-by-date">
+      <div></div>
     </ul>
 
     <!-- 容量 -->
-    <p id="notes-size" style="color: #999;"></p>
+    <p style="color: #999;">
+      共有
+      <span id="count"></span>
+      个标签
+    </p>
 
     <script src="/public/util.js"></script>
-    <script src="/static/index.js"></script>
+    <script src="/static/tags.js"></script>
   </body>
 </html>

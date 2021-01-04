@@ -20,7 +20,9 @@
     </style>
   </head>
   <body>
-    <div><a href="/home">uglynotes</a> .. Tag
+    <div><a href="/home">uglynotes</a> .. 
+      <a href="/html/tags">Tags</a> ..
+      Tag
       <div id="head-buttons">
         |
         <a id="delete" href="#">Delete</a>
@@ -81,7 +83,11 @@
     </ul>
 
     <!-- 容量 -->
-    <p id="notes-size" style="color: #999;"></p>
+    <p style="color: #999;">
+      该标签共有
+      <span id="count"></span>
+      条关联笔记
+    </p>
 
     <script src="/public/util.js"></script>
     <script src="/static/tag.js"></script>

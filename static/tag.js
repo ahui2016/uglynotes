@@ -9,6 +9,12 @@ const tag_name = getUrlParam('name');
 tagName.text(tag_name);
 
 ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
+  if (!that.response) {
+    $('#count').text(0);
+    return;
+  }
+  $('#count').text(that.response.length);
+
   that.response.forEach(note => {
     let updatedAt = dayjs(note.UpdatedAt);
     let item = $('#li-tmpl').contents().clone();
