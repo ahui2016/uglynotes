@@ -63,6 +63,9 @@ func main() {
 	api.Get("/tags/all-by-date", allTagsByDate)
 	api.Get("/tag/:name/notes", getNotesByTag)
 	api.Put("/tag", renameTag)
+	api.Delete("/tag/:name", func(c *fiber.Ctx) error {
+		return c.SendStatus(200)
+	})
 
 	log.Fatal(app.Listen(defaultAddress))
 }

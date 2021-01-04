@@ -73,8 +73,8 @@ function ajaxPut(form, url, btn, onload, onloadend) {
   ajaxDo('PUT', form, url, btn, onload, onloadend);
 }
 
-function ajaxDelete(form, url, btn, onload, onloadend) {
-  ajaxDo('DELETE', form, url, btn, onload, onloadend);
+function ajaxDelete(url, btn, onload, onloadend) {
+  ajaxDo('DELETE', null, url, btn, onload, onloadend);
 }
 
 function ajaxGet(url, btn, onload, onloadend) {
@@ -92,7 +92,7 @@ function getTags(tagsElem) {
   if (!tagsElem) {
     tagsElem = $('#tags');
   }
-  let trimmed = $('#tags').val().replace(/[#;,，\n]/g, ' ').trim();
+  let trimmed = tagsElem.val().replace(/[#;,，\n]/g, ' ').trim();
   if (trimmed.length == 0) {
     return [];
   }

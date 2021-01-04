@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -145,7 +146,7 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 	for _, tagName := range tagsToDelete {
 		tag := new(Tag)
 		if err := tx.One("Name", tagName, tag); err != nil {
-			return err
+			return fmt.Errorf("tag[%s] %w", tagName, err)
 		}
 		tag.Remove(noteID) // 每一个 tag 都与该 Note.ID 脱离关系
 		return tx.Update(tag)
@@ -328,10 +329,19 @@ func (db *DB) GetByTag(name string) (notes []Note, err error) {
 
 // RenameTag .
 func (db *DB) RenameTag(oldName, newName string) error {
+	_, err := db.GetTag(newName)
+	if err != nil && err != storm.ErrNotFound {
+		return err
+	}
+	if err == nil {
+		return errors.New("标签名称 [" + newName + "] 已存在")
+	}
+
 	tag, err := db.GetTag(oldName)
 	if err != nil {
 		return err
 	}
+
 	tx, err := db.DB.Begin(true)
 	if err != nil {
 		return err

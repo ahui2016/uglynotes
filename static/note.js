@@ -54,9 +54,7 @@ function delete_toggle(event) {
 // 确认删除
 yes_btn.click(event => {
   event.preventDefault();
-  let form = new FormData();
-  form.append('id', id);
-  ajaxDelete(form, '/api/note/'+id, yes_btn, function() {
+  ajaxDelete('/api/note/'+id, yes_btn, function() {
     $('.alert').hide();
     $('#head-buttons').hide();
     $('#title-block').hide();
