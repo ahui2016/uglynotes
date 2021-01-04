@@ -331,7 +331,7 @@ func (db *DB) GetByTag(name string) (notes []Note, err error) {
 func (db *DB) RenameTag(oldName, newName string) error {
 	_, err := db.GetTag(newName)
 	if err != nil && err != storm.ErrNotFound {
-		return err
+		return fmt.Errorf("%s %w", newName, err)
 	}
 	if err == nil {
 		return errors.New("标签名称 [" + newName + "] 已存在")
@@ -339,7 +339,7 @@ func (db *DB) RenameTag(oldName, newName string) error {
 
 	tag, err := db.GetTag(oldName)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s %w", oldName, err)
 	}
 
 	tx, err := db.DB.Begin(true)
@@ -358,12 +358,15 @@ func renameTag(tx storm.Node, tag Tag, newName string) error {
 	for _, noteID := range tag.NoteIDs {
 		var note Note
 		if err := tx.One("ID", noteID, &note); err != nil {
-			return err
+			return fmt.Errorf("%s %w", noteID, err)
 		}
 		note.RenameTag(tag.Name, newName)
 		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
 			return err
 		}
 	}
-	return tx.UpdateField(&tag, "Name", newName)
+	err1 := tx.DeleteStruct(&tag)
+	tag.Name = newName
+	err2 := tx.Save(&tag)
+	return util.WrapErrors(err1, err2)
 }
