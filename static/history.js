@@ -6,6 +6,7 @@ const yes_btn = $('#yes');
 const no_btn = $('#no');
 const plaintext = $('.plaintext.contents');
 const markdown = $('.markdown.contents');
+const diff = $('.diff.contents');
 
 const id = getUrlParam('id');
 const note_id = getUrlParam('noteid');
@@ -58,7 +59,7 @@ ajaxGet('/api/history/'+id, null, that => {
     const diffHtml = Diff2Html.html(diffJson, { 
       drawFileList: false 
     });
-    $('.diff.contents').html(diffHtml);
+    diff.html(diffHtml);
   });
 }, function() {
   //onloadend
@@ -66,9 +67,11 @@ ajaxGet('/api/history/'+id, null, that => {
 });
 
 $('input[name="note-type"]').change(event => {
+  plaintext.hide();
+  markdown.hide();
+  diff.hide();
   const value = event.currentTarget.value;
-  plaintext.toggle();
-  markdown.toggle();
+  $(`.${value}.contents`).show();
 });
 
 // 删除按钮
