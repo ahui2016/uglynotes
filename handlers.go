@@ -130,7 +130,7 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 	if err := note.SetContents(contents); err != nil {
 		return nil, err
 	}
-	note.Tags = tags
+	note.SetTags(tags)
 	return note, nil
 }
 

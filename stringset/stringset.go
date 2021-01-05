@@ -1,5 +1,7 @@
 package stringset
 
+import "sort"
+
 // Set .
 type Set struct {
 	Map map[string]bool
@@ -15,19 +17,20 @@ func NewSet(arr []string) *Set {
 }
 
 // Slice convert the set to a string slice.
-func (set *Set) Slice() []string {
-	var arr []string
+func (set *Set) Slice() (arr []string) {
 	for key := range set.Map {
 		if set.Map[key] {
 			arr = append(arr, key)
 		}
 	}
-	return arr
+	return
 }
 
-// Unique 利用 Set 对 arr 进行除重处理。
-func Unique(arr []string) []string {
-	return NewSet(arr).Slice()
+// UniqueSort 利用 Set 对 arr 进行除重和排序。
+func UniqueSort(arr []string) (result []string) {
+	result = NewSet(arr).Slice()
+	sort.Strings(result)
+	return
 }
 
 // AddAndDelete 利用 Set 对 arr 进行添加和删除操作。

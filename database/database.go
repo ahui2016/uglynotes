@@ -18,11 +18,15 @@ const cookieName = "uglynotesCookie"
 // historyLimit 限制每篇笔记可保留的历史上限。
 const historyLimit = 3
 
+// tagGroupLimit 限制标签组的上限。
+const tagGroupLimit = 100
+
 type (
 	Note       = model.Note
 	NoteType   = model.NoteType
 	History    = model.History
 	Tag        = model.Tag
+	TagGroup   = model.TagGroup
 	IncreaseID = model.IncreaseID
 )
 
@@ -65,7 +69,8 @@ func (db *DB) createIndexes() error {
 	err1 := db.DB.Init(&Note{})
 	err2 := db.DB.Init(&History{})
 	err3 := db.DB.Init(&Tag{})
-	return util.WrapErrors(err1, err2, err3)
+	err4 := db.DB.Init(&TagGroup{})
+	return util.WrapErrors(err1, err2, err3, err4)
 }
 
 // NewNote .
@@ -92,6 +97,9 @@ func (db *DB) Insert(note *Note) error {
 	if err := tx.Save(note); err != nil {
 		return err
 	}
+	if err := saveTagGroup(tx, note.Tags); err != nil {
+		return err
+	}
 	if err := addTags(tx, note.Tags, note.ID); err != nil {
 		return err
 	}
@@ -99,6 +107,38 @@ func (db *DB) Insert(note *Note) error {
 		return err
 	}
 	return db.increaseTotalSize(note.Size)
+}
+
+func saveTagGroup(tx storm.Node, tags []string) (err error) {
+	tagGroup := model.NewTagGroup(tags)
+	err = tx.Save(tagGroup)
+	if err == storm.ErrAlreadyExists {
+		if err = tx.One("Tags", tags, tagGroup); err != nil {
+			return
+		}
+		err = tx.UpdateField(tagGroup, "UpdatedAt", model.TimeNow())
+	}
+	return deleteOldTagGroup(tx)
+}
+
+func deleteOldTagGroup(tx storm.Node) (err error) {
+	groups, err := notReservedTagGroups(tx)
+	if err != nil {
+		return err
+	}
+	if len(groups) > tagGroupLimit {
+		oldGroup := groups[0]
+		err = tx.DeleteStruct(&oldGroup)
+	}
+	return
+}
+
+func notReservedTagGroups(tx storm.Node) (groups []TagGroup, err error) {
+	err = tx.Select(q.Eq("Reserved", false)).OrderBy("UpdatedAt").Find(&groups)
+	if err == storm.ErrNotFound {
+		err = nil
+	}
+	return
 }
 
 // 检查 ID 冲突
@@ -213,6 +253,9 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 	if err := tx.Update(&note); err != nil {
 		return err
 	}
+	if err := saveTagGroup(tx, tags); err != nil {
+		return err
+	}
 	return tx.Commit()
 }
 
@@ -259,8 +302,7 @@ func addHistory(tx storm.Node, note Note, history *History) error {
 	if err != nil {
 		return err
 	}
-	length := len(histories)
-	if length > historyLimit {
+	if len(histories) > historyLimit {
 		oldHistory := histories[0]
 		if err := deleteHistory(tx, oldHistory); err != nil {
 			return err

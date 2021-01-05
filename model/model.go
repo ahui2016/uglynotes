@@ -95,10 +95,10 @@ func (note *Note) SetContents(contents string) error {
 	return nil
 }
 
-// SetTags 可以对标签进行除重。
+// SetTags 可以对标签进行除重和排序。
 // 当不需要除重时可以直接操作 note.Tags
 func (note *Note) SetTags(tags []string) {
-	note.Tags = stringset.Unique(tags)
+	note.Tags = stringset.UniqueSort(tags)
 }
 
 // RenameTag .
@@ -195,4 +195,24 @@ func getMarkdownTitle(s string) string {
 		return matches[2]
 	}
 	return ""
+}
+
+// TagGroup 标签组，其中 Tags 应该除重和排序。
+type TagGroup struct {
+	ID        string   // primary key, random
+	Tags      []string `storm:"unique"`
+	Reserved  bool
+	CreatedAt string `storm:"index"` // ISO8601
+	UpdatedAt string `storm:"index"`
+}
+
+// NewTagGroup .
+func NewTagGroup(tags []string) *TagGroup {
+	now := TimeNow()
+	return &TagGroup{
+		ID:        RandomID(),
+		Tags:      tags,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 }
