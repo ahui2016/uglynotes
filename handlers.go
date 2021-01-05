@@ -280,3 +280,11 @@ func allTagsByDate(c *fiber.Ctx) error {
 	}
 	return c.JSON(tags)
 }
+
+func allTagGroups(c *fiber.Ctx) error {
+	groups, err := db.AllTagGroups()
+	if err != nil {
+		return nil
+	}
+	return c.JSON(groups)
+}

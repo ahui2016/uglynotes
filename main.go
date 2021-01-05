@@ -43,8 +43,8 @@ func main() {
 	htmlPage.Get("/tags", tagsPage)
 
 	api := app.Group("/api", checkLoginJSON)
-	api.Get("/notes/all", getAllNotes)
-	api.Get("/notes/size", notesSizeHandler)
+	api.Get("/note/all", getAllNotes)
+	api.Get("/note/all/size", notesSizeHandler)
 
 	api.Get("/note/:id", getNoteHandler)
 	api.Post("/note", newNoteHandler)
@@ -59,13 +59,15 @@ func main() {
 	api.Get("/history/:id", getHistoryHandler)
 	api.Put("/history/protected", setProtected)
 
-	api.Get("/tags/all", getAllTags)
-	api.Get("/tags/all-by-date", allTagsByDate)
+	api.Get("/tag/all", getAllTags)
+	api.Get("/tag/all-by-date", allTagsByDate)
 	api.Get("/tag/:name/notes", getNotesByTag)
 	api.Put("/tag", renameTag)
 	api.Delete("/tag/:name", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
+
+	api.Get("/tag/group/all", allTagGroups)
 
 	log.Fatal(app.Listen(defaultAddress))
 }

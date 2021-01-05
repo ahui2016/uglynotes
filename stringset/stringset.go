@@ -35,9 +35,11 @@ func UniqueSort(arr []string) (result []string) {
 
 // AddAndDelete 利用 Set 对 arr 进行添加和删除操作。
 // 适用于类似于重命名的情形。
-func AddAndDelete(arr []string, toDelete, toAdd string) []string {
+func AddAndDelete(arr []string, toDelete, toAdd string) (result []string) {
 	set := NewSet(arr)
 	set.Map[toDelete] = false
 	set.Map[toAdd] = true
-	return set.Slice()
+	result = set.Slice()
+	sort.Strings(result)
+	return
 }

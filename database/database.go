@@ -97,7 +97,7 @@ func (db *DB) Insert(note *Note) error {
 	if err := tx.Save(note); err != nil {
 		return err
 	}
-	if err := saveTagGroup(tx, note.Tags); err != nil {
+	if err := saveTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
 		return err
 	}
 	if err := addTags(tx, note.Tags, note.ID); err != nil {
@@ -109,11 +109,13 @@ func (db *DB) Insert(note *Note) error {
 	return db.increaseTotalSize(note.Size)
 }
 
-func saveTagGroup(tx storm.Node, tags []string) (err error) {
-	tagGroup := model.NewTagGroup(tags)
+func saveTagGroup(tx storm.Node, tagGroup *TagGroup) (err error) {
+	if len(tagGroup.Tags) < 2 {
+		return
+	}
 	err = tx.Save(tagGroup)
 	if err == storm.ErrAlreadyExists {
-		if err = tx.One("Tags", tags, tagGroup); err != nil {
+		if err = tx.One("Tags", tagGroup.Tags, tagGroup); err != nil {
 			return
 		}
 		err = tx.UpdateField(tagGroup, "UpdatedAt", model.TimeNow())
@@ -212,6 +214,16 @@ func (db *DB) AllTagsByDate() (tags []Tag, err error) {
 	return
 }
 
+// AllTagGroups fetches all tag-groups, sortd by "UpdatedAt".
+func (db *DB) AllTagGroups() (groups []TagGroup, err error) {
+	return txAllTagGroups(db.DB)
+}
+
+func txAllTagGroups(tx storm.Node) (groups []TagGroup, err error) {
+	err = tx.AllByIndex("UpdatedAt", &groups)
+	return
+}
+
 // ChangeType 同时也可能需要修改标题。
 func (db *DB) ChangeType(id string, noteType NoteType) error {
 	note, err := db.GetByID(id)
@@ -249,11 +261,11 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 	}
 
 	// 最后更新 note.Tags
-	note.Tags = tags
+	note.SetTags(tags)
 	if err := tx.Update(&note); err != nil {
 		return err
 	}
-	if err := saveTagGroup(tx, tags); err != nil {
+	if err := saveTagGroup(tx, model.NewTagGroup(tags)); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -397,6 +409,16 @@ func (db *DB) RenameTag(oldName, newName string) error {
 }
 
 func renameTag(tx storm.Node, tag Tag, newName string) error {
+	err1 := notesRenameTag(tx, tag, newName)
+	err2 := tagGroupsRenameTag(tx, tag.Name, newName)
+	err3 := tx.DeleteStruct(&tag)
+
+	tag.Name = newName
+	err4 := tx.Save(&tag)
+	return util.WrapErrors(err1, err2, err3, err4)
+}
+
+func notesRenameTag(tx storm.Node, tag Tag, newName string) error {
 	for _, noteID := range tag.NoteIDs {
 		var note Note
 		if err := tx.One("ID", noteID, &note); err != nil {
@@ -407,8 +429,19 @@ func renameTag(tx storm.Node, tag Tag, newName string) error {
 			return err
 		}
 	}
-	err1 := tx.DeleteStruct(&tag)
-	tag.Name = newName
-	err2 := tx.Save(&tag)
-	return util.WrapErrors(err1, err2)
+	return nil
+}
+
+func tagGroupsRenameTag(tx storm.Node, oldName, newName string) error {
+	groups, err := txAllTagGroups(tx)
+	if err != nil {
+		return err
+	}
+	for _, group := range groups {
+		group.RenameTag(oldName, newName)
+		if err := tx.UpdateField(&group, "Tags", group.Tags); err != nil {
+			return err
+		}
+	}
+	return nil
 }

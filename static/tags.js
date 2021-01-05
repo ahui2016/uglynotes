@@ -1,4 +1,4 @@
-ajaxGet('/api/tags/all', null, that => {
+ajaxGet('/api/tag/all', null, that => {
   if (!that.response) {
     $('#count').text(0);
     return;
@@ -20,7 +20,7 @@ ajaxGet('/api/tags/all', null, that => {
   $('#loading').hide();
 });
 
-ajaxGet('/api/tags/all-by-date', null, that => {
+ajaxGet('/api/tag/all-by-date', null, that => {
   that.response.forEach(tag => {
     let createdAt = dayjs(tag.CreatedAt);
     let item = $('#li-tmpl').contents().clone();

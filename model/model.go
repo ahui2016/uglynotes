@@ -211,8 +211,13 @@ func NewTagGroup(tags []string) *TagGroup {
 	now := TimeNow()
 	return &TagGroup{
 		ID:        RandomID(),
-		Tags:      tags,
+		Tags:      stringset.UniqueSort(tags),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
+}
+
+// RenameTag .
+func (group *TagGroup) RenameTag(oldName, newName string) {
+	group.Tags = stringset.AddAndDelete(group.Tags, oldName, newName)
 }

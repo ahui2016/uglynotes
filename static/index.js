@@ -1,4 +1,4 @@
-ajaxGet('/api/notes/all', null, that => {
+ajaxGet('/api/note/all', null, that => {
   that.response.forEach(note => {
     let updatedAt = dayjs(note.UpdatedAt);
     let item = $('#li-tmpl').contents().clone();
@@ -15,7 +15,7 @@ ajaxGet('/api/notes/all', null, that => {
   $('#loading').hide();
 });
 
-ajaxGet("/api/notes/size", null, that => {
+ajaxGet("/api/note/all/size", null, that => {
   const totalSize = that.response.totalSize;
   const capacity = that.response.capacity;
   const used = fileSizeToString(totalSize, 0);
