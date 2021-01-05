@@ -28,6 +28,9 @@ func (set *Set) Slice() (arr []string) {
 
 // UniqueSort 利用 Set 对 arr 进行除重和排序。
 func UniqueSort(arr []string) (result []string) {
+	if len(arr) == 0 {
+		return
+	}
 	result = NewSet(arr).Slice()
 	sort.Strings(result)
 	return

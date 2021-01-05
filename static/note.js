@@ -15,7 +15,7 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#edit').attr('href', '/html/note/edit?id='+note.ID);
   $('#history').attr('href', '/html/note/history?id='+note.ID)
 
-  if (note.Tags.length > 0) {
+  if (note.Tags && note.Tags.length > 0) {
     $('#tags').show();
     note.Tags.forEach(tag => {
       const tagElem = $('#tag-tmpl').contents().clone();

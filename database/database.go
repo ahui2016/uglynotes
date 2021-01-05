@@ -191,7 +191,9 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 			return fmt.Errorf("tag[%s] %w", tagName, err)
 		}
 		tag.Remove(noteID) // 每一个 tag 都与该 Note.ID 脱离关系
-		return tx.Update(tag)
+		if err := tx.UpdateField(tag, "NoteIDs", tag.NoteIDs); err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -262,7 +264,7 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 
 	// 最后更新 note.Tags
 	note.SetTags(tags)
-	if err := tx.Update(&note); err != nil {
+	if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
 		return err
 	}
 	if err := saveTagGroup(tx, model.NewTagGroup(tags)); err != nil {
