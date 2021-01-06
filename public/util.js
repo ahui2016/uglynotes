@@ -92,7 +92,7 @@ function getTags(tagsElem) {
   if (!tagsElem) {
     tagsElem = $('#tags');
   }
-  let trimmed = tagsElem.val().replace(/[#;,，\n]/g, ' ').trim();
+  let trimmed = tag_replace(tagsElem.val());
   if (trimmed.length == 0) {
     return [];
   }
@@ -100,10 +100,15 @@ function getTags(tagsElem) {
   return new Set(arr);
 }
 
+function tag_replace(tags) {
+  return tags.replace(/[#;,，'"\+\-\n]/g, ' ').trim();
+}
+
 // 把集合数组转化为字符串。
 function addPrefix(aSet, prefix) {
   if (!aSet) return '';
   let arr = Array.from(aSet);
+  if (!prefix) prefix = '';
   return arr.map(x => prefix + x).join(' ');
 }
 

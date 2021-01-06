@@ -63,6 +63,10 @@ func tagsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tags.html")
 }
 
+func searchPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/search.html")
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")

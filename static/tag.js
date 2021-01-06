@@ -69,7 +69,7 @@ ok.click(() => {
     insertInfoAlert('重命名成功时会自动刷新页面');
     window.setTimeout(function(){
       window.location = '/html/tag/?name=' + encodeURIComponent(new_name)
-    }, 10000);
+    }, 5000);
   });  
 });
 
@@ -104,7 +104,7 @@ yes_btn.click(event => {
 
 // 对标签文本框内的字符串进行处理，提取出一个标签。
 function getTag(tagsElem) {
-  let trimmed = tagsElem.val().replace(/[#;,，\n]/g, ' ').trim();
+  let trimmed = tag_replace(tagsElem.val());
   if (trimmed.length == 0) {
     return '';
   }

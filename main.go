@@ -41,6 +41,7 @@ func main() {
 	htmlPage.Get("/note/history", noteHistoryPage)
 	htmlPage.Get("/tag", tagPage)
 	htmlPage.Get("/tags", tagsPage)
+	htmlPage.Get("/search", searchPage)
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/note/all", getAllNotes)
@@ -66,8 +67,16 @@ func main() {
 	api.Delete("/tag/:name", func(c *fiber.Ctx) error {
 		return c.SendStatus(200)
 	})
-
 	api.Get("/tag/group/all", allTagGroups)
+
+	api.Get("/search/tags/:tags", func(c *fiber.Ctx) error {
+		tags, err := getParams(c, "tags")
+		if err != nil {
+			return err
+		}
+		log.Print(tags)
+		return jsonMessage(c, tags)
+	})
 
 	log.Fatal(app.Listen(defaultAddress))
 }

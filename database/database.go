@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
@@ -28,6 +29,7 @@ type (
 	Tag        = model.Tag
 	TagGroup   = model.TagGroup
 	IncreaseID = model.IncreaseID
+	Set        = stringset.Set
 )
 
 // DB .
@@ -262,12 +264,14 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 		return err
 	}
 
+	// 更新标签组
+	if err := saveTagGroup(tx, model.NewTagGroup(tags)); err != nil {
+		return err
+	}
+
 	// 最后更新 note.Tags
 	note.SetTags(tags)
 	if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
-		return err
-	}
-	if err := saveTagGroup(tx, model.NewTagGroup(tags)); err != nil {
 		return err
 	}
 	return tx.Commit()
@@ -446,4 +450,30 @@ func tagGroupsRenameTag(tx storm.Node, oldName, newName string) error {
 		}
 	}
 	return nil
+}
+
+// SearchTagGroup 通过标签组搜索笔记。
+// 如果其中一个标签不存在，会返回错误，另外一种处理方式是忽略找不到的标签。
+// 但我选择了返回错误，因为本项目的设计思想之一是 informational(更多信息)。
+func (db *DB) SearchTagGroup(tags []string) ([]Note, error) {
+	var idGroups []*Set
+	for i := range tags {
+		var tag Tag
+		if err := db.DB.One("Name", tags[i], &tag); err != nil {
+			return nil, fmt.Errorf("Tag[%s] %w", tags[i], err)
+		}
+		idGroups = append(idGroups, stringset.NewSet(tag.NoteIDs))
+	}
+	noteIDs := stringset.Intersect(idGroups).Slice()
+	return db.getByIDs(noteIDs)
+}
+
+func (db *DB) getByIDs(noteIDs []string) ([]Note, error) {
+	var notes []Note
+	err := db.DB.Select(q.In("ID", noteIDs), q.Eq("DeletedAt", "")).
+		OrderBy("UpdatedAt").Find(&notes)
+	if err == storm.ErrNotFound {
+		err = nil
+	}
+	return notes, err
 }

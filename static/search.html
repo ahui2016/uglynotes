@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>Search .. uglynotes</title>
+
+    <!-- <script src="https://unpkg.com/jquery@3.5.1/dist/jquery.min.js"></script> -->
+    <!-- <script src="https://unpkg.com/dayjs@1.9.7/dayjs.min.js"></script> -->
+    <script src="/public/jquery-3.5.1.min.js"></script>
+    <script src="/public/dayjs.min.js"></script>
+
+    <style>
+      
+.li .id {
+    text-transform: uppercase;
+}
+
+    </style>
+  </head>
+  <body>
+    <div>
+      uglynotes .. Search
+    </div>
+
+    <form autocomplete="off" style="margin-top: 1em;">      
+      <div id="search-options">
+        Search for
+        <input type="radio" id="for-tags" name="search-for" value="tags" checked>
+        <label for="for-tags">tags</label>
+      </div>
+
+      <label>
+        <input type="text" id="search-input" autofocus required>
+      </label>
+      <input type="submit" value="search" id="search-btn">
+    </form>
+
+    <p id="loading" class="alert-info"></p>
+
+    <!-- 容量 -->
+    <p id="notes-size" style="color: #999;"></p>
+    
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert alert-success">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <ul>
+      <template id="li-tmpl">
+        <li class="li">
+          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
+          <a class="title"></a><br>
+          <span class="tags"></span>
+        </li>
+      </template>
+    </ul>
+
+    <script src="/public/util.js"></script>
+    <script src="/static/search.js"></script>
+  </body>
+</html>
