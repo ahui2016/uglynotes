@@ -1,8 +1,8 @@
 // 创建历史版本的间隔时间
-const DelayOfAutoUpdate = 1000 * 10
+const DelayOfAutoUpdate = 1000 * 60
 
 // setInterval 自动运行次数的上限
-const AutoUpdateLimit = 3
+const AutoUpdateLimit = 100
 
 // 插入出错提示
 function insertErrorAlert(msg, where) {
@@ -33,7 +33,7 @@ function insertAlert(type, msg, where) {
 }
 
 // 向服务器提交表单，在等待过程中 btn 会失效，避免重复提交。
-function ajaxDo(method, form, url, btn, onload, onloadend) {
+function ajaxDo(method, form, url, btn, onload, onloadend, not200) {
   if (btn) {
     btn.prop('disabled', true);
   }
@@ -49,6 +49,7 @@ function ajaxDo(method, form, url, btn, onload, onloadend) {
     } else {
         let errMsg = !this.response ? this.status : this.response.message;
         insertErrorAlert(errMsg);
+        if (not200) not200(this);
     }
   });
   xhr.addEventListener('loadend', function() {
@@ -77,8 +78,8 @@ function ajaxDelete(url, btn, onload, onloadend) {
   ajaxDo('DELETE', null, url, btn, onload, onloadend);
 }
 
-function ajaxGet(url, btn, onload, onloadend) {
-  ajaxDo('GET', null, url, btn, onload, onloadend);
+function ajaxGet(url, btn, onload, onloadend, not200) {
+  ajaxDo('GET', null, url, btn, onload, onloadend, not200);
 }
 
 // 获取地址栏的参数。

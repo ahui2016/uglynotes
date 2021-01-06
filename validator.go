@@ -54,3 +54,8 @@ func getProtected(c *fiber.Ctx) (protected bool, err error) {
 func getParams(c *fiber.Ctx, key string) (string, error) {
 	return url.QueryUnescape(c.Params(key))
 }
+
+func getTagGroup(c *fiber.Ctx) ([]string, error) {
+	tagsString, err := getParams(c, "tags")
+	return strings.Split(tagsString, " "), err
+}

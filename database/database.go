@@ -17,7 +17,7 @@ import (
 const cookieName = "uglynotesCookie"
 
 // historyLimit 限制每篇笔记可保留的历史上限。
-const historyLimit = 3
+const historyLimit = 100
 
 // tagGroupLimit 限制标签组的上限。
 const tagGroupLimit = 100

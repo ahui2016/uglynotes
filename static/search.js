@@ -1,6 +1,7 @@
 const search_input = $('#search-input');
 const search_btn = $('#search-btn');
 const loading = $('#loading');
+const note_list = $('ul');
 
 let searchFor = 'tags';
 
@@ -25,8 +26,26 @@ function searchTags() {
   const url = '/api/search/tags/' + encodeURIComponent(tags);
   loading.text('searching: ' + addPrefix(tagSet, '#'));
   ajaxGet(url, search_btn, that => {
-    console.log(that.response);
-    insertSuccessAlert('ok');
+    $('.alert').remove();
+    $('#notes-count').text(`找到 ${that.response.length} 篇笔记`);
+    refreshNoteList(that.response);
+  }, null, function() {
+    // not200
+    note_list.html('');
   });
+}
 
+function refreshNoteList(notes) {
+  note_list.html('');
+  notes.forEach(note => {
+    let updatedAt = dayjs(note.UpdatedAt);
+    let item = $('#li-tmpl').contents().clone();
+    item.find('.id').text(note.ID);
+    item.find('.datetime').text(updatedAt.format('MMM D, HH:mm'));
+    item.find('.title')
+      .attr('href', '/html/note?id='+note.ID)
+      .text(note.Title);
+    item.find('.tags').text(addPrefix(note.Tags, '#'));
+    item.appendTo(note_list);
+  });
 }

@@ -21,7 +21,7 @@
   </head>
   <body>
     <div>
-      uglynotes .. Search
+      <a href="/home">uglynotes</a> .. Search
     </div>
 
     <form autocomplete="off" style="margin-top: 1em;">      
@@ -40,7 +40,7 @@
     <p id="loading" class="alert-info"></p>
 
     <!-- 容量 -->
-    <p id="notes-size" style="color: #999;"></p>
+    <p id="notes-count" style="color: #999;"></p>
     
     <!-- 默认提示位置 -->
     <template id="alert-insert-after-here"></template>
@@ -72,15 +72,14 @@
       </p>
     </template>
 
-    <ul>
-      <template id="li-tmpl">
-        <li class="li">
-          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
-          <a class="title"></a><br>
-          <span class="tags"></span>
-        </li>
-      </template>
-    </ul>
+    <ul></ul>
+    <template id="li-tmpl">
+      <li class="li">
+        [id:<strong class="id"></strong>] <span class="datetime"></span><br>
+        <a class="title"></a><br>
+        <span class="tags"></span>
+      </li>
+    </template>
 
     <script src="/public/util.js"></script>
     <script src="/static/search.js"></script>

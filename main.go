@@ -69,14 +69,7 @@ func main() {
 	})
 	api.Get("/tag/group/all", allTagGroups)
 
-	api.Get("/search/tags/:tags", func(c *fiber.Ctx) error {
-		tags, err := getParams(c, "tags")
-		if err != nil {
-			return err
-		}
-		log.Print(tags)
-		return jsonMessage(c, tags)
-	})
+	api.Get("/search/tags/:tags", searchTagGroup)
 
 	log.Fatal(app.Listen(defaultAddress))
 }

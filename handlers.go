@@ -292,3 +292,15 @@ func allTagGroups(c *fiber.Ctx) error {
 	}
 	return c.JSON(groups)
 }
+
+func searchTagGroup(c *fiber.Ctx) error {
+	tags, err := getTagGroup(c)
+	if err != nil {
+		return err
+	}
+	notes, err := db.SearchTagGroup(tags)
+	if err != nil {
+		return err
+	}
+	return c.JSON(notes)
+}
