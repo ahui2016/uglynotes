@@ -1,7 +1,10 @@
+const tagGroup = getUrlParam('tags');
+
 const search_input = $('#search-input');
 const search_btn = $('#search-btn');
 const loading = $('#loading');
 const note_list = $('ul');
+const notesCount = $('#notes-count');
 
 let searchFor = 'tags';
 
@@ -27,11 +30,14 @@ function searchTags() {
   loading.text('searching: ' + addPrefix(tagSet, '#'));
   ajaxGet(url, search_btn, that => {
     $('.alert').remove();
-    $('#notes-count').text(`找到 ${that.response.length} 篇笔记`);
+    notesCount
+      .show()
+      .text(`找到 ${that.response.length} 篇笔记`);
     refreshNoteList(that.response);
   }, null, function() {
     // not200
     note_list.html('');
+    notesCount.hide();
   });
 }
 
@@ -48,4 +54,10 @@ function refreshNoteList(notes) {
     item.find('.tags').text(addPrefix(note.Tags, '#'));
     item.appendTo(note_list);
   });
+}
+
+if (tagGroup) {
+  // tag_group = tagGroup.split(' ');
+  search_input.val(tagGroup);
+  search_btn.click();
 }

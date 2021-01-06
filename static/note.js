@@ -22,8 +22,17 @@ ajaxGet('/api/note/'+id, null, that => {
       tagElem
         .text(tag)
         .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
+      tagElem.insertBefore('#tag-tmpl');
+    });
+    if (note.Tags.length > 1) {
+      const tagElem = $('#tag-tmpl').contents().clone();
+      tagElem
+        .text('group')
+        .addClass('group')
+        .attr('title', 'search tag group')
+        .attr('href', '/html/search?tags=' + encodeURIComponent(addPrefix(note.Tags)));
       tagElem.insertBefore('#tag-tmpl');    
-    });  
+    }
   }
 
   if (note.Type == 'Markdown') {
