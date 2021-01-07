@@ -29,6 +29,15 @@
 .group:hover {
   background-color:darkcyan
 }
+li button {
+  display: none;
+}
+li:hover .enabled {
+  display: inline;
+}
+.protected {
+  color: #999;;
+}
     </style>
   </head>
   <body>
@@ -53,8 +62,13 @@
     <ul>
       <template id="li-tmpl">
         <li class="li">
-          <span class="datetime"></span><br>
+          <span class="datetime"></span>
+          <span class="protected" style="display: none;">PROTECTED</span><br>
           <a class="tag group">group</a>
+          <button class="protect enabled">protect</button>
+          <button class="unprotect">unprotect</button>
+          <button class="create enabled" title="create a new note">create</button>
+          <button class="delete enabled" title="delete this tag group">delete</button>
         </li>
       </template>
     </ul>

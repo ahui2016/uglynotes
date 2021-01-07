@@ -69,3 +69,9 @@ pre {
     color: #999;
     font-size: smaller;
 }
+
+.protected {
+    font-size: smaller;
+    background-color: lightgreen;
+  }
+  

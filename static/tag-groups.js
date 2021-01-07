@@ -20,6 +20,20 @@ ajaxGet('/api/tag/group/all', null, that => {
         .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
       tagElem.insertBefore(groupElem);
     });
+
+    const protect = item.find('.protect');
+    const unprotect = item.find('.unprotect');
+    const protected = item.find('.protected');
+    protect.click(() => {
+      protected.toggle();
+      protect.removeClass('enabled');
+      unprotect.addClass('enabled');
+    });
+    unprotect.click(() => {
+      protected.toggle();
+      unprotect.removeClass('enabled');
+      protect.addClass('enabled');
+    });
   });
 }, () => {
   // onloadend

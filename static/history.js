@@ -20,7 +20,7 @@ ajaxGet('/api/history/'+id, null, that => {
   $('#size').text(fileSizeToString(history.Size));
   $('#histories').attr('href', '/html/note/history?id='+note_id);
 
-  const protected = $('#protected');
+  const protected = $('.protected');
   const protectBtn = $('#protect');
   const unprotectBtn = $('#unprotect');
   protectBtn.click(setProtected);
