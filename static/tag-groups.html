@@ -38,6 +38,9 @@ li:hover .enabled {
 .protected {
   color: #999;;
 }
+#tags-input {
+  width: 300px;
+}
     </style>
   </head>
   <body>
@@ -45,10 +48,35 @@ li:hover .enabled {
         <a href="/home">uglynotes</a> .. Tag Groups
     </div>
 
+    <form autocomplete="off" style="margin-top: 1em;">
+      <label>
+        <input type="text" id="tags-input" autofocus required>
+      </label>
+      <input type="submit" value="add" id="add-btn">
+    </form>
+
     <p id="loading" class="alert-info">Loading...</p>
     
     <!-- 默认提示位置 -->
     <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert alert-success">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
 
     <!-- 错误提示 -->
     <template id="alert-danger-tmpl">

@@ -95,7 +95,7 @@ function getTags(tagsElem) {
   }
   let trimmed = tag_replace(tagsElem.val());
   if (trimmed.length == 0) {
-    return [];
+    return new Set();
   }
   let arr = trimmed.split(/ +/);
   return new Set(arr);

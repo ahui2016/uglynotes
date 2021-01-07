@@ -23,13 +23,27 @@ let oldTags = new Set();
 let autoSubmitID;
 let autoUpdateCount = 1;
 
-/* 开始初始化表单 */
+/* 初始化 note/new 表单 */
 
-const param_id = getUrlParam('id');
+if (document.location.pathname == "/html/note/new") {
+  loading.hide();
+  const param_tags = getUrlParam('tags');
+  if (param_tags) {
+    tagsElem.val(param_tags);
+    tags = getTags();
+    tagsElem.val(addPrefix(tags, '#'));
+  }
+}
 
-if (!param_id) loading.hide();
+/* 初始化 note/edit 表单 */
 
-if (param_id) {
+if (document.location.pathname == "/html/note/edit") {
+  const param_id = getUrlParam('id');
+  if (param_id) initEditForm(param_id);
+}
+
+
+function initEditForm(param_id) {
   // initAjaxGet 函数定义在本文件末尾。
   initAjaxGet('/api/note/'+param_id, function() {
     if (this.status == 200) {

@@ -126,7 +126,7 @@ func saveTagGroup(tx storm.Node, tagGroup *TagGroup) (err error) {
 }
 
 func deleteOldTagGroup(tx storm.Node) (err error) {
-	groups, err := notReservedTagGroups(tx)
+	groups, err := notProtectedTagGroups(tx)
 	if err != nil {
 		return err
 	}
@@ -137,8 +137,8 @@ func deleteOldTagGroup(tx storm.Node) (err error) {
 	return
 }
 
-func notReservedTagGroups(tx storm.Node) (groups []TagGroup, err error) {
-	err = tx.Select(q.Eq("Reserved", false)).OrderBy("UpdatedAt").Find(&groups)
+func notProtectedTagGroups(tx storm.Node) (groups []TagGroup, err error) {
+	err = tx.Select(q.Eq("Protected", false)).OrderBy("UpdatedAt").Find(&groups)
 	if err == storm.ErrNotFound {
 		err = nil
 	}
