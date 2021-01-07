@@ -7,6 +7,11 @@ $('#note-id')
 let history_size = 0;
 
 ajaxGet(`/api/note/${id}/history`, null, that => {
+  if (!that.response) {
+    insertInfoAlert('该笔记没有历史版本');
+    $('#size-block').hide();
+    return;
+  }
   that.response.forEach(history => {
     history_size += history.Size;
 

@@ -30,10 +30,12 @@ function searchTags() {
   loading.text('searching: ' + addPrefix(tagSet, '#'));
   ajaxGet(url, search_btn, that => {
     $('.alert').remove();
+    let notes = [];
+    if (that.response) notes = that.response;
     notesCount
       .show()
-      .text(`找到 ${that.response.length} 篇笔记`);
-    refreshNoteList(that.response);
+      .text(`找到 ${notes.length} 篇笔记`);
+    refreshNoteList(notes);
   }, null, function() {
     // not200
     note_list.html('');

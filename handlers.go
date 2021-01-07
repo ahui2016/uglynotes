@@ -63,6 +63,10 @@ func tagsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tags.html")
 }
 
+func tagGroupsPage(c *fiber.Ctx) error {
+	return c.SendFile("./static/tag-groups.html")
+}
+
 func searchPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/search.html")
 }

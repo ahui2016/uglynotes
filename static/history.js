@@ -57,7 +57,7 @@ ajaxGet('/api/history/'+id, null, that => {
     );
     const diffJson = Diff2Html.parse(diffString);
     const diffHtml = Diff2Html.html(diffJson, { 
-      drawFileList: false 
+      drawFileList: false,
     });
     diff.html(diffHtml);
   });

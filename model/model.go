@@ -46,7 +46,6 @@ type Note struct {
 	Tags      []string // []Tag.Name
 	CreatedAt string   `storm:"index"` // ISO8601
 	UpdatedAt string   `storm:"index"`
-	DeletedAt string   `storm:"index"`
 }
 
 // NewNote .
@@ -201,7 +200,7 @@ func getMarkdownTitle(s string) string {
 type TagGroup struct {
 	ID        string   // primary key, random
 	Tags      []string `storm:"unique"`
-	Reserved  bool
+	Protected bool
 	CreatedAt string `storm:"index"` // ISO8601
 	UpdatedAt string `storm:"index"`
 }

@@ -470,7 +470,7 @@ func (db *DB) SearchTagGroup(tags []string) ([]Note, error) {
 
 func (db *DB) getByIDs(noteIDs []string) ([]Note, error) {
 	var notes []Note
-	err := db.DB.Select(q.In("ID", noteIDs), q.Eq("DeletedAt", "")).
+	err := db.DB.Select(q.In("ID", noteIDs)).
 		OrderBy("UpdatedAt").Find(&notes)
 	if err == storm.ErrNotFound {
 		err = nil
