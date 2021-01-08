@@ -69,6 +69,8 @@ func main() {
 		return c.SendStatus(200)
 	})
 	api.Get("/tag/group/all", allTagGroups)
+	api.Post("/tag/group", addTagGroup)
+	api.Put("/tag/group/protected", setTagGroupProtected)
 
 	api.Get("/search/tags/:tags", searchTagGroup)
 

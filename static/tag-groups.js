@@ -38,8 +38,21 @@ function addTagGroup(group) {
     protect.toggleClass('enabled');
     unprotect.toggleClass('enabled');
   }
-  protect.click(toggle_protect);
-  unprotect.click(toggle_protect);
+  
+  function setProtected(event) {
+    const form = new FormData();
+    form.append("id", group.ID);
+    form.append("protected", !group.Protected);
+    ajaxPut(
+      form, '/api/tag/group/protected', $(event.currentTarget), () => {
+      toggle_protect();
+    });
+  }
+
+  if (group.Protected) toggle_protect();
+
+  protect.click(setProtected);
+  unprotect.click(setProtected);
 
   item.find('.create').click(() => {
     window.location = '/html/note/new?tags=' + encodedTags;
@@ -56,11 +69,11 @@ add_btn.click(event => {
     insertInfoAlert('标签组至少需要 2 个标签');
     return;
   }
-  const group = {
-    Tags: tagsSet,
-    UpdatedAt: dayjs().format(),
-  };
-  addTagGroup(group);
-  $('.alert').remove();
-  insertSuccessAlert('新标签组添加成功');
+  const form = new FormData();
+  form.append('tags', JSON.stringify(Array.from(tagsSet)));
+  ajaxPost(form, '/api/tag/group', add_btn, that => {
+    addTagGroup(that.response);
+    $('.alert').remove();
+    insertSuccessAlert('新标签组添加成功');  
+  });
 });

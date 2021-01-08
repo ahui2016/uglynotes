@@ -111,6 +111,11 @@ func (db *DB) Insert(note *Note) error {
 	return db.increaseTotalSize(note.Size)
 }
 
+// SaveTagGroup .
+func (db *DB) SaveTagGroup(tagGroup *TagGroup) error {
+	return saveTagGroup(db.DB, tagGroup)
+}
+
 func saveTagGroup(tx storm.Node, tagGroup *TagGroup) (err error) {
 	if len(tagGroup.Tags) < 2 {
 		return
@@ -367,6 +372,12 @@ func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, 
 func (db *DB) SetProtected(historyID string, protected bool) error {
 	return db.DB.UpdateField(
 		&History{ID: historyID}, "Protected", protected)
+}
+
+// SetTagGroupProtected .
+func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
+	return db.DB.UpdateField(
+		&TagGroup{ID: groupID}, "Protected", protected)
 }
 
 // GetByTag returns notes without contents.

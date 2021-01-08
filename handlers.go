@@ -213,6 +213,18 @@ func setProtected(c *fiber.Ctx) error {
 	return db.SetProtected(historyID, protected)
 }
 
+func setTagGroupProtected(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	groupID, err1 := getID(c)
+	protected, err2 := getProtected(c)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return db.SetTagGroupProtected(groupID, protected)
+}
+
 func noteHistory(c *fiber.Ctx) error {
 	histories, err := db.NoteHistories(c.Params("id"))
 	if err != nil {
@@ -307,4 +319,19 @@ func searchTagGroup(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(notes)
+}
+
+func addTagGroup(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	tags, err := getTags(c)
+	if err != nil {
+		return err
+	}
+	group := model.NewTagGroup(tags)
+	if err := db.SaveTagGroup(group); err != nil {
+		return err
+	}
+	return c.JSON(group)
 }
