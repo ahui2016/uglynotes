@@ -12,17 +12,23 @@ ajaxGet('/api/tag/group/all', null, that => {
 });
 
 function addTagGroup(group) {
+  const item_id = 'item-'+group.ID;
   const tagsString = addPrefix(group.Tags);
   const encodedTags = encodeURIComponent(tagsString);
   const updatedAt = dayjs(group.UpdatedAt);
 
   const item = $('#li-tmpl').contents().clone();
+  item.insertAfter('#li-tmpl');
   const groupElem = item.find('.group');
   const protect = item.find('.protect');
   const unprotect = item.find('.unprotect');
   const protected = item.find('.protected');
-  item.insertAfter('#li-tmpl');
+  const delete_btn = item.find('.delete');
+  const confirm_block = item.find('.confirm-block');
+  const no_btn = item.find('.no-btn');
+  const yes_btn = item.find('.yes-btn');
 
+  item.attr('id', item_id);
   item.find('.datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
   groupElem.attr('href','/html/search?tags=' + encodedTags);
   group.Tags.forEach(tag => {
@@ -35,8 +41,8 @@ function addTagGroup(group) {
 
   const toggle_protect = function() {
     protected.toggle();
-    protect.toggleClass('enabled');
-    unprotect.toggleClass('enabled');
+    protect.toggle();
+    unprotect.toggle();
   }
   
   function setProtected(event) {
@@ -57,6 +63,29 @@ function addTagGroup(group) {
   item.find('.create').click(() => {
     window.location = '/html/note/new?tags=' + encodedTags;
   });
+    
+  // 删除按钮
+  delete_btn.click(delete_toggle);
+
+  // 取消删除
+  no_btn.click(delete_toggle);
+
+  function delete_toggle() {
+    delete_btn.toggle();
+    confirm_block.toggle();
+  }
+
+  // 确认删除
+  yes_btn.click(event => {
+    event.preventDefault();
+    ajaxDelete('/api/tag/group/'+group.ID, yes_btn, function() {
+      insertSuccessAlert(`笔记 id:${id} 已删除`);
+    }, function() {
+      // onFail
+      insertErrorAlert('删除失败', $('#'+item_id));
+    });
+  });
+
 }
 
 const tags_input = $('#tags-input');

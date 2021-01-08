@@ -9,6 +9,8 @@ const tag_name = getUrlParam('name');
 tagName.text(tag_name);
 
 ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
+  $('#tag-name').show();
+  $('#count-block').show();
   if (!that.response) {
     $('#count').text(0);
     return;

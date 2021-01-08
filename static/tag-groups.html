@@ -29,10 +29,10 @@
 .group:hover {
   background-color:darkcyan
 }
-li button {
+li .buttons {
   display: none;
 }
-li:hover .enabled {
+li:hover .buttons {
   display: inline;
 }
 .protected {
@@ -93,10 +93,17 @@ li:hover .enabled {
           <span class="datetime"></span>
           <span class="protected" style="display: none;">PROTECTED</span><br>
           <a class="tag group">group</a>
-          <button class="protect enabled">protect</button>
-          <button class="unprotect">unprotect</button>
-          <button class="create enabled" title="create a new note">create</button>
-          <button class="delete enabled" title="delete this tag group">delete</button>
+          <span class="buttons">
+            <button class="protect">protect</button>
+            <button class="unprotect" style="display: none;">unprotect</button>
+            <button class="create" title="create a new note">create</button>
+            <button class="delete" title="delete this tag group">delete</button>
+            <span class="confirm-block" style="display: none; color: red;">
+              delete this note?
+              <button class="yes-btn">Yes</button>
+              <button class="no-btn">No</button>
+            </span>  
+          </span>
         </li>
       </template>
     </ul>

@@ -384,7 +384,7 @@ func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
 func (db *DB) GetByTag(name string) (notes []Note, err error) {
 	tag, err := db.GetTag(name)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("tag[%s] %w", name, err)
 	}
 	for i := range tag.NoteIDs {
 		var note Note
@@ -402,7 +402,7 @@ func (db *DB) GetByTag(name string) (notes []Note, err error) {
 func (db *DB) RenameTag(oldName, newName string) error {
 	_, err := db.GetTag(newName)
 	if err != nil && err != storm.ErrNotFound {
-		return fmt.Errorf("%s %w", newName, err)
+		return fmt.Errorf("tag[%s] %w", newName, err)
 	}
 	if err == nil {
 		return errors.New("标签名称 [" + newName + "] 已存在")
@@ -410,7 +410,7 @@ func (db *DB) RenameTag(oldName, newName string) error {
 
 	tag, err := db.GetTag(oldName)
 	if err != nil {
-		return fmt.Errorf("%s %w", oldName, err)
+		return fmt.Errorf("tag[%s] %w", oldName, err)
 	}
 
 	tx, err := db.DB.Begin(true)
@@ -439,7 +439,7 @@ func notesRenameTag(tx storm.Node, tag Tag, newName string) error {
 	for _, noteID := range tag.NoteIDs {
 		var note Note
 		if err := tx.One("ID", noteID, &note); err != nil {
-			return fmt.Errorf("%s %w", noteID, err)
+			return fmt.Errorf("id[%s] %w", noteID, err)
 		}
 		note.RenameTag(tag.Name, newName)
 		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
