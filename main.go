@@ -73,6 +73,7 @@ func main() {
 	api.Put("/tag/group/protected", setTagGroupProtected)
 
 	api.Get("/search/tags/:tags", searchTagGroup)
+	api.Get("/search/title/:pattern", searchTitle)
 
 	log.Fatal(app.Listen(defaultAddress))
 }

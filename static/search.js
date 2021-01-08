@@ -6,8 +6,6 @@ const loading = $('#loading');
 const note_list = $('ul');
 const notesCount = $('#notes-count');
 
-let searchFor = 'tags';
-
 search_btn.click(event => {
   event.preventDefault();
   const pattern = search_input.val().trim();
@@ -17,9 +15,9 @@ search_btn.click(event => {
     return;
   }
 
-  if (searchFor == 'tags') {
-    searchTags();
-  }
+  const searchBy = $('input[name="search-by"]:checked').val()
+  if (searchBy == 'tags') searchTags();
+  if (searchBy == 'title') searchTitle();
 });
 
 function searchTags() {
@@ -28,19 +26,34 @@ function searchTags() {
   const tags = addPrefix(tagSet);
   const url = '/api/search/tags/' + encodeURIComponent(tags);
   loading.text('searching: ' + addPrefix(tagSet, '#'));
-  ajaxGet(url, search_btn, that => {
-    $('.alert').remove();
-    let notes = [];
-    if (that.response) notes = that.response;
-    notesCount
-      .show()
-      .text(`找到 ${notes.length} 篇笔记`);
-    refreshNoteList(notes);
-  }, null, function() {
-    // not200
-    note_list.html('');
-    notesCount.hide();
-  });
+  ajaxGet(url, search_btn, onSuccess, null, onFail);
+}
+
+function searchTitle() {
+  const title = search_input.val().trim();
+  const url = '/api/search/title/' + encodeURIComponent(title);
+  loading.text('searching: ' + title);
+  ajaxGet(url, search_btn, onSuccess, null, onFail);
+}
+
+function onSuccess(that) {
+  const notes = getNotes(that);
+  refreshNoteList(notes);
+}
+
+function onFail(that) {
+  note_list.html('');
+  notesCount.hide();
+}
+
+function getNotes(that) {
+  $('.alert').remove();
+  let notes = [];
+  if (that.response) notes = that.response;
+  notesCount
+    .show()
+    .text(`找到 ${notes.length} 篇笔记`);
+  return notes;
 }
 
 function refreshNoteList(notes) {
@@ -58,8 +71,8 @@ function refreshNoteList(notes) {
   });
 }
 
+// 当网址中带有标签组参数时，直接自动搜索
 if (tagGroup) {
-  // tag_group = tagGroup.split(' ');
   search_input.val(tagGroup);
   search_btn.click();
 }

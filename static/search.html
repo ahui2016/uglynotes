@@ -16,6 +16,9 @@
 .li .id {
     text-transform: uppercase;
 }
+#search-input {
+  width: 300px;
+}
 
     </style>
   </head>
@@ -26,9 +29,11 @@
 
     <form autocomplete="off" style="margin-top: 1em;">      
       <div id="search-options">
-        Search for
-        <input type="radio" id="for-tags" name="search-for" value="tags" checked>
-        <label for="for-tags">tags</label>
+        Search by
+        <input type="radio" id="by-tags" name="search-by" value="tags" checked>
+        <label for="by-tags">tags</label>
+        <input type="radio" id="by-title" name="search-by" value="title">
+        <label for="by-title">title</label>
       </div>
 
       <label>

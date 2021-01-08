@@ -488,3 +488,14 @@ func (db *DB) getByIDs(noteIDs []string) ([]Note, error) {
 	}
 	return notes, err
 }
+
+// SearchTitle by regular expression.
+func (db *DB) SearchTitle(pattern string) ([]Note, error) {
+	var notes []Note
+	err := db.DB.Select(q.Re("Title", pattern)).
+		OrderBy("UpdatedAt").Find(&notes)
+	if err == storm.ErrNotFound {
+		err = nil
+	}
+	return notes, err
+}

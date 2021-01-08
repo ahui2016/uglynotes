@@ -33,7 +33,7 @@ function insertAlert(type, msg, where) {
 }
 
 // 向服务器提交表单，在等待过程中 btn 会失效，避免重复提交。
-function ajaxDo(method, form, url, btn, onload, onloadend, not200) {
+function ajaxDo(method, form, url, btn, onSuccess, onloadend, onFail) {
   if (btn) {
     btn.prop('disabled', true);
   }
@@ -45,11 +45,11 @@ function ajaxDo(method, form, url, btn, onload, onloadend, not200) {
   };
   xhr.addEventListener('load', function() {
     if (this.status == 200) {
-      if (onload) onload(this);
+      if (onSuccess) onSuccess(this);
     } else {
         let errMsg = !this.response ? this.status : this.response.message;
         insertErrorAlert(errMsg);
-        if (not200) not200(this);
+        if (onFail) onFail(this);
     }
   });
   xhr.addEventListener('loadend', function() {
@@ -66,20 +66,20 @@ function ajaxDo(method, form, url, btn, onload, onloadend, not200) {
   xhr.send(form);
 }
 
-function ajaxPost(form, url, btn, onload, onloadend) {
-  ajaxDo('POST', form, url, btn, onload, onloadend);
+function ajaxPost(form, url, btn, onSuccess, onloadend) {
+  ajaxDo('POST', form, url, btn, onSuccess, onloadend);
 }
 
-function ajaxPut(form, url, btn, onload, onloadend) {
-  ajaxDo('PUT', form, url, btn, onload, onloadend);
+function ajaxPut(form, url, btn, onSuccess, onloadend) {
+  ajaxDo('PUT', form, url, btn, onSuccess, onloadend);
 }
 
-function ajaxDelete(url, btn, onload, onloadend) {
-  ajaxDo('DELETE', null, url, btn, onload, onloadend);
+function ajaxDelete(url, btn, onSuccess, onloadend) {
+  ajaxDo('DELETE', null, url, btn, onSuccess, onloadend);
 }
 
-function ajaxGet(url, btn, onload, onloadend, not200) {
-  ajaxDo('GET', null, url, btn, onload, onloadend, not200);
+function ajaxGet(url, btn, onSuccess, onloadend, onFail) {
+  ajaxDo('GET', null, url, btn, onSuccess, onloadend, onFail);
 }
 
 // 获取地址栏的参数。

@@ -318,6 +318,20 @@ func searchTagGroup(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
+	trimContents(notes)
+	return c.JSON(notes)
+}
+
+func searchTitle(c *fiber.Ctx) error {
+	pattern, err := getParams(c, "pattern")
+	if err != nil {
+		return err
+	}
+	notes, err := db.SearchTitle(pattern)
+	if err != nil {
+		return err
+	}
+	trimContents(notes)
 	return c.JSON(notes)
 }
 
