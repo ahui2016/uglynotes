@@ -36,7 +36,11 @@ li:hover .buttons {
   display: inline;
 }
 .protected {
-  color: #999;;
+  color: #999;
+}
+.deleted {
+  color: #EEE;
+  background-color: #999;
 }
 #tags-input {
   width: 300px;
@@ -91,7 +95,9 @@ li:hover .buttons {
       <template id="li-tmpl">
         <li class="li">
           <span class="datetime"></span>
-          <span class="protected" style="display: none;">PROTECTED</span><br>
+          <span class="protected" style="display: none;">PROTECTED</span>
+          <span class="deleted" style="display: none;">DELETED</span><br>
+          <span class="tags" style="display: none;"></span>
           <a class="tag group">group</a>
           <span class="buttons">
             <button class="protect">protect</button>
@@ -99,7 +105,7 @@ li:hover .buttons {
             <button class="create" title="create a new note">create</button>
             <button class="delete" title="delete this tag group">delete</button>
             <span class="confirm-block" style="display: none; color: red;">
-              delete this note?
+              delete this group?
               <button class="yes-btn">Yes</button>
               <button class="no-btn">No</button>
             </span>  

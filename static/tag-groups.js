@@ -23,10 +23,12 @@ function addTagGroup(group) {
   const protect = item.find('.protect');
   const unprotect = item.find('.unprotect');
   const protected = item.find('.protected');
+  const deleted = item.find('.deleted');
   const delete_btn = item.find('.delete');
   const confirm_block = item.find('.confirm-block');
   const no_btn = item.find('.no-btn');
   const yes_btn = item.find('.yes-btn');
+  const tagsElem = item.find('.tags');
 
   item.attr('id', item_id);
   item.find('.datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
@@ -38,6 +40,7 @@ function addTagGroup(group) {
       .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
     tagElem.insertBefore(groupElem);
   });
+  tagsElem.text(addPrefix(group.Tags, '#'));
 
   const toggle_protect = function() {
     protected.toggle();
@@ -79,8 +82,13 @@ function addTagGroup(group) {
   yes_btn.click(event => {
     event.preventDefault();
     ajaxDelete('/api/tag/group/'+group.ID, yes_btn, function() {
-      insertSuccessAlert(`笔记 id:${id} 已删除`);
-    }, function() {
+      protected.hide();
+      deleted.show();
+      item.find('.tags').show();
+      item.find('.tag').hide();
+      item.find('.buttons').hide();
+      $('.alert').remove();
+    }, null, function() {
       // onFail
       insertErrorAlert('删除失败', $('#'+item_id));
     });

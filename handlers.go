@@ -12,6 +12,7 @@ type (
 	Note     = model.Note
 	NoteType = model.NoteType
 	History  = model.History
+	TagGroup = model.TagGroup
 )
 
 func errorHandler(c *fiber.Ctx, err error) error {
@@ -348,4 +349,31 @@ func addTagGroup(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(group)
+}
+
+func deleteTagGroup(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	groupID := c.Params("id")
+	return db.DB.DeleteStruct(&TagGroup{ID: groupID})
+}
+
+func deleteNote(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id := c.Params("id")
+	return db.DeleteNote(id)
+}
+
+func deleteTag(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	name, err := getParams(c, "name")
+	if err != nil {
+		return err
+	}
+	return db.DeleteTag(name)
 }

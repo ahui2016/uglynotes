@@ -50,9 +50,7 @@ func main() {
 
 	api.Get("/note/:id", getNoteHandler)
 	api.Post("/note", newNoteHandler)
-	api.Delete("/note/:id", func(c *fiber.Ctx) error {
-		return c.SendStatus(200)
-	})
+	api.Delete("/note/:id", deleteNote)
 	api.Put("/note/type", changeType)
 	api.Put("/note/tags", updateNoteTags)
 	api.Put("/note/contents", updateNoteContents)
@@ -65,8 +63,10 @@ func main() {
 	api.Get("/tag/all-by-date", allTagsByDate)
 	api.Get("/tag/:name/notes", getNotesByTag)
 	api.Put("/tag", renameTag)
+	api.Delete("/tag/:name", deleteTag)
 	api.Get("/tag/group/all", allTagGroups)
 	api.Post("/tag/group", addTagGroup)
+	api.Delete("/tag/group/:id", deleteTagGroup)
 	api.Put("/tag/group/protected", setTagGroupProtected)
 
 	api.Get("/search/tags/:tags", searchTagGroup)

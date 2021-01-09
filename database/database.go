@@ -499,3 +499,59 @@ func (db *DB) SearchTitle(pattern string) ([]Note, error) {
 	}
 	return notes, err
 }
+
+// DeleteNote .
+func (db *DB) DeleteNote(id string) error {
+	note, err := db.GetByID(id)
+	if err != nil {
+		return err
+	}
+
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err1 := deleteTags(tx, note.Tags, note.ID)
+	err2 := tx.DeleteStruct(&note)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// DeleteTag .
+func (db *DB) DeleteTag(name string) error {
+	tag, err := db.GetTag(name)
+	if err != nil {
+		return fmt.Errorf("tag[%s] %w", name, err)
+	}
+
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err1 := notesDeleteTag(tx, tag)
+	err2 := tx.DeleteStruct(&tag)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func notesDeleteTag(tx storm.Node, tag Tag) error {
+	for _, noteID := range tag.NoteIDs {
+		var note Note
+		if err := tx.One("ID", noteID, &note); err != nil {
+			return fmt.Errorf("id[%s] %w", noteID, err)
+		}
+		note.DeleteTag(tag.Name)
+		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
+			return err
+		}
+	}
+	return nil
+}

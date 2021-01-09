@@ -105,6 +105,15 @@ func (note *Note) RenameTag(oldName, newName string) {
 	note.Tags = stringset.AddAndDelete(note.Tags, oldName, newName)
 }
 
+// DeleteTag .
+func (note *Note) DeleteTag(tag string) {
+	i := util.StringIndex(note.Tags, tag)
+	if i < 0 {
+		return
+	}
+	note.Tags = util.DeleteFromSlice(note.Tags, i)
+}
+
 // History 数据表，用于保存笔记的历史记录。
 type History struct {
 	ID        string // primary key, random
