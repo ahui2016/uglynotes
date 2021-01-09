@@ -14,9 +14,14 @@
   </head>
   <body>
     <div>Note [<a id="note-id"></a>] .. Histories
-      <div id="head-buttons" style="display: none;">
+      <div id="head-buttons">
         |
-        <a href="/html/note/new">New Note</a>
+        <a id="delete" href="#" title="删除未保护历史">delete all</a>
+        <span id="confirm-block" style="display: none; color: red;">
+          delete all unprotected histories?
+          <button id="yes">Yes</button>
+          <button id="no">No</button>
+        </span>  
         |
       </div>
     </div>
@@ -29,6 +34,15 @@
     <!-- 普通提示 -->
     <template id="alert-info-tmpl">
       <p class="alert alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert alert-success">
         <span class="alert-time"></span>
         <span class="alert-message"></span>
         <span class="alert-dismiss" title="dismiss">(&times;)</span>

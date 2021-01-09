@@ -11,6 +11,12 @@
     <script src="/public/jquery-3.5.1.min.js"></script>
     <script src="/public/dayjs.min.js"></script>
 
+    <style>
+.deleted {
+  color: #EEE;
+  background-color: #999;
+}
+    </style>
   </head>
   <body>
     <div>
@@ -43,14 +49,15 @@
       <li class="li">
         <span class="datetime"></span><br>
         <a class="name"></a> (<span class="count"></span>)
+        <span class="deleted" style="display: none;">DELETED</span>
       </li>
     </template>
 
     <template id="del-btn-tmpl">
-      <span>
-        <button class="delete" title="delete this tag group">delete</button>
+      <span class="del-btn-block">
+        <button class="delete">delete</button>
         <span class="confirm-block" style="display: none; color: red;">
-          delete this group?
+          delete this tag?
           <button class="yes-btn">Yes</button>
           <button class="no-btn">No</button>
         </span>  

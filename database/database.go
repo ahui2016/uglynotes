@@ -555,3 +555,9 @@ func notesDeleteTag(tx storm.Node, tag Tag) error {
 	}
 	return nil
 }
+
+// DeleteNoteHistory .
+func (db *DB) DeleteNoteHistory(noteID string) error {
+	return db.DB.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
+		Delete(&History{})
+}

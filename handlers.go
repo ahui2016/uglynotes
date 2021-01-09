@@ -377,3 +377,19 @@ func deleteTag(c *fiber.Ctx) error {
 	}
 	return db.DeleteTag(name)
 }
+
+func deleteHistory(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id := c.Params("id")
+	return db.DB.DeleteStruct(&History{ID: id})
+}
+
+func deleteNoteHistories(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id := c.Params("id")
+	return db.DeleteNoteHistory(id)
+}
