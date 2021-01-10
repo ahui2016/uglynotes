@@ -50,6 +50,18 @@ ajaxGet('/api/history/'+id, null, that => {
   const clean = DOMPurify.sanitize(dirty);
   markdown.html(clean);
   
+  const clipboard = new ClipboardJS('#copy', {
+    text: () => { return history.Contents; }
+  });
+  clipboard.on('success', () => {
+    insertSuccessAlert('该历史版本内容已复制到剪贴板');
+  });
+  clipboard.on('error', e => {
+    console.error('Action:', e.action);
+    console.error('Trigger:', e.trigger);
+    insertErrorAlert('复制失败，详细信息见控制台');
+  });
+
   ajaxGet('/api/note/'+note_id, null, that => {
     const current_contents = that.response.Contents;
     const diffString = Diff.createPatch(

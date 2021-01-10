@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
 
     <style>
 .plaintext {
@@ -57,6 +58,7 @@
         |
         <button id="protect">Protect</button>
         <button id="unprotect" style="display: none;">Unprotect</button> |
+        <a href="#" id="copy">Copy</a> |
         <a id="delete" href="#">Delete</a>
         <span id="confirm-block" style="display: none; color: red;">
           delete this history?

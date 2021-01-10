@@ -35,6 +35,18 @@ ajaxGet('/api/note/'+id, null, that => {
     }
   }
 
+  const clipboard = new ClipboardJS('#copy', {
+    text: () => { return note.Contents; }
+  });
+  clipboard.on('success', () => {
+    insertSuccessAlert('笔记内容已复制到剪贴板');
+  });
+  clipboard.on('error', e => {
+    console.error('Action:', e.action);
+    console.error('Trigger:', e.trigger);
+    insertErrorAlert('复制失败，详细信息见控制台');
+  });
+
   if (note.Type == 'Markdown') {
     const dirty = marked(note.Contents);
     const clean = DOMPurify.sanitize(dirty);
