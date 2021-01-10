@@ -16,7 +16,7 @@ func main() {
 		ErrorHandler: errorHandler,
 	})
 
-	app.Use(responseNoCache)
+	// app.Use(responseNoCache)
 	app.Use(limiter.New(limiter.Config{
 		Max: 300,
 	}))
