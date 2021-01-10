@@ -11,6 +11,8 @@ ajaxGet('/api/tag/all', null, that => {
 }, () => {
   // onloadend
   $('#loading').hide();
+  $('#sort-by').show();
+  $('#count-block').show();
 });
 
 ajaxGet('/api/tag/all-by-date', null, that => {

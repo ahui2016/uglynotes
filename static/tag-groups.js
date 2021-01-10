@@ -9,6 +9,7 @@ ajaxGet('/api/tag/group/all', null, that => {
 }, () => {
   // onloadend
   $('#loading').hide();
+  $('#count-block').show();
 });
 
 function addTagGroup(group) {
