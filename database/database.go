@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
@@ -15,12 +15,6 @@ import (
 )
 
 const cookieName = "uglynotesCookie"
-
-// historyLimit 限制每篇笔记可保留的历史上限。
-const historyLimit = 100
-
-// tagGroupLimit 限制标签组的上限。
-const tagGroupLimit = 100
 
 type (
 	Note       = model.Note
@@ -44,14 +38,14 @@ type DB struct {
 }
 
 // Open .
-func (db *DB) Open(maxAge time.Duration, cap int, dbPath string) (err error) {
+func (db *DB) Open(dbPath string) (err error) {
 	if db.DB, err = storm.Open(dbPath); err != nil {
 		return err
 	}
 	db.path = dbPath
-	db.capacity = cap
+	db.capacity = settings.DatabaseCapacity
 	db.Sess = session.New(session.Config{
-		Expiration: maxAge,
+		Expiration: settings.MaxAge,
 		CookieName: cookieName,
 	})
 	err1 := db.createIndexes()
@@ -135,7 +129,7 @@ func deleteOldTagGroup(tx storm.Node) (err error) {
 	if err != nil {
 		return err
 	}
-	if len(groups) > tagGroupLimit {
+	if len(groups) > settings.TagGroupLimit {
 		oldGroup := groups[0]
 		err = tx.DeleteStruct(&oldGroup)
 	}
@@ -325,7 +319,7 @@ func addHistory(tx storm.Node, note Note, history *History) error {
 	if err != nil {
 		return err
 	}
-	if len(histories) > historyLimit {
+	if len(histories) > settings.HistoryLimit {
 		oldHistory := histories[0]
 		if err := deleteHistory(tx, oldHistory); err != nil {
 			return err

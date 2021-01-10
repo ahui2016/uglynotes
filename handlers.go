@@ -4,6 +4,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -77,7 +78,7 @@ func loginHandler(c *fiber.Ctx) error {
 		return jsonMessage(c, "already logged in")
 	}
 
-	if c.FormValue("password") != defaultPassword {
+	if c.FormValue("password") != settings.DefaultPassword {
 		passwordTry++
 		if err := checkPasswordTry(c); err != nil {
 			return err
@@ -190,7 +191,7 @@ func notesSizeHandler(c *fiber.Ctx) error {
 	}
 	return c.JSON(fiber.Map{
 		"totalSize": size,
-		"capacity":  databaseCapacity,
+		"capacity":  settings.DatabaseCapacity,
 	})
 }
 
@@ -237,7 +238,7 @@ func noteHistory(c *fiber.Ctx) error {
 
 func shortHistories(histories []History) {
 	for i := range histories {
-		title := headLimit(histories[i].Contents, model.TitleLimit)
+		title := headLimit(histories[i].Contents, settings.NoteTitleLimit)
 		histories[i].Contents = title
 	}
 }

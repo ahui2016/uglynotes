@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/ahui2016/uglynotes/settings"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
@@ -11,7 +12,7 @@ func main() {
 	defer db.Close()
 
 	app := fiber.New(fiber.Config{
-		BodyLimit:    maxBodySize,
+		BodyLimit:    settings.MaxBodySize,
 		Concurrency:  10,
 		ErrorHandler: errorHandler,
 	})
@@ -74,5 +75,5 @@ func main() {
 	api.Get("/search/tags/:tags", searchTagGroup)
 	api.Get("/search/title/:pattern", searchTitle)
 
-	log.Fatal(app.Listen(defaultAddress))
+	log.Fatal(app.Listen(settings.DefaultAddress))
 }

@@ -7,18 +7,10 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
 )
-
-// ISO8601 需要根据服务器的具体时区来设定正确的时区
-const ISO8601 = "2006-01-02T15:04:05.999+00:00"
-
-// TitleLimit 限制标题的长度。
-const TitleLimit = 200
-
-// SizeLimit 限制每篇笔记的体积。
-const SizeLimit = 1 << 19 // 512 KB
 
 // NoteType 是一个枚举类型，用来区分 Note 的类型。
 type NoteType string
@@ -76,7 +68,7 @@ func (note *Note) UpdatedAtNow() {
 // SetContents 在填充内容的同时设置 size, 并根据笔记类型设置标题。
 // 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
 func (note *Note) SetContents(contents string) error {
-	title := firstLineLimit(contents, TitleLimit)
+	title := firstLineLimit(contents, settings.NoteTitleLimit)
 	if note.Type == Markdown {
 		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
 			title = mdTitle
@@ -88,7 +80,7 @@ func (note *Note) SetContents(contents string) error {
 	note.Title = title
 	note.Contents = contents
 	note.Size = len(contents)
-	if note.Size > SizeLimit {
+	if note.Size > settings.NoteSizeLimit {
 		return errors.New("size limit exceeded")
 	}
 	return nil
@@ -170,7 +162,7 @@ func (tag *Tag) Remove(id string) {
 
 // TimeNow .
 func TimeNow() string {
-	return time.Now().Format(ISO8601)
+	return time.Now().Format(settings.ISO8601)
 }
 
 // firstLineLimit 返回第一行，并限定长度，其中 s 必须事先 TrimSpace 并确保不是空字串。
