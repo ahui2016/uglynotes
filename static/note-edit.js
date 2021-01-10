@@ -23,6 +23,16 @@ let oldTags = new Set();
 let autoSubmitID;
 let autoUpdateCount = 1;
 
+$('#higher').click(function(){
+  const rows = textarea.attr('rows');
+  textarea.attr('rows', parseInt(rows) + 1);
+});
+
+$('#wider').click(function(){
+  const cols = textarea.attr('cols');
+  textarea.attr('cols', parseInt(cols) + 1);
+});
+
 /* 初始化 note/new 表单 */
 
 if (document.location.pathname == "/html/note/new") {
