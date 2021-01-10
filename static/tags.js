@@ -76,6 +76,8 @@ function addTagItem(tag, insertPoint) {
   }
 }
 
+$('#by-date').prop('checked', true).click();
+
 $('input[name="sort-by"]').change(() => {
   $('#sort-by-name').toggle();
   $('#sort-by-date').toggle();

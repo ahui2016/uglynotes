@@ -32,7 +32,9 @@ func main() {
 	app.Get("/", redirectToHome)
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)
+	app.Get("/login", loginPage)
 	app.Post("/login", loginHandler)
+	app.Get("/check", checkLogin)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/note", notePage)

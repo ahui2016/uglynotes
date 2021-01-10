@@ -1,5 +1,21 @@
+const loading = $('#loading');
 const pw_input = $('#password');
 const submit_btn = $('#submit');
+const formElem = $('form');
+const navi = $('#navi');
+
+ajaxGet('/check', null, that => {
+  if (that.response.message == "OK") {
+    insertSuccessAlert('已登入')
+    navi.show();
+    return;
+  }
+  formElem.show();
+  pw_input.focus();
+}, function() {
+  // onloadend
+  loading.hide();
+});
 
 submit_btn.click(event => {
   event.preventDefault();
@@ -14,7 +30,9 @@ submit_btn.click(event => {
   form.append('password', password);
 
   ajaxPost(form, '/login', submit_btn, function() {
-    submit_btn.prop('disabled', true);
-    window.location.reload();
+    $('.alert').remove();
+    insertSuccessAlert('登入成功')
+    formElem.hide();
+    navi.show();
   });
 });

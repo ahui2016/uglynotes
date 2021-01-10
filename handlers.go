@@ -37,6 +37,10 @@ func homePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/index.html")
 }
 
+func loginPage(c *fiber.Ctx) error {
+	return c.SendFile("./public/login.html")
+}
+
 func notePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note.html")
 }
@@ -85,9 +89,15 @@ func loginHandler(c *fiber.Ctx) error {
 		}
 		return jsonError(c, "Wrong Password", 400)
 	}
-
 	passwordTry = 0
 	return db.SessionSet(c)
+}
+
+func checkLogin(c *fiber.Ctx) error {
+	if isLoggedIn(c) {
+		return jsonMessage(c, "OK")
+	}
+	return jsonMessage(c, "NG")
 }
 
 func getAllNotes(c *fiber.Ctx) error {
