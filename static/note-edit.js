@@ -108,9 +108,7 @@ function delete_toggle(event) {
 // 确认删除
 yes_btn.click(event => {
   event.preventDefault();
-  let form = new FormData();
-  form.append('id', id);
-  ajaxDelete(form, '/api/note/'+id, yes_btn, function() {
+  ajaxDelete('/api/note/'+id, yes_btn, function() {
     $('.alert').hide();
     $('form').hide();
     $('#head-buttons').hide();
@@ -245,6 +243,17 @@ function update(event) {
   }
 }
 
+// 复制至剪贴板
+const clipboard = new ClipboardJS('#copy');
+clipboard.on('success', e => {
+  insertSuccessAlert('笔记内容已复制到剪贴板', loading);
+});
+clipboard.on('error', e => {
+  console.error('Action:', e.action);
+  console.error('Trigger:', e.trigger);
+  insertErrorAlert('复制失败，详细信息见控制台', loading);
+});
+
 // 插入历史版本提示
 function insertHistoryAlert(history_id, where) {
   let alertElem = $('#alert-history-tmpl').contents().clone();
@@ -271,7 +280,6 @@ function submitOrUpdate() {
 }
 
 autoSubmitID = window.setInterval(submitOrUpdate, DelayOfAutoUpdate);
-
 
 // 用于初始化表单。
 function initAjaxGet(url, onload, onloadend) {

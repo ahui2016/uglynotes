@@ -10,12 +10,15 @@
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+
   </head>
   <body>
     <div><a href="/home">uglynotes</a> ..
       <span id="where">New Note</span>
       <div id="head-buttons" style="display: none;">
         |
+        <a href="#" id="copy" data-clipboard-target="#contents">Copy</a> |
         <a id="readonly-mode" style="display: none;">readonly mode</a>
         |
       </div>
