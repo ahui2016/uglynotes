@@ -219,5 +219,8 @@ func NewTagGroup(tags []string) *TagGroup {
 
 // RenameTag .
 func (group *TagGroup) RenameTag(oldName, newName string) {
+	if util.StringIndex(group.Tags, oldName) < 0 {
+		return
+	}
 	group.Tags = stringset.AddAndDelete(group.Tags, oldName, newName)
 }
