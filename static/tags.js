@@ -32,7 +32,7 @@ function addTagItem(tag, insertPoint) {
   }
 
   item.find('.datetime').text(createdAt.format('YYYY-MM-DD HH:mm:ss'));
-  nameElem = item.find('.name');
+  const nameElem = item.find('.name');
   nameElem
     .text(tag.Name)
     .attr('href', '/html/tag/?name=' + encodeURIComponent(tag.Name));
