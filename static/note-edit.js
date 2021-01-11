@@ -14,6 +14,8 @@ const update_btn = $('#update');
 const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
+const higher = $('#higher');
+const wider = $('#wider');
 
 let id = '';
 let oldContents = '';
@@ -23,15 +25,20 @@ let oldTags = new Set();
 let autoSubmitID;
 let autoUpdateCount = 1;
 
-$('#higher').click(function(){
+higher.click(function(){
   const rows = textarea.attr('rows');
   textarea.attr('rows', parseInt(rows) + 1);
 });
 
-$('#wider').click(function(){
+wider.click(function(){
   const cols = textarea.attr('cols');
   textarea.attr('cols', parseInt(cols) + 1);
 });
+
+function toggle_higher_wider() {
+  higher.toggle();
+  wider.toggle();
+}
 
 /* 初始化 note/new 表单 */
 
@@ -140,6 +147,7 @@ previewBtn.click(event => {
   editBtn.show();
   plaintextBtn.hide();
   plaintextLabel.hide();
+  toggle_higher_wider();
 });
 
 // 编辑按钮
@@ -150,6 +158,7 @@ editBtn.click(event => {
   plaintextLabel.show();
   previewBtn.show();
   editBtn.hide();
+  toggle_higher_wider();
   textarea.focus();
 });
 

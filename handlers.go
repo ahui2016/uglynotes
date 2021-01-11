@@ -103,7 +103,7 @@ func checkLogin(c *fiber.Ctx) error {
 func getAllNotes(c *fiber.Ctx) error {
 	notes, err := db.AllNotes()
 	if err != nil {
-		return nil
+		return err
 	}
 	trimContents(notes)
 	return c.JSON(notes)
@@ -300,7 +300,7 @@ func getNotesByTag(c *fiber.Ctx) error {
 func getAllTags(c *fiber.Ctx) error {
 	tags, err := db.AllTags()
 	if err != nil {
-		return nil
+		return err
 	}
 	return c.JSON(tags)
 }
@@ -308,7 +308,7 @@ func getAllTags(c *fiber.Ctx) error {
 func allTagsByDate(c *fiber.Ctx) error {
 	tags, err := db.AllTagsByDate()
 	if err != nil {
-		return nil
+		return err
 	}
 	return c.JSON(tags)
 }
@@ -316,7 +316,7 @@ func allTagsByDate(c *fiber.Ctx) error {
 func allTagGroups(c *fiber.Ctx) error {
 	groups, err := db.AllTagGroups()
 	if err != nil {
-		return nil
+		return err
 	}
 	return c.JSON(groups)
 }

@@ -218,7 +218,7 @@ func (db *DB) AllTagsByDate() (tags []Tag, err error) {
 }
 
 // AllTagGroups fetches all tag-groups, sortd by "UpdatedAt".
-func (db *DB) AllTagGroups() (groups []TagGroup, err error) {
+func (db *DB) AllTagGroups() ([]TagGroup, error) {
 	return txAllTagGroups(db.DB)
 }
 
