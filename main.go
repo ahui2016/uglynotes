@@ -79,5 +79,8 @@ func main() {
 	api.Get("/search/tags/:tags", searchTagGroup)
 	api.Get("/search/title/:pattern", searchTitle)
 
+	// 导出全部笔记
+	// api.Get("/export", exportAllNotes)
+
 	log.Fatal(app.Listen(settings.DefaultAddress))
 }

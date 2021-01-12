@@ -1,6 +1,7 @@
 package util
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 )
@@ -96,4 +97,18 @@ func SliceDifference(newSlice, oldSlice []string) (toAdd, toDelete []string) {
 // DeleteFromSlice .
 func DeleteFromSlice(slice []string, i int) []string {
 	return append(slice[:i], slice[i+1:]...)
+}
+
+// MustMarshal .
+func MustMarshal(data interface{}) []byte {
+	dataJSON, err := json.MarshalIndent(data, "", "    ")
+	CheckErrorPanic(err)
+	return dataJSON
+}
+
+// CheckErrorPanic panics if err != nil
+func CheckErrorPanic(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

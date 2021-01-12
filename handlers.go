@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io/ioutil"
 	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/model"
@@ -116,6 +117,14 @@ func getDeletedNotes(c *fiber.Ctx) error {
 	}
 	trimContents(notes)
 	return c.JSON(notes)
+}
+
+func exportAllNotes(c *fiber.Ctx) error {
+	notes, err := db.AllNotesWithDeleted()
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(exportPath, util.MustMarshal(notes), 0600)
 }
 
 func trimContents(notes []Note) {

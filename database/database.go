@@ -213,6 +213,12 @@ func (db *DB) AllDeletedNotes() (notes []Note, err error) {
 	return
 }
 
+// AllNotesWithDeleted .
+func (db *DB) AllNotesWithDeleted() (notes []Note, err error) {
+	err = db.DB.AllByIndex("UpdatedAt", &notes)
+	return
+}
+
 // AllTags fetches all tags, sorted by "Name".
 func (db *DB) AllTags() (tags []Tag, err error) {
 	err = db.DB.AllByIndex("Name", &tags)

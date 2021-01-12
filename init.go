@@ -15,8 +15,9 @@ var (
 )
 
 var (
-	dataDir = filepath.Join(util.UserHomeDir(), settings.DataFolderName)
-	dbPath  = filepath.Join(dataDir, settings.DatabaseFileName)
+	dataDir    = filepath.Join(util.UserHomeDir(), settings.DataFolderName)
+	dbPath     = filepath.Join(dataDir, settings.DatabaseFileName)
+	exportPath = filepath.Join(dataDir, settings.ExportFileName)
 )
 
 func init() {

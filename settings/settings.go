@@ -5,6 +5,7 @@ import "time"
 const (
 	DataFolderName   = "uglynotes_data_folder"
 	DatabaseFileName = "uglynotes.db"
+	ExportFileName   = "uglynotes.json"
 	PasswordMaxTry   = 5
 	DefaultPassword  = "abc"
 	DefaultAddress   = "127.0.0.1:80"
