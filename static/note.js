@@ -5,6 +5,8 @@ const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
 
+let isDeleted = false;
+
 ajaxGet('/api/note/'+id, null, that => {
   const note = that.response;
   const updatedAt = dayjs(note.UpdatedAt);
@@ -12,8 +14,14 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#id').text(note.ID);
   $('#note-type').text(note.Type);
   $('#size').text(fileSizeToString(note.Size));
-  $('#edit').attr('href', '/html/note/edit?id='+note.ID);
+  if (!note.Deleted) $('#edit').attr('href', '/html/note/edit?id='+note.ID);
   $('#history').attr('href', '/html/note/history?id='+note.ID)
+
+  if (note.Deleted) {
+    isDeleted = true;
+    delete_btn.text('Delete forever');
+    insertInfoAlert('该笔记被标记为 “已删除”');
+  }
 
   if (note.Tags && note.Tags.length > 0) {
     $('#tags').show();
@@ -74,12 +82,17 @@ function delete_toggle(event) {
 
 // 确认删除
 yes_btn.click(event => {
-  event.preventDefault();
-  ajaxDelete('/api/note/'+id, yes_btn, function() {
+  let url = '/api/note/'+id;
+  let msg = `笔记 id:${id} 已删除`;
+  if (isDeleted) {
+    url = '/api/note/deleted/'+id
+    msg = `笔记 id:${id} 已彻底删除`;
+  }
+  ajaxDelete(url, yes_btn, function() {
     $('.alert').hide();
     $('#head-buttons').hide();
     $('#title-block').hide();
     $('.contents').hide();
-    insertSuccessAlert(`笔记 id:${id} 已删除`);
+    insertSuccessAlert(msg);
   });
 });

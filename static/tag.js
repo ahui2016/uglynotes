@@ -17,17 +17,7 @@ ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
   }
   $('#count').text(that.response.length);
 
-  that.response.forEach(note => {
-    let updatedAt = dayjs(note.UpdatedAt);
-    let item = $('#li-tmpl').contents().clone();
-    item.find('.id').text(note.ID);
-    item.find('.datetime').text(updatedAt.format('MMM D, HH:mm'));
-    item.find('.title')
-      .attr('href', '/html/note?id='+note.ID)
-      .text(note.Title);
-    item.find('.tags').text(addPrefix(note.Tags, '#'));
-    item.insertAfter('#li-tmpl');
-  });
+  that.response.forEach(addNoteElem);
 }, () => {
   // onloadend
   $('#loading').hide();

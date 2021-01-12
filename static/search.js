@@ -58,17 +58,7 @@ function getNotes(that) {
 
 function refreshNoteList(notes) {
   note_list.html('');
-  notes.forEach(note => {
-    let updatedAt = dayjs(note.UpdatedAt);
-    let item = $('#li-tmpl').contents().clone();
-    item.find('.id').text(note.ID);
-    item.find('.datetime').text(updatedAt.format('MMM D, HH:mm'));
-    item.find('.title')
-      .attr('href', '/html/note?id='+note.ID)
-      .text(note.Title);
-    item.find('.tags').text(addPrefix(note.Tags, '#'));
-    item.appendTo(note_list);
-  });
+  notes.forEach(addNoteElem);
 }
 
 // 当网址中带有标签组参数时，直接自动搜索

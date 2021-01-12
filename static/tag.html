@@ -9,13 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
 
-    <style>
-      
-.li .id {
-    text-transform: uppercase;
-}
-
-    </style>
   </head>
   <body>
     <div><a href="/home">uglynotes</a> .. 
@@ -78,7 +71,17 @@
     <ul>
       <template id="li-tmpl">
         <li class="li">
-          [id:<strong class="id"></strong>] <span class="datetime"></span><br>
+          [id:<strong class="id"></strong>] <span class="datetime"></span>
+          <span class="deleted" style="display: none;">DELETED</span>
+          <span class="buttons">
+            <button class="delete">delete</button>
+            <span class="confirm-block" style="display: none; color: red;">
+              delete this note?
+              <button class="yes-btn">Yes</button>
+              <button class="no-btn">No</button>
+            </span>  
+          </span>    
+          <br>
           <a class="title"></a><br>
           <span class="tags"></span>
         </li>

@@ -109,6 +109,15 @@ func getAllNotes(c *fiber.Ctx) error {
 	return c.JSON(notes)
 }
 
+func getDeletedNotes(c *fiber.Ctx) error {
+	notes, err := db.AllDeletedNotes()
+	if err != nil {
+		return err
+	}
+	trimContents(notes)
+	return c.JSON(notes)
+}
+
 func trimContents(notes []Note) {
 	for i := range notes {
 		notes[i].Contents = ""
@@ -376,6 +385,14 @@ func deleteNote(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 	return db.DeleteNote(id)
+}
+
+func deleteNoteForever(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id := c.Params("id")
+	return db.DeleteNoteForever(id)
 }
 
 func deleteTag(c *fiber.Ctx) error {

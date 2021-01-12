@@ -199,9 +199,17 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 	return nil
 }
 
-// AllNotes fetches all notes, sorted by "UpdatedAt".
+// AllNotes .
 func (db *DB) AllNotes() (notes []Note, err error) {
-	err = db.DB.AllByIndex("UpdatedAt", &notes)
+	err = db.DB.Select(q.Eq("Deleted", false)).
+		OrderBy("UpdatedAt").Find(&notes)
+	return
+}
+
+// AllDeletedNotes .
+func (db *DB) AllDeletedNotes() (notes []Note, err error) {
+	err = db.DB.Select(q.Eq("Deleted", true)).
+		OrderBy("UpdatedAt").Find(&notes)
 	return
 }
 
@@ -508,7 +516,26 @@ func (db *DB) DeleteNote(id string) error {
 	defer tx.Rollback()
 
 	err1 := deleteTags(tx, note.Tags, note.ID)
-	err2 := tx.DeleteStruct(&note)
+	err2 := tx.UpdateField(&note, "Deleted", true)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+// DeleteNoteForever .
+func (db *DB) DeleteNoteForever(id string) error {
+	tx, err := db.DB.Begin(true)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err1 := tx.Select(q.Eq("NoteID", id)).Delete(&History{})
+	if err1 == storm.ErrNotFound {
+		err1 = nil
+	}
+	err2 := tx.DeleteStruct(&Note{ID: id})
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return err
 	}

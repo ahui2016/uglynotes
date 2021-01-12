@@ -61,41 +61,45 @@ if (document.location.pathname == "/html/note/edit") {
 
 
 function initEditForm(param_id) {
-  // initAjaxGet 函数定义在本文件末尾。
-  initAjaxGet('/api/note/'+param_id, function() {
-    if (this.status == 200) {
-      const note = this.response;
-      id = note.ID;
-    
-      if (note.Type == 'Markdown') {
-        plaintextBtn.prop('checked', false);
-        $('#markdown').prop('checked', true);
-        previewBtn.show();
-        oldNoteType = 'markdown';
-      }
-    
-      textarea.val(note.Contents);
-      oldContents = note.Contents;
-    
-      tagsElem.val(addPrefix(note.Tags, '#'));
-      tags = new Set(note.Tags);
-      oldTags = new Set(note.Tags);
+  ajaxGet('/api/note/'+param_id, null, that => {
+    const note = that.response;
 
-      enterEditMode();
-      insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
-      insertSuccessAlert('已进入编辑模式');
-    } else {
-      $('.alert').hide();
-      $('form').hide();
-      window.clearInterval(autoSubmitID);
-      let errMsg = !this.response ? this.status : this.response.message;
-      errMsg = `[id:${param_id}] ` + errMsg
-      insertErrorAlert(errMsg);
+    if (note.Deleted) {
+      onFail();
+      insertErrorAlert(`the note(id:${param_id}) is deleted`);
+      return;
     }
-  }, function() {
-    // onloadend
-    loading.hide();
-  });
+
+    id = note.ID;
+  
+    if (note.Type == 'Markdown') {
+      plaintextBtn.prop('checked', false);
+      $('#markdown').prop('checked', true);
+      previewBtn.show();
+      oldNoteType = 'markdown';
+    }
+  
+    textarea.val(note.Contents);
+    oldContents = note.Contents;
+  
+    tagsElem.val(addPrefix(note.Tags, '#'));
+    tags = new Set(note.Tags);
+    oldTags = new Set(note.Tags);
+
+    enterEditMode();
+    insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
+    insertSuccessAlert('已进入编辑模式');
+
+  }, onLoadend, onFail);
+}
+
+function onLoadend() {
+  loading.hide();
+}
+
+function onFail() {
+  $('form').hide();
+  window.clearInterval(autoSubmitID);
 }
 
 /* 表单初始化结束 */

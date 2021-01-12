@@ -43,12 +43,12 @@ function addTagItem(tag, insertPoint) {
     const delBtnBlock = $('#del-btn-tmpl').contents().clone();
     delBtnBlock.appendTo(item);
 
+    const deleted = item.find('.deleted');
+    const del_btn_block = item.find('.del-btn-block');
     const delete_btn = item.find('.delete');
     const confirm_block = item.find('.confirm-block');
     const no_btn = item.find('.no-btn');
     const yes_btn = item.find('.yes-btn');
-    const deleted = item.find('.deleted');
-    const del_btn_block = item.find('.del-btn-block');
 
     function delete_toggle() {
       delete_btn.toggle();

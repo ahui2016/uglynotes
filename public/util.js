@@ -130,3 +130,48 @@ function fileSizeToString(fileSize, fixed) {
   }
   return `${sizeMB.toFixed(fixed)} MB`;
 }
+
+function addNoteElem(note) {
+  let updatedAt = dayjs(note.UpdatedAt);
+  let item = $('#li-tmpl').contents().clone();
+  item.find('.id').text(note.ID);
+  item.find('.datetime').text(updatedAt.format('MMM D, HH:mm'));
+  const titleElem = item.find('.title');
+  titleElem
+    .attr('href', '/html/note?id='+note.ID)
+    .text(note.Title);
+  item.find('.tags').text(addPrefix(note.Tags, '#'));
+  item.prependTo('ul');
+
+  const deleted = item.find('.deleted');
+  const del_btn_block = item.find('.del-btn-block');
+  const delete_btn = item.find('.delete');
+  const confirm_block = item.find('.confirm-block');
+  const no_btn = item.find('.no-btn');
+  const yes_btn = item.find('.yes-btn');
+
+  function delete_toggle() {
+    delete_btn.toggle();
+    confirm_block.toggle();
+  }
+
+  // 删除按钮
+  delete_btn.click(delete_toggle);
+
+  // 取消删除
+  no_btn.click(delete_toggle);
+
+  // 确认删除
+  yes_btn.click(event => {
+    ajaxDelete('/api/note/'+note.ID, yes_btn, function() {
+      $('.alert').hide();
+      titleElem.removeAttr('href');
+      del_btn_block.hide();
+      deleted.show();
+    }, null, function() {
+      // onFail
+      const insertPoint = $(event.currentTarget).parent().parent().parent();
+      insertErrorAlert('删除失败', insertPoint);
+    });
+  });
+}

@@ -49,11 +49,13 @@ func main() {
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/note/all", getAllNotes)
+	api.Get("/note/deleted", getDeletedNotes)
 	api.Get("/note/all/size", notesSizeHandler)
 
 	api.Get("/note/:id", getNoteHandler)
 	api.Post("/note", newNoteHandler)
 	api.Delete("/note/:id", deleteNote)
+	api.Delete("/note/deleted/:id", deleteNoteForever)
 	api.Put("/note/type", changeType)
 	api.Put("/note/tags", updateNoteTags)
 	api.Put("/note/contents", updateNoteContents)

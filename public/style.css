@@ -73,5 +73,19 @@ pre {
 .protected {
     font-size: smaller;
     background-color: lightgreen;
-  }
+}
+      
+.li .id {
+    text-transform: uppercase;
+}
+.li .buttons {
+  display: none;
+}
+.li:hover .buttons {
+  display: inline;
+}
+.deleted {
+  color: #EEE;
+  background-color: #999;
+}
   

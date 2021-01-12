@@ -36,8 +36,9 @@ type Note struct {
 	Contents  string
 	Size      int
 	Tags      []string // []Tag.Name
-	CreatedAt string   `storm:"index"` // ISO8601
-	UpdatedAt string   `storm:"index"`
+	Deleted   bool
+	CreatedAt string `storm:"index"` // ISO8601
+	UpdatedAt string `storm:"index"`
 }
 
 // NewNote .
