@@ -42,9 +42,10 @@
 
     <form autocomplete="off" style="margin-top: 1em;">
       <label>
-        <input type="text" id="tags-input" autofocus required>
+        <input type="text" id="tags-input" placeholder="new tag groups" autofocus required>
       </label>
-      <input type="submit" value="add" id="add-btn">
+      <input type="submit" disabled style="display: none;">
+      <button id="add-btn">add</button>
     </form>
 
     <p id="loading" class="alert-info">Loading...</p>

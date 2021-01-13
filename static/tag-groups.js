@@ -115,3 +115,12 @@ add_btn.click(event => {
     insertSuccessAlert('新标签组添加成功');  
   });
 });
+
+tags_input.blur(() => {
+  const tags = getTags(tags_input);
+  if (tags) {
+    tags_input.val(addPrefix(tags, '#'));
+    add_btn.show();  
+  }
+});
+tags_input.focus(() => { add_btn.hide(); });
