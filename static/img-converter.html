@@ -11,20 +11,29 @@
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
 
     <style>
-#search-input {
-  width: 300px;
+#size-limit {
+  width: 4em;
 }
     </style>
   </head>
   <body>
     <div>
-      <a href="/home">uglynotes</a> .. Converter
+      <a href="/home">uglynotes</a> .. Image Converter
     </div>
 
+    <p>将图片转换为可以内嵌到 markdown 文件中的文本数据，不需要图床，图片直接内嵌到 markdown 文件里。</p>
+    <p>（注意，本程序会先缩小图片尺寸再转码。另外，建议一个 markdown 文件里只内嵌一两张图片，不要内嵌太多。）</p>
+
     <form autocomplete="off" style="margin-top: 1em;">
-      <label>
+      <label>size limit:
+        <input type="number" id="size-limit" value="480">
+        <span style="font-size: small; color: #666;">(图片尺寸限制，大图会被缩小)</span>
+      </label>
+      <br><br>
+      <label style="outline: olive solid 1px;">
         <input id="file-input" type="file" accept="image/*">
       </label>
+      <button id="convert-btn">convert</button>
     </form>
 
     <!-- 容量 -->
@@ -60,10 +69,26 @@
       </p>
     </template>
 
-    <p id="copy-block" style="display: none; color: blue;">
-      复制 markdown 图片代码
-      <button id="copy">copy</button>
-    </p>
+    <!-- <p id="copy-block" style="display: none; color: blue;">
+      复制图片代码
+      <button id="copy-img">copy image code</button>
+      粘贴在 markdown 文件底部
+      <br><br>
+      复制图片<em>引用</em>代码
+      <button id="copy-ref">copy reference</button>
+      粘贴在 markdown 文件的任意位置
+    </p> -->
+    <div id="copy-block" style="display: none;">
+      <p>请分别点击以下两个复制按钮，粘贴到同一个 markdown 文件中：</p>
+      <p>
+        <button id="copy-img">copy image code</button>
+        粘贴在 markdown 文件底部
+      </p>
+      <p>
+        <button id="copy-ref">copy reference</button>
+        粘贴在 markdown 文件的任意位置（图片显示位置）
+      </p>
+    </div>
 
     <p>
       <img id="img-preview" style="display: none;"  alt="the converted image">

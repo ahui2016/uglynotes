@@ -1,23 +1,36 @@
-const preview = $('#img-preview');
+const sizeLimitElem = $('#size-limit');
 const fileInput = $('#file-input');
+const convert_btn = $('#convert-btn');
 const sizeElem = $('#img-size');
 const copy_block = $('#copy-block');
-const copy_btn = $('#copy');
+const copy_img = $('#copy-img');
+const copy_ref = $('#copy-ref');
+const preview = $('#img-preview');
 
-let dataURL;
+let file, dataURL, img_ref;
 
 fileInput.change(event => {
-  const file = event.target.files[0];
-  if (!file) return;
+  if (!event.target.files[0]) return;
+  file = event.target.files[0];
+});
 
+convert_btn.click(event => {
+  event.preventDefault();
+  if (!file) {
+    insertInfoAlert('请选择文件');
+    return;
+  }
   const reader = new FileReader();
   reader.readAsDataURL(file);
   reader.addEventListener('load', function() {
     drawThumbResize(reader.result).then(img_resized => {
       copy_block.show();
       preview.show().attr('src', img_resized);
-      dataURL = `![${file.name}][${file.name}]\n\n[${file.name}]:${img_resized}`;
+      const img_id = 'img' + dayjs().valueOf();
+      dataURL = `[${img_id}]:${img_resized}`;
+      img_ref = `![${file.name}][${img_id}]`;
       const size = fileSizeToString(img_resized.length);
+      $('.alert').remove();
       insertSuccessAlert(`转码成功, size: ${size}`);
     })
     .catch(() => {
@@ -25,29 +38,35 @@ fileInput.change(event => {
       copy_block.hide();
       insertErrorAlert('image error');
     });
-  });    
+  }); 
 });
 
-const clipboard = new ClipboardJS('#copy', {
+const clipboardImg = new ClipboardJS('#copy-img', {
   text: () => { return dataURL; }
 });
-clipboard.on('success', () => {
-  insertSuccessAlert('已复制，请粘贴到 markdown 文件中', copy_btn);
+const clipboardRef = new ClipboardJS('#copy-ref', {
+  text: () => { return img_ref; }
 });
-clipboard.on('error', e => {
+clipboardImg.on('success', clipOnSuccess);
+clipboardImg.on('error', clipOnError);
+clipboardRef.on('success', clipOnSuccess);
+clipboardRef.on('error', clipOnError);
+function clipOnSuccess() {
+  insertSuccessAlert('复制成功', copy_block);
+}
+function clipOnError(e) {
   console.error('Action:', e.action);
   console.error('Trigger:', e.trigger);
   insertErrorAlert('复制失败，详细信息见控制台');
-});
-
+}
 async function drawThumbResize(src) {
-  const [canvas, changed] = await resizeLimit(src, null);
+  const [canvas, changed] = await resizeLimit(src, parseInt(sizeLimitElem.val()));
 
   // 如果图片不需要缩小，就直接返回src.
   if (!changed) {
     return src;
   }
-  const img_resized = canvas.toDataURL('image/jpeg');
+  const img_resized = canvas.toDataURL('image/jpeg', 0.85);
   return img_resized;
 }
   
@@ -78,7 +97,7 @@ function resizeLimit(src, limit) {
   
 function limitWidthHeight(w, h, limit) {
   if (!limit) {
-    limit = 600 // 默认边长上限 600px
+    limit = 480 // 默认边长上限 480px
   }
   // 先限制宽度
   if (w > limit) {
