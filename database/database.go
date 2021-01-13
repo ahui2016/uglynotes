@@ -66,7 +66,10 @@ func (db *DB) createIndexes() error {
 	err2 := db.DB.Init(&History{})
 	err3 := db.DB.Init(&Tag{})
 	err4 := db.DB.Init(&TagGroup{})
-	return util.WrapErrors(err1, err2, err3, err4)
+
+	// 不知道为啥 TagGroup 的 index 经常出问题
+	err5 := db.DB.ReIndex(&TagGroup{})
+	return util.WrapErrors(err1, err2, err3, err4, err5)
 }
 
 // NewNote .

@@ -102,7 +102,7 @@ function getTags(tagsElem) {
 }
 
 function tag_replace(tags) {
-  return tags.replace(/[#;,，'"\+\-\n]/g, ' ').trim();
+  return tags.replace(/[#;,，'"\+\n]/g, ' ').trim();
 }
 
 // 把集合数组转化为字符串。
