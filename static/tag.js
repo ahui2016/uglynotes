@@ -103,3 +103,13 @@ function getTag(tagsElem) {
   let arr = trimmed.split(/ +/);
   return arr[0];
 }
+
+// 自动在标签前加井号，同时更新全局变量。
+name_input.blur(() => {
+  const tag = getTag(name_input);
+  if (tag) {
+    name_input.val(tag);
+    ok.show();  
+  }
+});
+name_input.focus(() => { ok.hide(); });
