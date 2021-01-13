@@ -4,7 +4,6 @@ const search_input = $('#search-input');
 const search_btn = $('#search-btn');
 const loading = $('#loading');
 const note_list = $('ul');
-const notesCount = $('#notes-count');
 
 search_btn.click(event => {
   event.preventDefault();
@@ -50,9 +49,7 @@ function getNotes(that) {
   $('.alert').remove();
   let notes = [];
   if (that.response) notes = that.response;
-  notesCount
-    .show()
-    .text(`找到 ${notes.length} 篇笔记`);
+  insertInfoAlert(`找到 ${notes.length} 篇笔记`);
   return notes;
 }
 

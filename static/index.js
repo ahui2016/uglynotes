@@ -3,6 +3,12 @@ ajaxGet('/api/note/all', null, that => {
 }, () => {
   // onloadend
   $('#loading').hide();
+}, that => {
+  // onFail
+  if (that.response && that.response.message == 'not found') {
+    $('.alert').remove();
+    insertInfoAlert('数据库中没有笔记');
+  }
 });
 
 ajaxGet("/api/note/all/size", null, that => {

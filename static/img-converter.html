@@ -3,24 +3,39 @@
   <head>
     <meta charset="utf-8">
     <link rel="stylesheet" href="/public/style.css">
-
-    <title>Login .. uglynotes</title>
-
+   
+    <title>Converter .. uglynotes</title>
+   
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
 
+    <style>
+#search-input {
+  width: 300px;
+}
+    </style>
   </head>
   <body>
-    <p>uglynotes .. Login</p>
+    <div>
+      <a href="/home">uglynotes</a> .. Converter
+    </div>
 
-    <p id="loading" class="alert-info">Loading...</p>
+    <form autocomplete="off" style="margin-top: 1em;">
+      <label>
+        <input id="file-input" type="file" accept="image/*">
+      </label>
+    </form>
 
-    <!-- 默认的提示位置 -->
+    <!-- 容量 -->
+    <p id="img-size" style="color: #999;"></p>
+    
+    <!-- 默认提示位置 -->
     <template id="alert-insert-after-here"></template>
 
     <!-- 普通提示 -->
     <template id="alert-info-tmpl">
-      <p class="alert-info">
+      <p class="alert alert-info">
         <span class="alert-time"></span>
         <span class="alert-message"></span>
         <span class="alert-dismiss" title="dismiss">(&times;)</span>
@@ -38,31 +53,23 @@
 
     <!-- 错误提示 -->
     <template id="alert-danger-tmpl">
-      <p class="alert-danger">
+      <p class="alert alert-danger">
         <span class="alert-time"></span>
         <span class="alert-message"></span>
         <span class="alert-dismiss" title="dismiss">(&times;)</span>
       </p>
     </template>
 
-    <form autocomplete="off" style="display: none;">
-      <label>
-        password
-        <input type="password" id="password" autofocus required>
-      </label>
-      <input type="submit" value="login" id="submit">
-    </form>
+    <p id="copy-block" style="display: none; color: blue;">
+      复制 markdown 图片代码
+      <button id="copy">copy</button>
+    </p>
 
-    <div id="navi" style="display: none;">
-      <p><a href="/html/note/new">New Note</a> - 创建新笔记</p>
-      <p><a href="/home">Index</a> - 笔记列表</p>
-      <p><a href="/html/search">Search</a> - 搜索</p>
-      <p><a href="/html/tags">Tags</a> - 标签列表</p>
-      <p><a href="/html/tag/groups">Groups</a> - 标签组</p>
-      <p><a href="/html/converter">Converter</a> - 图片压缩转码</p>
-    </div>
+    <p>
+      <img id="img-preview" style="display: none;"  alt="the converted image">
+    </p>
 
     <script src="/public/util.js"></script>
-    <script src="/public/login.js"></script>
+    <script src="/static/img-converter.js"></script>
   </body>
 </html>

@@ -46,6 +46,7 @@ func main() {
 	htmlPage.Get("/tags", tagsPage)
 	htmlPage.Get("/search", searchPage)
 	htmlPage.Get("/tag/groups", tagGroupsPage)
+	htmlPage.Get("/converter", converterPage)
 
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/note/all", getAllNotes)
