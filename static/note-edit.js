@@ -86,6 +86,7 @@ function initEditForm(param_id) {
     tags = new Set(note.Tags);
     oldTags = new Set(note.Tags);
 
+    updateSize(note.Size);
     enterEditMode();
     insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
     insertSuccessAlert('已进入编辑模式');
@@ -194,6 +195,7 @@ function submit(event) {
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;
+    updateSize(contents.length);
     enterEditMode();
     insertSuccessAlert('新笔记创建成功 id:' + id);
   });
@@ -261,6 +263,7 @@ function update(event) {
     if (!event) autoUpdateCount++;
     ajaxPut(form, '/api/note/contents', update_btn, that => {
       oldContents = contents;
+      updateSize(contents.length);
       insertHistoryAlert(that.response.message);
     });
   }
@@ -301,6 +304,10 @@ function submitOrUpdate() {
     return;
   }
 }
+
+function updateSize(size) {
+  $('#note-size').text('Size: ' + fileSizeToString(size));
+} 
 
 autoSubmitID = window.setInterval(submitOrUpdate, DelayOfAutoUpdate);
 
