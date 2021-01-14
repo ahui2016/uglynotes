@@ -67,9 +67,12 @@ func (db *DB) createIndexes() error {
 	err3 := db.DB.Init(&Tag{})
 	err4 := db.DB.Init(&TagGroup{})
 
+	return util.WrapErrors(err1, err2, err3, err4)
+}
+
+func (db *DB) reIndex() error {
 	// 不知道为啥 TagGroup 的 index 经常出问题
-	err5 := db.DB.ReIndex(&TagGroup{})
-	return util.WrapErrors(err1, err2, err3, err4, err5)
+	return db.DB.ReIndex(&TagGroup{})
 }
 
 // NewNote .
@@ -236,7 +239,12 @@ func (db *DB) AllTagsByDate() (tags []Tag, err error) {
 
 // AllTagGroups fetches all tag-groups, sortd by "UpdatedAt".
 func (db *DB) AllTagGroups() ([]TagGroup, error) {
-	return txAllTagGroups(db.DB)
+	groups, err := txAllTagGroups(db.DB)
+	if err == storm.ErrNotFound {
+		db.reIndex()
+		return txAllTagGroups(db.DB)
+	}
+	return groups, nil
 }
 
 func txAllTagGroups(tx storm.Node) (groups []TagGroup, err error) {
