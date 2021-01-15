@@ -20,11 +20,11 @@
   cursor: pointer;
   background-color: #666;
 }
-.group {
+.tag.btn {
   color: #EEE;
   background-color: cadetblue;  
 }
-.group:hover {
+.tag.btn:hover {
   background-color:darkcyan
 }
 .protected {
@@ -88,11 +88,11 @@
           <span class="protected" style="display: none;">PROTECTED</span>
           <span class="deleted" style="display: none;">DELETED</span><br>
           <span class="tags" style="display: none;"></span>
-          <a class="tag group">group</a>
+          <a class="tag btn group" title="search group">group</a>
+          <a class="tag btn create" title="create a new note">create</a>
           <span class="buttons">
             <button class="protect">protect</button>
             <button class="unprotect" style="display: none;">unprotect</button>
-            <button class="create" title="create a new note">create</button>
             <button class="delete" title="delete this tag group">delete</button>
             <span class="confirm-block" style="display: none; color: red;">
               delete this group?

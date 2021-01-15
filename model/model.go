@@ -87,10 +87,23 @@ func (note *Note) SetContents(contents string) error {
 	return nil
 }
 
-// SetTags 可以对标签进行除重和排序。
-// 当不需要除重时可以直接操作 note.Tags
-func (note *Note) SetTags(tags []string) {
-	note.Tags = stringset.UniqueSort(tags)
+// SetTags 对标签进行一些验证和处理（例如除重和排序）。
+// 尽量不要直接操作 note.Tags
+func (note *Note) SetTags(tags []string) error {
+	sorted := stringset.UniqueSort(tags)
+	if len(sorted) < 2 {
+		return errors.New("too few tags (at least two)")
+	}
+	note.Tags = purify(sorted)
+	return nil
+}
+
+func purify(tags []string) (purified []string) {
+	re := regexp.MustCompile(`[#;,，'"/\+\n]`)
+	for i := range tags {
+		purified = append(purified, re.ReplaceAllString(tags[i], ""))
+	}
+	return
 }
 
 // RenameTag .

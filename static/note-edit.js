@@ -186,6 +186,10 @@ function submit(event) {
     insertErrorAlert('超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
     return;
   }
+  if (tags.size < 2) {
+    insertErrorAlert('至少需要 2 个标签才能创建笔记');
+    return;
+  }
 
   const form = new FormData();
   const note_type = $('input[name="note-type"]:checked').val();
@@ -234,6 +238,10 @@ function update(event) {
 
   // 更新标签
   if (!setsAreEqual(tags, oldTags)) {
+    if (tags.size < 2) {
+      insertErrorAlert('至少需要 2 个标签');
+      return;
+    }
     const form = new FormData();
     form.append('id', id);
     form.append('tags', JSON.stringify(Array.from(tags)));

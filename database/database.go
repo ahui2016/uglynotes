@@ -273,6 +273,14 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
+	// 更新 note.Tags
+	if err := note.SetTags(tags); err != nil {
+		return err
+	}
+	if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
+		return err
+	}
+
 	toAdd, toDelete := util.SliceDifference(tags, note.Tags)
 
 	// 删除标签（从 tag.NoteIDs 里删除 id）
@@ -290,11 +298,6 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 		return err
 	}
 
-	// 最后更新 note.Tags
-	note.SetTags(tags)
-	if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
-		return err
-	}
 	return tx.Commit()
 }
 

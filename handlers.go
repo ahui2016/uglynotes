@@ -163,16 +163,16 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 	noteType, err1 := getNoteType(c)
 	contents, err2 := getFormValue(c, "contents")
 	tags, err3 := getTags(c)
-
 	if err := util.WrapErrors(err1, err2, err3); err != nil {
 		return nil, err
 	}
 
 	note := db.NewNote(noteType)
-	if err := note.SetContents(contents); err != nil {
+	err1 = note.SetContents(contents)
+	err2 = note.SetTags(tags)
+	if err := util.WrapErrors(err1, err2); err != nil {
 		return nil, err
 	}
-	note.SetTags(tags)
 	return note, nil
 }
 

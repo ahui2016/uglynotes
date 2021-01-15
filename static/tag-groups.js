@@ -64,9 +64,7 @@ function addTagGroup(group) {
   protect.click(setProtected);
   unprotect.click(setProtected);
 
-  item.find('.create').click(() => {
-    window.location = '/html/note/new?tags=' + encodedTags;
-  });
+  item.find('.create').attr('href', '/html/note/new?tags=' + encodedTags);
     
   // 删除按钮
   delete_btn.click(delete_toggle);
