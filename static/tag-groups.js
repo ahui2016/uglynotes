@@ -97,10 +97,26 @@ function addTagGroup(group) {
 
 }
 
+// 对标签输入框进行处理
+const check_tags_btn = $('#check-tags-btn');
 const tags_input = $('#tags-input');
-const add_btn = $('#add-btn');
-
-add_btn.click(event => {
+const handle_tags_btn = $('#handle-tags-btn');
+check_tags_btn.click(() => {
+  check_tags_btn.hide();
+});
+tags_input.focus(() => {
+  handle_tags_btn.hide();
+  check_tags_btn.show();
+});
+tags_input.blur(() => {
+  const tags = getTags(tags_input);
+  if (tags) {
+    tags_input.val(addPrefix(tags, '#'));
+    handle_tags_btn.show();
+    check_tags_btn.hide();
+  }
+});
+handle_tags_btn.click(event => {
   event.preventDefault();
   const tagsSet = getTags(tags_input);
   if (tagsSet.size < 2) {
@@ -109,18 +125,9 @@ add_btn.click(event => {
   }
   const form = new FormData();
   form.append('tags', JSON.stringify(Array.from(tagsSet)));
-  ajaxPost(form, '/api/tag/group', add_btn, that => {
+  ajaxPost(form, '/api/tag/group', handle_tags_btn, that => {
     addTagGroup(that.response);
     $('.alert').remove();
     insertSuccessAlert('新标签组添加成功');  
   });
 });
-
-tags_input.blur(() => {
-  const tags = getTags(tags_input);
-  if (tags) {
-    tags_input.val(addPrefix(tags, '#'));
-    add_btn.show();  
-  }
-});
-tags_input.focus(() => { add_btn.hide(); });

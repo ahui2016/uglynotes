@@ -27,12 +27,12 @@ let autoUpdateCount = 1;
 
 higher.click(function(){
   const rows = textarea.attr('rows');
-  textarea.attr('rows', parseInt(rows) + 1);
+  textarea.attr('rows', parseInt(rows) + 5);
 });
 
 wider.click(function(){
   const cols = textarea.attr('cols');
-  textarea.attr('cols', parseInt(cols) + 1);
+  textarea.attr('cols', parseInt(cols) + 5);
 });
 
 function toggle_higher_wider() {
