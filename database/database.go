@@ -28,10 +28,9 @@ type (
 
 // DB .
 type DB struct {
-	path     string
-	capacity int
-	DB       *storm.DB
-	Sess     *session.Store
+	path string
+	DB   *storm.DB
+	Sess *session.Store
 
 	// 只在 package database 外部使用锁，不在 package database 内部使用锁。
 	sync.Mutex
@@ -43,21 +42,25 @@ func (db *DB) Open(dbPath string) (err error) {
 		return err
 	}
 	db.path = dbPath
-	db.capacity = settings.DatabaseCapacity
 	db.Sess = session.New(session.Config{
 		Expiration: settings.MaxAge,
 		CookieName: cookieName,
 	})
 	err1 := db.createIndexes()
 	err2 := db.initFirstID()
-	err3 := db.initCapacity()
-	err4 := db.initTotalSize()
-	return util.WrapErrors(err1, err2, err3, err4)
+	err3 := db.initTotalSize()
+	return util.WrapErrors(err1, err2, err3)
 }
 
 // Close 只是 db.DB.Close(), 不清空 db 里的其它部分。
 func (db *DB) Close() error {
 	return db.DB.Close()
+}
+
+func (db *DB) mustBegin() storm.Node {
+	tx, err := db.DB.Begin(true)
+	util.CheckErrorPanic(err)
+	return tx
 }
 
 // 创建 bucket 和索引
@@ -90,10 +93,7 @@ func (db *DB) Insert(note *Note) error {
 		return err
 	}
 
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	if err := tx.Save(note); err != nil {
@@ -270,10 +270,7 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 	if err != nil {
 		return err
 	}
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	toAdd, toDelete := util.SliceDifference(tags, note.Tags)
@@ -322,16 +319,12 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 	history := model.NewHistory(note.Contents, id)
 	note.SetContentsNow(contents)
 
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return "", err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	if err := addHistory(tx, note, history); err != nil {
-		return "", err
-	}
-	if err := txIncreaseTotalSize(tx, note.Size); err != nil {
+	err1 := addHistory(tx, note, history)
+	err2 := txCheckIncreaseTotalSize(tx, note.Size)
+	if err := util.WrapErrors(err1, err2); err != nil {
 		return "", err
 	}
 	err = tx.Commit()
@@ -359,6 +352,10 @@ func addHistory(tx storm.Node, note Note, history *History) error {
 		return err
 	}
 	return tx.Update(&note)
+}
+
+func (db *DB) DeleteHistory(oldHistory History) error {
+	return deleteHistory(db.DB, oldHistory)
 }
 
 func deleteHistory(tx storm.Node, oldHistory History) error {
@@ -432,10 +429,7 @@ func (db *DB) RenameTag(oldName, newName string) error {
 		return fmt.Errorf("tag[%s] %w", oldName, err)
 	}
 
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	if err := renameTag(tx, tag, newName); err != nil {
@@ -526,10 +520,7 @@ func (db *DB) DeleteNote(id string) error {
 		return err
 	}
 
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	err1 := deleteTags(tx, note.Tags, note.ID)
@@ -542,10 +533,7 @@ func (db *DB) DeleteNote(id string) error {
 
 // DeleteNoteForever .
 func (db *DB) DeleteNoteForever(id string) error {
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	err1 := tx.Select(q.Eq("NoteID", id)).Delete(&History{})
@@ -556,7 +544,10 @@ func (db *DB) DeleteNoteForever(id string) error {
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return err
 	}
-	return tx.Commit()
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return db.resetTotalSize()
 }
 
 // DeleteTag .
@@ -566,10 +557,7 @@ func (db *DB) DeleteTag(name string) error {
 		return fmt.Errorf("tag[%s] %w", name, err)
 	}
 
-	tx, err := db.DB.Begin(true)
-	if err != nil {
-		return err
-	}
+	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	err1 := notesDeleteTag(tx, tag)
@@ -596,6 +584,10 @@ func notesDeleteTag(tx storm.Node, tag Tag) error {
 
 // DeleteNoteHistory .
 func (db *DB) DeleteNoteHistory(noteID string) error {
-	return db.DB.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
+	err := db.DB.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
 		Delete(&History{})
+	if err != nil {
+		return err
+	}
+	return db.resetTotalSize()
 }

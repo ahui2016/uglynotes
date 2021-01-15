@@ -424,7 +424,7 @@ func deleteHistory(c *fiber.Ctx) error {
 	defer db.Unlock()
 
 	id := c.Params("id")
-	return db.DB.DeleteStruct(&History{ID: id})
+	return db.DeleteHistory(History{ID: id})
 }
 
 func deleteNoteHistories(c *fiber.Ctx) error {

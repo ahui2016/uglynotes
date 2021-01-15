@@ -2,8 +2,10 @@ package database
 
 import (
 	"errors"
+	"os"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
 )
@@ -13,7 +15,6 @@ const (
 	metadataBucket = "metadata-bucket"
 	currentIdKey   = "current-id-key"
 	totalSizeKey   = "total-size-key"
-	capacityKey    = "capacity-key"
 )
 
 func (db *DB) initFirstID() error {
@@ -56,15 +57,6 @@ func (db *DB) initTotalSize() (err error) {
 	return
 }
 
-func (db *DB) initCapacity() error {
-	return db.DB.Set(metadataBucket, capacityKey, db.capacity)
-}
-
-func txGetCapacity(tx storm.Node) (cap int, err error) {
-	err = tx.Get(metadataBucket, capacityKey, &cap)
-	return
-}
-
 // GetTotalSize .
 func (db *DB) GetTotalSize() (size int, err error) {
 	return txGetTotalSize(db.DB)
@@ -84,14 +76,7 @@ func txSetTotalSize(tx storm.Node, size int) error {
 }
 
 func (db *DB) checkTotalSize(addition int) error {
-	totalSize, err := db.GetTotalSize()
-	if err != nil {
-		return err
-	}
-	if totalSize+addition > db.capacity {
-		return errors.New("超过数据库总容量上限")
-	}
-	return nil
+	return txCheckTotalSize(db.DB, addition)
 }
 
 func txCheckTotalSize(tx storm.Node, addition int) error {
@@ -99,11 +84,7 @@ func txCheckTotalSize(tx storm.Node, addition int) error {
 	if err != nil {
 		return err
 	}
-	cap, err := txGetCapacity(tx)
-	if err != nil {
-		return err
-	}
-	if totalSize+addition > cap {
+	if totalSize+addition > settings.DatabaseCapacity {
 		return errors.New("超过数据库总容量上限")
 	}
 	return nil
@@ -124,7 +105,18 @@ func txIncreaseTotalSize(tx storm.Node, addition int) error {
 	return txSetTotalSize(tx, totalSize+addition)
 }
 
-// recountTotalSize 用于一次性删除多个项目时重新计算数据库总体积。
-// func (db *DB) recountTotalSize() error {
-// 	return nil
-// }
+func txCheckIncreaseTotalSize(tx storm.Node, addition int) error {
+	err1 := txCheckTotalSize(tx, addition)
+	err2 := txIncreaseTotalSize(tx, addition)
+	return util.WrapErrors(err1, err2)
+}
+
+// resetTotalSize 用于一次性删除多个项目时重新计算数据库总体积。
+// (注意，不可用于一次性添加多个项目，事实上也没有一次性添加多个项目的情境。)
+func (db *DB) resetTotalSize() error {
+	info, err := os.Lstat(db.path)
+	if err != nil {
+		return err
+	}
+	return db.setTotalSize(int(info.Size()))
+}
