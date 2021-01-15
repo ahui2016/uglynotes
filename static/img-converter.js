@@ -11,6 +11,8 @@ let file, dataURL, img_ref;
 
 fileInput.change(event => {
   if (!event.target.files[0]) return;
+  $('.alert').hide();
+  insertInfoAlert('已选择文件，请点击 convert 按钮');
   file = event.target.files[0];
 });
 

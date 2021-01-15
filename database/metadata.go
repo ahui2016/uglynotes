@@ -2,7 +2,6 @@ package database
 
 import (
 	"errors"
-	"os"
 
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/settings"
@@ -113,10 +112,11 @@ func txCheckIncreaseTotalSize(tx storm.Node, addition int) error {
 
 // resetTotalSize 用于一次性删除多个项目时重新计算数据库总体积。
 // (注意，不可用于一次性添加多个项目，事实上也没有一次性添加多个项目的情境。)
-func (db *DB) resetTotalSize() error {
-	info, err := os.Lstat(db.path)
-	if err != nil {
-		return err
-	}
-	return db.setTotalSize(int(info.Size()))
-}
+// BoltDB 的体积只能增加，永远不会变小（以后不用这个数据库了）
+// func (db *DB) resetTotalSize() error {
+// 	info, err := os.Lstat(db.path)
+// 	if err != nil {
+// 		return err
+// 	}
+// 	return db.setTotalSize(int(info.Size()))
+// }

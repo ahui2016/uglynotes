@@ -182,6 +182,10 @@ function submit(event) {
     if (event) insertInfoAlert('笔记内容不可空白');
     return;
   }
+  if (contents.length > NoteSizeLimit) {
+    insertErrorAlert('超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
+    return;
+  }
 
   const form = new FormData();
   const note_type = $('input[name="note-type"]:checked').val();
@@ -205,9 +209,7 @@ function enterEditMode() {
   $('title').text('Edit Note .. uglynotes');
   $('#where').text('Edit Note');
   $('#head-buttons').show();
-  $('#readonly-mode')
-    .show()
-    .attr('href', '/html/note?id='+id);
+  $('#readonly-mode').attr('href', '/html/note?id='+id);
   submit_block.hide();
   update_block.show();
 }
@@ -248,7 +250,10 @@ function update(event) {
     if (event) insertInfoAlert('笔记内容不可空白');
     return;
   }
-
+  if (contents.length > NoteSizeLimit) {
+    insertErrorAlert('超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit, 0));
+    return;
+  }
   if (contents == oldContents) {
     if (event) insertInfoAlert('笔记内容没有变化');
     return;

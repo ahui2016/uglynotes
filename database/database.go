@@ -536,18 +536,22 @@ func (db *DB) DeleteNoteForever(id string) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	err1 := tx.Select(q.Eq("NoteID", id)).Delete(&History{})
-	if err1 == storm.ErrNotFound {
-		err1 = nil
-	}
-	err2 := tx.DeleteStruct(&Note{ID: id})
-	if err := util.WrapErrors(err1, err2); err != nil {
+	if err := txDeleteOneNote(tx, id); err != nil {
 		return err
 	}
-	if err := tx.Commit(); err != nil {
+	query := tx.Select(q.Eq("NoteID", id))
+	if err := txDeleteHistories(tx, query); err != nil {
 		return err
 	}
-	return db.resetTotalSize()
+	return tx.Commit()
+}
+
+func txDeleteOneNote(tx storm.Node, id string) error {
+	var note Note
+	err1 := tx.One("ID", id, &note)
+	err2 := tx.DeleteStruct(&note)
+	err3 := txIncreaseTotalSize(tx, -note.Size)
+	return util.WrapErrors(err1, err2, err3)
 }
 
 // DeleteTag .
@@ -584,10 +588,26 @@ func notesDeleteTag(tx storm.Node, tag Tag) error {
 
 // DeleteNoteHistory .
 func (db *DB) DeleteNoteHistory(noteID string) error {
-	err := db.DB.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
-		Delete(&History{})
-	if err != nil {
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	query := tx.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false))
+	if err := txDeleteHistories(tx, query); err != nil {
 		return err
 	}
-	return db.resetTotalSize()
+	return tx.Commit()
+}
+
+func txDeleteHistories(tx storm.Node, query storm.Query) error {
+	var (
+		size      int
+		histories []History
+	)
+	err1 := query.Find(&histories)
+	for i := range histories {
+		size += histories[i].Size
+	}
+	err2 := txIncreaseTotalSize(tx, -size)
+	err3 := query.Delete(&History{})
+	return util.WrapErrors(err1, err2, err3)
 }

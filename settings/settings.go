@@ -15,6 +15,7 @@ const (
 const MaxAge = 99 * time.Hour * 24
 
 // NoteSizeLimit 限制每篇笔记的体积。
+// 注意：该限制还需要在 public/util.js 中设置（为了做前端限制）
 const NoteSizeLimit = 1 << 19 // 512 KB
 
 // MaxBodySize 单个文件上限

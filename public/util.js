@@ -4,6 +4,10 @@ const DelayOfAutoUpdate = 1000 * 60 // 60秒
 // setInterval 自动运行次数的上限
 const AutoUpdateLimit = 100
 
+// NoteSizeLimit 限制每篇笔记的体积。
+// 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
+const NoteSizeLimit = 1 << 19 // 512 KB
+
 // 插入出错提示
 function insertErrorAlert(msg, where) {
   insertAlert('danger', msg, where);
