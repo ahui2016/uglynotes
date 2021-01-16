@@ -99,7 +99,7 @@ function resizeLimit(src, limit) {
   
 function limitWidthHeight(w, h, limit) {
   if (!limit) {
-    limit = 480 // 默认边长上限 480px
+    limit = 300 // 默认边长上限 300px
   }
   // 先限制宽度
   if (w > limit) {
