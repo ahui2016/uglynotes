@@ -11,11 +11,6 @@ const submit_block = $('#submit-block');
 const confirm_block = $('#confirm-block');
 const update_block = $('#update-block');
 const update_btn = $('#update');
-const delete_btn = $('#delete');
-const yes_btn = $('#yes');
-const no_btn = $('#no');
-const higher = $('#higher');
-const wider = $('#wider');
 
 let id = '';
 let oldContents = '';
@@ -113,31 +108,6 @@ $('input[name="note-type"]').change(() => {
 tagsElem.blur(() => {
     tags = getTags();
     tagsElem.val(addPrefix(tags, '#'));
-});
-
-// 删除按钮
-delete_btn.click(delete_toggle);
-
-// 取消删除
-no_btn.click(delete_toggle);
-
-function delete_toggle(event) {
-  event.preventDefault();
-  delete_btn.toggle();
-  confirm_block.toggle();
-}
-
-// 确认删除
-yes_btn.click(event => {
-  event.preventDefault();
-  ajaxDelete('/api/note/'+id, yes_btn, function() {
-    $('.alert').hide();
-    $('form').hide();
-    $('#head-buttons').hide();
-    window.clearInterval(autoSubmitID);
-    insertSuccessAlert(`笔记 id:${id} 已删除`);
-    id = '';
-  });
 });
 
 // 预览按钮

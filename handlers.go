@@ -75,7 +75,7 @@ func tagGroupsPage(c *fiber.Ctx) error {
 }
 
 func converterPage(c *fiber.Ctx) error {
-	return c.SendFile("./static/img-converter.html")
+	return c.SendFile("./public/img-converter.html")
 }
 
 func searchPage(c *fiber.Ctx) error {
