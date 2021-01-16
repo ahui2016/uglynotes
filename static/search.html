@@ -18,7 +18,13 @@
   <body>
     <div>
       <a href="/home">uglynotes</a> .. Search
+      <img id="about-page-icon" src="/public/info-circle.svg" alt="info"
+          title="显示/隐藏说明">
     </div>
+
+    <p id="about-page-info" style="display: none;">
+      搜索方式：标签是精确搜索，并且分大小写；标题是正则表达式搜索。
+    </p>
 
     <form autocomplete="off" style="margin-top: 1em;">      
       <div id="search-options">

@@ -28,7 +28,9 @@ svg {
   </head>
   <body>
     <div><a href="/home">uglynotes</a> ..
-      <span id="where">New Note</span> ..
+      <span id="where">New Note</span>
+      <img id="about-page-icon" src="/public/info-circle.svg" alt="info"
+          title="显示/隐藏说明"> ..
       <a href="/converter" title="image converter" target="_blank">Converter</a>
       <div id="head-buttons" style="display: none;">
         |
@@ -37,6 +39,10 @@ svg {
         |
       </div>
     </div>
+
+    <p id="about-page-info" style="display: none;">
+      注意：在修改了笔记或标签后，在关闭页面前，请点击一次 update 按钮，以确保修改内容被保存到服务器。
+    </p>
 
     <p id="loading" class="alert-info">Loading...</p>
 

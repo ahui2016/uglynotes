@@ -4,6 +4,7 @@ const name_input = $('#name-input');
 const rename_block = $('#rename-block');
 const cancel = $('#cancel');
 const ok = $('#ok');
+const check_tags_btn = $('#check-tags-btn');
 
 const tag_name = getUrlParam('name');
 tagName.text(tag_name);
@@ -104,11 +105,15 @@ function getTag(tagsElem) {
   return arr[0];
 }
 
+name_input.focus(() => {
+  ok.hide();
+  check_tags_btn.show();
+});
 name_input.blur(() => {
   const tag = getTag(name_input);
   if (tag) {
-    name_input.val(tag);
+    name_input.val('#' + tag);
     ok.show();  
+    check_tags_btn.hide();
   }
 });
-name_input.focus(() => { ok.hide(); });

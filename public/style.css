@@ -88,4 +88,11 @@ pre {
   color: #EEE;
   background-color: #999;
 }
-  
+
+#about-page-icon {
+    cursor: pointer;
+}
+#about-page-info {
+    color: #eee;
+    background-color: darkseagreen;
+}

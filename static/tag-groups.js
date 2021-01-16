@@ -99,23 +99,23 @@ function addTagGroup(group) {
 const check_tags_btn = $('#check-tags-btn');
 const tags_input = $('#tags-input');
 const handle_tags_btn = $('#handle-tags-btn');
-check_tags_btn.click(() => {
-  check_tags_btn.hide();
-});
+
 tags_input.focus(() => {
   handle_tags_btn.hide();
   check_tags_btn.show();
 });
-tags_input.blur(() => {
+check_tags_btn.click(() => {
   const tags = getTags(tags_input);
-  if (tags) {
-    tags_input.val(addPrefix(tags, '#'));
-    handle_tags_btn.show();
-    check_tags_btn.hide();
+  if (tags.size == 0) return ;
+  if (tags.size == 1) {
+    insertInfoAlert('标签组至少需要 2 个标签');
+    return;
   }
+  tags_input.val(addPrefix(tags, '#'));
+  handle_tags_btn.show();
+  check_tags_btn.hide();
 });
-handle_tags_btn.click(event => {
-  event.preventDefault();
+handle_tags_btn.click(() => {
   const tagsSet = getTags(tags_input);
   if (tagsSet.size < 2) {
     insertInfoAlert('标签组至少需要 2 个标签');

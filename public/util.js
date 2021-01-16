@@ -1,7 +1,7 @@
 // 创建历史版本的间隔时间
 const DelayOfAutoUpdate = 1000 * 60 // 60秒
 
-// setInterval 自动运行次数的上限
+// 自动保存（自动更新）次数的上限
 const AutoUpdateLimit = 100
 
 // NoteSizeLimit 限制每篇笔记的体积。
@@ -179,3 +179,8 @@ function addNoteElem(note) {
     });
   });
 }
+
+// 初始化页面说明。
+$('#about-page-icon').click(() => {
+  $('#about-page-info').toggle();
+});

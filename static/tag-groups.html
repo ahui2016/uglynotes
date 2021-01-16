@@ -37,17 +37,20 @@
   </head>
   <body>
     <div>
-        <a href="/home">uglynotes</a> .. Tag Groups
+      <a href="/home">uglynotes</a> .. Tag Groups
+      <img id="about-page-icon" src="/public/info-circle.svg" alt="info"
+          title="显示/隐藏说明">
     </div>
 
-    <form autocomplete="off" style="margin-top: 1em;">
-      <label>
-        <input type="text" id="tags-input" placeholder="new tag groups" autofocus required>
-      </label>
-      <input type="submit" disabled style="display: none;">
+    <p id="about-page-info" style="display: none;">
+      点击 create 按钮创建新笔记，如果没有合适的标签组，可先新增标签组再创建新笔记。
+    </p>
+
+    <div style="margin-top: 1em;">
+      <input type="text" id="tags-input" placeholder="new tag groups" autocomplete="off" autofocus required>
       <button id="check-tags-btn">check</button>
       <button id="handle-tags-btn" style="display: none;">add</button>
-    </form>
+    </div>
 
     <p id="loading" class="alert-info">Loading...</p>
     
