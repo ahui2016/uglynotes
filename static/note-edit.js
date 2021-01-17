@@ -20,11 +20,13 @@ let oldTags = new Set();
 let autoSubmitID;
 let autoUpdateCount = 1;
 
+const higher = $('#higher');
 higher.click(function(){
   const rows = textarea.attr('rows');
   textarea.attr('rows', parseInt(rows) + 5);
 });
 
+const wider = $('#wider');
 wider.click(function(){
   const cols = textarea.attr('cols');
   textarea.attr('cols', parseInt(cols) + 5);
