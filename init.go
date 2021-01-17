@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"path/filepath"
 
@@ -9,22 +11,50 @@ import (
 	"github.com/ahui2016/uglynotes/util"
 )
 
+const settingsFile = "settings.json"
+
+var (
+	config     settings.Settings
+	dataDir    string
+	dbPath     string
+	exportPath string
+)
+
 var (
 	db          = new(database.DB)
 	passwordTry = 0
 )
 
-var (
-	dataDir    = filepath.Join(util.UserHomeDir(), settings.DataFolderName)
-	dbPath     = filepath.Join(dataDir, settings.DatabaseFileName)
-	exportPath = filepath.Join(dataDir, settings.ExportFileName)
-)
-
 func init() {
+	setConfig()
+	setPaths()
 	util.MustMkdir(dataDir)
 
 	// open the db here, close the db in main().
 	err := db.Open(dbPath)
 	util.Panic(err)
 	log.Print(dbPath)
+}
+
+func setPaths() {
+	dataDir = filepath.Join(util.UserHomeDir(), config.DataFolderName)
+	dbPath = filepath.Join(dataDir, config.DatabaseFileName)
+	exportPath = filepath.Join(dataDir, config.ExportFileName)
+}
+
+func setConfig() {
+	configJSON, err := ioutil.ReadFile(settingsFile)
+
+	// 找不到文件或内容为空
+	if err != nil || len(configJSON) == 0 {
+		config = settings.Default()
+		configJSON, err := json.MarshalIndent(config, "", "    ")
+		util.Panic(err)
+		util.Panic(ioutil.WriteFile(settingsFile, configJSON, 0600))
+		return
+	}
+
+	// settingsFile 有内容
+	util.Panic(json.Unmarshal(configJSON, &settings.Config))
+	config = settings.Config
 }

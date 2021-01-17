@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/settings"
@@ -15,6 +16,8 @@ import (
 )
 
 const cookieName = "uglynotesCookie"
+
+var config = settings.Config
 
 type (
 	Note       = model.Note
@@ -43,13 +46,19 @@ func (db *DB) Open(dbPath string) (err error) {
 	}
 	db.path = dbPath
 	db.Sess = session.New(session.Config{
-		Expiration: settings.MaxAge,
+		Expiration: mustParseDuration(config.MaxAge),
 		CookieName: cookieName,
 	})
 	err1 := db.createIndexes()
 	err2 := db.initFirstID()
 	err3 := db.initTotalSize()
 	return util.WrapErrors(err1, err2, err3)
+}
+
+func mustParseDuration(s string) time.Duration {
+	d, err := time.ParseDuration(s)
+	util.Panic(err)
+	return d
 }
 
 // Close 只是 db.DB.Close(), 不清空 db 里的其它部分。
@@ -59,7 +68,7 @@ func (db *DB) Close() error {
 
 func (db *DB) mustBegin() storm.Node {
 	tx, err := db.DB.Begin(true)
-	util.CheckErrorPanic(err)
+	util.Panic(err)
 	return tx
 }
 
@@ -135,7 +144,7 @@ func deleteOldTagGroup(tx storm.Node) (err error) {
 	if err != nil {
 		return err
 	}
-	if len(groups) > settings.TagGroupLimit {
+	if len(groups) > settings.Config.TagGroupLimit {
 		oldGroup := groups[0]
 		err = tx.DeleteStruct(&oldGroup)
 	}
@@ -340,7 +349,7 @@ func addHistory(tx storm.Node, note Note, history *History) error {
 	if err != nil {
 		return err
 	}
-	if len(histories) > settings.HistoryLimit {
+	if len(histories) > config.HistoryLimit {
 		oldHistory := histories[0]
 		if err := deleteHistory(tx, oldHistory); err != nil {
 			return err

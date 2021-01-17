@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 
-	"github.com/ahui2016/uglynotes/settings"
 	"github.com/gofiber/fiber/v2"
 )
 
@@ -53,7 +52,7 @@ func isLoggedOut(c *fiber.Ctx) bool {
 }
 
 func checkPasswordTry(c *fiber.Ctx) error {
-	if passwordTry >= settings.PasswordMaxTry {
+	if passwordTry >= config.PasswordMaxTry {
 		_ = db.Close()
 		msg := "No more try. Input wrong password too many times."
 		return errors.New(msg)

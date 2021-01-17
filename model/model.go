@@ -12,6 +12,8 @@ import (
 	"github.com/ahui2016/uglynotes/util"
 )
 
+var config = settings.Config
+
 // NoteType 是一个枚举类型，用来区分 Note 的类型。
 type NoteType string
 
@@ -69,7 +71,7 @@ func (note *Note) UpdatedAtNow() {
 // SetContents 在填充内容的同时设置 size, 并根据笔记类型设置标题。
 // 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
 func (note *Note) SetContents(contents string) error {
-	title := firstLineLimit(contents, settings.NoteTitleLimit)
+	title := firstLineLimit(contents, config.NoteTitleLimit)
 	if note.Type == Markdown {
 		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
 			title = mdTitle
@@ -81,7 +83,7 @@ func (note *Note) SetContents(contents string) error {
 	note.Title = title
 	note.Contents = contents
 	note.Size = len(contents)
-	if note.Size > settings.NoteSizeLimit {
+	if note.Size > config.NoteSizeLimit {
 		return errors.New("size limit exceeded")
 	}
 	return nil
@@ -176,7 +178,7 @@ func (tag *Tag) Remove(id string) {
 
 // TimeNow .
 func TimeNow() string {
-	return time.Now().Format(settings.ISO8601)
+	return time.Now().Format(config.ISO8601)
 }
 
 // firstLineLimit 返回第一行，并限定长度，其中 s 必须事先 TrimSpace 并确保不是空字串。

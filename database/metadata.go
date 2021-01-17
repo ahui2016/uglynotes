@@ -83,7 +83,7 @@ func txCheckTotalSize(tx storm.Node, addition int) error {
 	if err != nil {
 		return err
 	}
-	if totalSize+addition > settings.DatabaseCapacity {
+	if totalSize+addition > settings.Config.DatabaseCapacity {
 		return errors.New("超过数据库总容量上限")
 	}
 	return nil

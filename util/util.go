@@ -102,13 +102,6 @@ func DeleteFromSlice(slice []string, i int) []string {
 // MustMarshal .
 func MustMarshal(data interface{}) []byte {
 	dataJSON, err := json.MarshalIndent(data, "", "    ")
-	CheckErrorPanic(err)
+	Panic(err)
 	return dataJSON
-}
-
-// CheckErrorPanic panics if err != nil
-func CheckErrorPanic(err error) {
-	if err != nil {
-		panic(err)
-	}
 }

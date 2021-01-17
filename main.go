@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	"github.com/ahui2016/uglynotes/settings"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 )
@@ -12,7 +11,7 @@ func main() {
 	defer db.Close()
 
 	app := fiber.New(fiber.Config{
-		BodyLimit:    settings.MaxBodySize,
+		BodyLimit:    config.MaxBodySize,
 		Concurrency:  10,
 		ErrorHandler: errorHandler,
 	})
@@ -83,5 +82,5 @@ func main() {
 	// 导出全部笔记
 	// api.Get("/export", exportAllNotes)
 
-	log.Fatal(app.Listen(settings.DefaultAddress))
+	log.Fatal(app.Listen(config.Address))
 }
