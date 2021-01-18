@@ -15,7 +15,7 @@
 ## 特色二：Markdown 内嵌图片
 
 - 特色一历史版本功能是我在逛 V2EX 的时候看大家讨论笔记软件时获得的灵感，这个特色二也同样是看到有人说起，我才想到做这个功能。
-- 目前我做了一个独立的页面 http://note.ai42.xyz/convert 用来将图片转码，转码后可粘贴到任何 markdown 文件中（不局限于本站，任何支持 markdown 的地方都可以使用），即可让图片直接内嵌在 markdown 文件里。
+- 目前我做了一个独立的页面 http://note.ai42.xyz/converter 用来将图片转码，转码后可粘贴到任何 markdown 文件中（不局限于本站，任何支持 markdown 的地方都可以使用），即可让图片直接内嵌在 markdown 文件里。
 - 不需要图床，因此也不用怕图床失效，图片数据就在 markdown 文件里，因此图片永远有效。
 
 
@@ -95,7 +95,7 @@ $ ./uglynotes &
 启动程序时默认在当前目录下找 settings.json, 但也可以用 -config 参数指定配置文件：
 
 ```
-$ ./uglynotes -config /path/to/another_settings.json
+$ ./uglynotes -config /path/to/another_settings.json &
 ```
 
 关于 settings.json 里各项目的详细说明请看 settings/settings.go

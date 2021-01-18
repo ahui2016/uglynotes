@@ -3,6 +3,7 @@ package database
 import (
 	"errors"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -21,6 +22,7 @@ var config = settings.Config
 
 type (
 	Note       = model.Note
+	Note2      = model.Note2
 	NoteType   = model.NoteType
 	History    = model.History
 	Tag        = model.Tag
@@ -91,6 +93,39 @@ func (db *DB) reIndex() error {
 func (db *DB) NewNote(noteType model.NoteType) *Note {
 	id := db.mustGetNextID()
 	return model.NewNote(id.String(), noteType)
+}
+
+// NewNote .
+func (db *DB) NewNote2(noteType model.NoteType) *Note2 {
+	id := db.mustGetNextID()
+	return model.NewNote2(id.String(), noteType)
+}
+
+// Insert .
+func (db *DB) Insert2(note *Note2) error {
+	if err := db.checkTotalSize(note.Size); err != nil {
+		return err
+	}
+	if err := db.checkExist(note.ID); err != nil {
+		return err
+	}
+
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	if err := tx.Save(note); err != nil {
+		return err
+	}
+	if err := saveTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
+		return err
+	}
+	if err := addTags(tx, note.Tags, note.ID); err != nil {
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return db.increaseTotalSize(note.Size)
 }
 
 // Insert .
@@ -170,6 +205,12 @@ func (db *DB) checkExist(id string) error {
 
 // GetByID .
 func (db *DB) GetByID(id string) (note Note, err error) {
+	err = db.DB.One("ID", id, &note)
+	return note, err
+}
+
+// GetByID .
+func (db *DB) GetByID2(id string) (note Note2, err error) {
 	err = db.DB.One("ID", id, &note)
 	return note, err
 }
@@ -341,6 +382,31 @@ func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err err
 	}
 	err = tx.Commit()
 	return history.ID, err
+}
+
+// AddPatch .
+func (db *DB) AddPatch(id, patch string) (int, error) {
+	note, err := db.GetByID2(id)
+	if err != nil {
+		return 0, err
+	}
+	size := note.Size
+	if err := note.AddPatchNow(patch); err != nil {
+		return 0, err
+	}
+	log.Print("AddPatch: ", note)
+
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	err1 := tx.Update(&note)
+	err2 := txCheckIncreaseTotalSize(tx, note.Size-size)
+
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return 0, err
+	}
+	err = tx.Commit()
+	return len(note.Patches), err
 }
 
 // addHistory 添加新 history, 同时可能需要删除旧的 history.

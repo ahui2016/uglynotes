@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>New Note .. uglynotes</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+
+    <style>
+.svg-btn {
+  cursor: pointer;
+  text-decoration: none;
+}
+svg {
+  color: white;
+  background-color: #999;
+}
+#contents {
+  resize: none;
+}
+    </style>
+  </head>
+  <body>
+    <div><a href="/home">uglynotes</a> ..
+      <span id="where">New Note</span>
+      <img id="about-page-icon" src="/public/info-circle.svg" alt="info"
+          title="显示/隐藏说明"> ..
+      <a href="/converter" title="image converter" target="_blank">Converter</a>
+      <div id="head-buttons" style="display: none;">
+        |
+        <a href="#" id="copy" data-clipboard-target="#contents">Copy</a> |
+        <a id="readonly-mode">readonly mode</a>
+        |
+      </div>
+    </div>
+
+    <p id="about-page-info" style="display: none;">
+      注意：在修改了笔记或标签后，在离开本页面前，请点击一次 update 按钮，以确保修改内容被保存到服务器。
+      另外要注意当自动保存次数达到上限时，就不会自动保存了，遇到这种情况请 <strong>手动保存</strong> 后刷新页面。
+    </p>
+
+    <p id="loading" class="alert-info">Loading...</p>
+
+    <p id="note-size" style="color: #666;"></p>
+
+    <form autocomplete="off">
+      <p>
+        <input type="radio" id="plaintext" name="note-type" value="plaintext" checked>
+        <label for="plaintext" id="plaintext-label">plaintext</label>
+        <input type="radio" id="markdown" name="note-type" value="markdown">
+        <label for="markdown">markdown</label>
+        <a id="preview-btn" href="#" style="display: none;">preview</a>
+        <a id="edit-btn" href="#" style="display: none;">edit</a>
+        <textarea id="contents" cols="60" rows="10" autofocus
+          style="display: block;"></textarea>
+        <a id="higher" class="svg-btn" title="higher">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
+          </svg>
+        </a>
+        <a id="wider" class="svg-btn" title="wider" style="margin-left: 0.5em;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-bar-right" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M6 8a.5.5 0 0 0 .5.5h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L12.293 7.5H6.5A.5.5 0 0 0 6 8zm-2.5 7a.5.5 0 0 1-.5-.5v-13a.5.5 0 0 1 1 0v13a.5.5 0 0 1-.5.5z"/>
+          </svg>
+        </a>
+      </p>
+      <div id="preview" class="markdown-preview" style="display: none;"></div>
+      <p>
+        <label for="tags" style="display: block;">Tags:</label>
+        <textarea id="tags" cols="60" rows="2"></textarea>
+      </p>
+      <p id="submit-block">
+        <input type="submit" value="submit" id="submit">
+      </p>
+      <p id="update-block" style="display: none;">
+        <button id="update">update</button>
+      </p>
+    </form>
+
+    <!-- 默认提示位置 -->
+    <template id="alert-insert-after-here"></template>
+
+    <!-- 普通提示 -->
+    <template id="alert-info-tmpl">
+      <p class="alert alert-info">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 成功提示 -->
+    <template id="alert-success-tmpl">
+      <p class="alert alert-success">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <!-- 错误提示 -->
+    <template id="alert-danger-tmpl">
+      <p class="alert alert-danger">
+        <span class="alert-time"></span>
+        <span class="alert-message"></span>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <script src="/public/util.js"></script>
+    <script src="/static/note-edit2.js"></script>
+  </body>
+</html>

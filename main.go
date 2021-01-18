@@ -39,8 +39,10 @@ func main() {
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/note", notePage)
 	htmlPage.Get("/note/new", noteNewPage)
+	htmlPage.Get("/note/new2", noteNewPage2)
 	htmlPage.Get("/note/edit", noteEditPage)
 	htmlPage.Get("/history", historyPage)
+	htmlPage.Get("/history2", historyPage2)
 	htmlPage.Get("/note/history", noteHistoryPage)
 	htmlPage.Get("/tag", tagPage)
 	htmlPage.Get("/tags", tagsPage)
@@ -53,12 +55,15 @@ func main() {
 	api.Get("/note/all/size", notesSizeHandler)
 
 	api.Get("/note/:id", getNoteHandler)
+	api.Get("/note2/:id", getNoteHandler2)
 	api.Post("/note", newNoteHandler)
+	api.Post("/note2", newNoteHandler2)
 	api.Delete("/note/:id", deleteNote)
 	api.Delete("/note/deleted/:id", deleteNoteForever)
 	api.Put("/note/type", changeType)
 	api.Put("/note/tags", updateNoteTags)
 	api.Put("/note/contents", updateNoteContents)
+	api.Post("/note/patch", addPatch)
 
 	api.Get("/note/:id/history", noteHistory)
 	api.Delete("/note/:id/history", deleteNoteHistories)
@@ -80,7 +85,7 @@ func main() {
 	api.Get("/search/title/:pattern", searchTitle)
 
 	// 导出全部笔记
-	// api.Get("/export", exportAllNotes)
+	api.Get("/export", exportAllNotes)
 
 	log.Fatal(app.Listen(config.Address))
 }

@@ -2,6 +2,8 @@ package main
 
 import (
 	"io/ioutil"
+	"log"
+	"strconv"
 	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/model"
@@ -11,6 +13,7 @@ import (
 
 type (
 	Note     = model.Note
+	Note2    = model.Note2
 	NoteType = model.NoteType
 	History  = model.History
 	TagGroup = model.TagGroup
@@ -49,12 +52,20 @@ func noteNewPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
 
+func noteNewPage2(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-edit2.html")
+}
+
 func noteEditPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
 
 func historyPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/history.html")
+}
+
+func historyPage2(c *fiber.Ctx) error {
+	return c.SendFile("./static/history2.html")
 }
 
 func noteHistoryPage(c *fiber.Ctx) error {
@@ -144,6 +155,14 @@ func getNoteHandler(c *fiber.Ctx) error {
 	return c.JSON(note)
 }
 
+func getNoteHandler2(c *fiber.Ctx) error {
+	note, err := db.GetByID2(c.Params("id"))
+	if err != nil {
+		return err
+	}
+	return c.JSON(note)
+}
+
 func newNoteHandler(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
@@ -156,6 +175,37 @@ func newNoteHandler(c *fiber.Ctx) error {
 		return err
 	}
 	return jsonMessage(c, note.ID)
+}
+
+func newNoteHandler2(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	note, err := createNote2(c)
+	if err != nil {
+		return jsonError(c, err.Error(), 400)
+	}
+	if err := db.Insert2(note); err != nil {
+		return err
+	}
+	return jsonMessage(c, note.ID)
+}
+
+func createNote2(c *fiber.Ctx) (*Note2, error) {
+	noteType, err1 := getNoteType(c)
+	contents, err2 := getFormValue(c, "contents")
+	tags, err3 := getTags(c)
+	if err := util.WrapErrors(err1, err2, err3); err != nil {
+		return nil, err
+	}
+
+	note := db.NewNote2(noteType)
+	err1 = note.SetContents(contents)
+	err2 = note.SetTags(tags)
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return nil, err
+	}
+	return note, nil
 }
 
 func createNote(c *fiber.Ctx) (*Note, error) {
@@ -213,6 +263,24 @@ func updateNoteContents(c *fiber.Ctx) error {
 		return err
 	}
 	return jsonMessage(c, historyID)
+}
+
+func addPatch(c *fiber.Ctx) error {
+	db.Lock()
+	defer db.Unlock()
+
+	id, err1 := getID(c)
+	patch, err2 := getFormValue(c, "patch")
+	if err := util.WrapErrors(err1, err2); err != nil {
+		return err
+	}
+
+	count, err := db.AddPatch(id, patch)
+	log.Print(count)
+	if err != nil {
+		return err
+	}
+	return jsonMessage(c, strconv.Itoa(count))
 }
 
 func notesSizeHandler(c *fiber.Ctx) error {
