@@ -92,7 +92,13 @@ $ killall uglynotes
 $ ./uglynotes &
 ```
 
-关于 settings.json 里各项目的更详细说明请看 settings/settings.go
+启动程序时默认在当前目录下找 settings.json, 但也可以用 -config 参数指定配置文件：
+
+```
+$ ./uglynotes -config /path/to/another_settings.json
+```
+
+关于 settings.json 里各项目的详细说明请看 settings/settings.go
 
 另外，“创建历史版本的间隔时间” 和 “自动保存（自动更新）次数的上限” 在 public/util.js 中设置，修改后不需要重启程序，而是需要在浏览器用 ctrl+shift+R 强制刷新。
 

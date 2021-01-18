@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"io/ioutil"
 	"log"
 	"path/filepath"
@@ -11,7 +12,10 @@ import (
 	"github.com/ahui2016/uglynotes/util"
 )
 
-const settingsFile = "settings.json"
+var (
+	cfgFlag      = flag.String("config", "", "run with a config file")
+	settingsFile = "settings.json"
+)
 
 var (
 	config     settings.Settings
@@ -26,6 +30,11 @@ var (
 )
 
 func init() {
+	flag.Parse()
+	if *cfgFlag != "" {
+		settingsFile = *cfgFlag
+	}
+
 	setConfig()
 	setPaths()
 	util.MustMkdir(dataDir)
