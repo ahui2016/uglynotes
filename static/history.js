@@ -91,6 +91,31 @@ next_btn.click(() => {
   gotoHistory(n);
 });
 
+export_btn.click(event => {
+  event.preventDefault();
+  exportDownload();
+});
+
+function exportDownload() {
+  const filename = `note-${id}-history-${current_n}`;
+  const contents = note.Patches.slice(0, current_n).reduce(
+    (patched, patch) => {
+      return patched = Diff.applyPatch(patched, patch)}, "");
+  insertDownloadAlert(filename, contents);
+}
+// 插入提示
+function insertDownloadAlert(filename, contents) {
+  let alertElem = $('#alert-download-tmpl').contents().clone();
+  alertElem.find('.alert-link')
+    .text(filename)
+    .attr('download', filename)
+    .attr('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents));
+  alertElem.find('.alert-dismiss').click(event => {
+    $(event.currentTarget).parent().remove();
+  });
+  alertElem.insertAfter('#buttons');
+}
+
 // 删除按钮
 delete_btn.click(delete_toggle);
 

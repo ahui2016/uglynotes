@@ -80,7 +80,16 @@
       </p>
     </template>
 
-    <div style="margin: 1em 0 1em 0;">
+    <!-- 下载提示 -->
+    <template id="alert-download-tmpl">
+      <p class="alert alert-info">
+        <span>已导出，请点击下载：</span>
+        <a class="alert-link"></a>
+        <span class="alert-dismiss" title="dismiss">(&times;)</span>
+      </p>
+    </template>
+
+    <div id="buttons" style="margin: 1em 0 1em 0;">
       <button id="first-btn" disabled>First</button>
       <button id="previous-btn" disabled>Previous</button>
       <input type="number" id="number" min="1" value="1" disabled>
