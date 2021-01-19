@@ -40,19 +40,6 @@ type Note struct {
 	Type      NoteType
 	Title     string
 	Contents  string
-	Size      int
-	Tags      []string // []Tag.Name
-	Deleted   bool
-	CreatedAt string `storm:"index"` // ISO8601
-	UpdatedAt string `storm:"index"`
-}
-
-// Note 表示一个数据表。
-type Note2 struct {
-	ID        string // primary key
-	Type      NoteType
-	Title     string
-	Contents  string
 	Patches   []string
 	Size      int
 	Tags      []string // []Tag.Name
@@ -62,9 +49,9 @@ type Note2 struct {
 }
 
 // NewNote .
-func NewNote2(id string, noteType NoteType) *Note2 {
+func NewNote(id string, noteType NoteType) *Note {
 	now := TimeNow()
-	return &Note2{
+	return &Note{
 		ID:        id,
 		Type:      noteType,
 		CreatedAt: now,
@@ -75,7 +62,7 @@ func NewNote2(id string, noteType NoteType) *Note2 {
 // SetContents 用于第一次填充内容，同时设置 size, 并根据笔记类型设置标题。
 // 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
 // 每篇笔记只使用一次 SetContents, 之后应使用 AddPatch.
-func (note *Note2) SetContents(contents string) error {
+func (note *Note) SetContents(contents string) error {
 	size, title, err := getSizeTitle(contents, note.Type)
 	if err != nil {
 		return err
@@ -87,7 +74,7 @@ func (note *Note2) SetContents(contents string) error {
 }
 
 // AddPatchNow combines AddPatch and UpdatedAtNow.
-func (note *Note2) AddPatchNow(patch string) error {
+func (note *Note) AddPatchNow(patch string) error {
 	if err := note.AddPatch(patch); err != nil {
 		return err
 	}
@@ -96,7 +83,7 @@ func (note *Note2) AddPatchNow(patch string) error {
 }
 
 // AddPatch .
-func (note *Note2) AddPatch(patch string) error {
+func (note *Note) AddPatch(patch string) error {
 	contents, err := patchApply(patch, note.Contents)
 	if err != nil {
 		return err
@@ -107,6 +94,7 @@ func (note *Note2) AddPatch(patch string) error {
 	note.Patches = append(note.Patches, patch)
 	return nil
 }
+
 func getSizeTitle(contents string, noteType NoteType) (
 	size int, title string, err error) {
 	size = len(contents)
@@ -121,6 +109,7 @@ func getSizeTitle(contents string, noteType NoteType) (
 	}
 	return
 }
+
 func getTitle(contents string, noteType NoteType) string {
 	title := firstLineLimit(contents, config.NoteTitleLimit)
 	if noteType == Markdown {
@@ -130,11 +119,13 @@ func getTitle(contents string, noteType NoteType) string {
 	}
 	return title
 }
+
 func diffGNU(s string) string {
 	i := strings.Index(s, "@@")
 	re := regexp.MustCompile(`\\ .*`)
 	return re.ReplaceAllString(s[i:], "")
 }
+
 func patchApply(patch string, text string) (string, error) {
 	log.Print("patch: ", patch)
 	dmp := diffmatchpatch.New()
@@ -148,65 +139,8 @@ func patchApply(patch string, text string) (string, error) {
 }
 
 // UpdatedAtNow updates note.UpdatedAt to TimeNow().
-func (note *Note2) UpdatedAtNow() {
-	note.UpdatedAt = TimeNow()
-}
-
-// SetTags 对标签进行一些验证和处理（例如除重和排序）。
-// 尽量不要直接操作 note.Tags
-func (note *Note2) SetTags(tags []string) error {
-	sorted := stringset.UniqueSort(tags)
-	if len(sorted) < 2 {
-		return errors.New("too few tags (at least two)")
-	}
-	note.Tags = purify(sorted)
-	return nil
-}
-
-// NewNote .
-func NewNote(id string, noteType NoteType) *Note {
-	now := TimeNow()
-	return &Note{
-		ID:        id,
-		Type:      noteType,
-		CreatedAt: now,
-		UpdatedAt: now,
-	}
-}
-
-// SetContentsNow combines SetContents and UpdatedAtNow.
-func (note *Note) SetContentsNow(contents string) error {
-	if err := note.SetContents(contents); err != nil {
-		return err
-	}
-	note.UpdatedAtNow()
-	return nil
-}
-
-// UpdatedAtNow updates note.UpdatedAt to TimeNow().
 func (note *Note) UpdatedAtNow() {
 	note.UpdatedAt = TimeNow()
-}
-
-// SetContents 在填充内容的同时设置 size, 并根据笔记类型设置标题。
-// 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
-func (note *Note) SetContents(contents string) error {
-	title := firstLineLimit(contents, config.NoteTitleLimit)
-	if note.Type == Markdown {
-		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
-			title = mdTitle
-		}
-	}
-	if title == "" {
-		return errors.New("note title is empty")
-	}
-	note.Title = title
-	note.Contents = contents
-	note.Size = len(contents)
-	if note.Size > config.NoteSizeLimit {
-		return errors.New("size limit exceeded")
-	}
-	return nil
 }
 
 // SetTags 对标签进行一些验证和处理（例如除重和排序）。

@@ -241,15 +241,17 @@ function update(event) {
 
   // 更新笔记内容
   if (contents != oldContents) {
+    const patch = Diff.createPatch(" ", oldContents, contents);
     const form = new FormData();
     form.append('id', id);
-    form.append('contents', contents);
+    form.append('patch', patch);
 
     if (!event) autoUpdateCount++;
-    ajaxPut(form, '/api/note/contents', update_btn, that => {
+    ajaxPost(form, '/api/note/patch', update_btn, that => {
       oldContents = contents;
       updateSize(contents.length);
-      insertHistoryAlert(that.response.message);
+      let count = that.response.message;
+      insertSuccessAlert(`笔记内容更新，产生第 ${count} 个历史版本`);
     });
   }
 }
@@ -264,17 +266,6 @@ clipboard.on('error', e => {
   console.error('Trigger:', e.trigger);
   insertErrorAlert('复制失败，详细信息见控制台', loading);
 });
-
-// 插入历史版本提示
-function insertHistoryAlert(history_id, where) {
-  let alertElem = $('#alert-history-tmpl').contents().clone();
-  alertElem.find('.alert-time').text(dayjs().format('HH:mm:ss'));
-  alertElem.find('.history-url')
-    .text(history_id)
-    .attr('href', `/html/history?id=${history_id}&noteid=${id}`);
-  if (!where) where = '#alert-insert-after-here';
-  alertElem.insertAfter(where);
-}
 
 // 自动更新
 function submitOrUpdate() {

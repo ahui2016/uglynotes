@@ -55,17 +55,13 @@ func main() {
 	api.Get("/note/all/size", notesSizeHandler)
 
 	api.Get("/note/:id", getNoteHandler)
-	api.Get("/note2/:id", getNoteHandler2)
 	api.Post("/note", newNoteHandler)
-	api.Post("/note2", newNoteHandler2)
 	api.Delete("/note/:id", deleteNote)
 	api.Delete("/note/deleted/:id", deleteNoteForever)
 	api.Put("/note/type", changeType)
 	api.Put("/note/tags", updateNoteTags)
-	api.Put("/note/contents", updateNoteContents)
 	api.Post("/note/patch", addPatch)
 
-	api.Get("/note/:id/history", noteHistory)
 	api.Delete("/note/:id/history", deleteNoteHistories)
 	api.Get("/history/:id", getHistoryHandler)
 	api.Put("/history/protected", setProtected)

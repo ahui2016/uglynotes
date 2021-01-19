@@ -1,5 +1,5 @@
 // 创建历史版本的间隔时间
-const DelayOfAutoUpdate = 1000 * 60 // 60秒
+const DelayOfAutoUpdate = 1000 * 60 * 5 // 5分钟
 
 // 自动保存（自动更新）次数的上限
 const AutoUpdateLimit = 100

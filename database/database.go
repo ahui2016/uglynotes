@@ -14,6 +14,7 @@ import (
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
 	"github.com/gofiber/fiber/v2/middleware/session"
+	"github.com/ianbruene/go-difflib/difflib"
 )
 
 const cookieName = "uglynotesCookie"
@@ -22,7 +23,6 @@ var config = settings.Config
 
 type (
 	Note       = model.Note
-	Note2      = model.Note2
 	NoteType   = model.NoteType
 	History    = model.History
 	Tag        = model.Tag
@@ -77,55 +77,95 @@ func (db *DB) mustBegin() storm.Node {
 // 创建 bucket 和索引
 func (db *DB) createIndexes() error {
 	err1 := db.DB.Init(&Note{})
-	err2 := db.DB.Init(&History{})
-	err3 := db.DB.Init(&Tag{})
-	err4 := db.DB.Init(&TagGroup{})
-
+	err2 := db.DB.Init(&Tag{})
+	err3 := db.DB.Init(&TagGroup{})
+	err4 := db.reIndex()
 	return util.WrapErrors(err1, err2, err3, err4)
 }
 
 func (db *DB) reIndex() error {
 	// 不知道为啥 TagGroup 的 index 经常出问题
-	return db.DB.ReIndex(&TagGroup{})
+	err1 := db.DB.ReIndex(&Note{})
+	err2 := db.DB.ReIndex(&TagGroup{})
+	return util.WrapErrors(err1, err2)
+}
+
+// Upgrade 将旧的历史版本系统（全文保存）升级至新的历史版本系统（只保存差异）。
+func (db *DB) Upgrade() error {
+	if db.noNeedToUpgrade() {
+		return nil
+	}
+
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	var all []Note
+	if err := tx.All(&all); err != nil {
+		return err
+	}
+	for _, note := range all {
+		histories, err1 := txNoteHistories(tx, note.ID)
+		if len(histories) == 0 {
+			continue
+		}
+		patch, err2 := getUnifiedDiffString("", histories[0].Contents)
+		if err := util.WrapErrors(err1, err2); err != nil {
+			return err
+		}
+		note.Patches = append(note.Patches, patch)
+		for i := 1; i < len(histories); i++ {
+			a := histories[i-1].Contents
+			b := histories[i].Contents
+			patch, err := getUnifiedDiffString(a, b)
+			if err != nil {
+				return err
+			}
+			note.Patches = append(note.Patches, patch)
+		}
+		query := tx.Select(q.Eq("NoteID", note.ID))
+		err1 = txDeleteHistories(tx, query)
+		err2 = tx.Save(&note)
+		err3 := txIncreaseTotalSize(tx, note.Size)
+		if err := util.WrapErrors(err1, err2, err3); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
+}
+
+func txNoteHistories(tx storm.Node, noteID string) (histories []History, err error) {
+	err = tx.Select(q.Eq("NoteID", noteID)).
+		OrderBy("CreatedAt").Find(&histories)
+	return
+}
+
+func getUnifiedDiffString(a, b string) (string, error) {
+	diff := difflib.LineDiffParams{
+		A:        difflib.SplitLines(a),
+		B:        difflib.SplitLines(b),
+		FromFile: " ",
+		ToFile:   " ",
+	}
+	return difflib.GetUnifiedDiffString(diff)
+}
+
+func (db *DB) noNeedToUpgrade() bool {
+	var histories []History
+	err := db.DB.All(&histories)
+	if err == storm.ErrNotFound {
+		return true
+	}
+	util.Panic(err)
+	if len(histories) == 0 {
+		return true
+	}
+	return false
 }
 
 // NewNote .
 func (db *DB) NewNote(noteType model.NoteType) *Note {
 	id := db.mustGetNextID()
 	return model.NewNote(id.String(), noteType)
-}
-
-// NewNote .
-func (db *DB) NewNote2(noteType model.NoteType) *Note2 {
-	id := db.mustGetNextID()
-	return model.NewNote2(id.String(), noteType)
-}
-
-// Insert .
-func (db *DB) Insert2(note *Note2) error {
-	if err := db.checkTotalSize(note.Size); err != nil {
-		return err
-	}
-	if err := db.checkExist(note.ID); err != nil {
-		return err
-	}
-
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	if err := tx.Save(note); err != nil {
-		return err
-	}
-	if err := saveTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
-		return err
-	}
-	if err := addTags(tx, note.Tags, note.ID); err != nil {
-		return err
-	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-	return db.increaseTotalSize(note.Size)
 }
 
 // Insert .
@@ -205,12 +245,6 @@ func (db *DB) checkExist(id string) error {
 
 // GetByID .
 func (db *DB) GetByID(id string) (note Note, err error) {
-	err = db.DB.One("ID", id, &note)
-	return note, err
-}
-
-// GetByID .
-func (db *DB) GetByID2(id string) (note Note2, err error) {
 	err = db.DB.One("ID", id, &note)
 	return note, err
 }
@@ -363,30 +397,9 @@ func (db *DB) GetHistory(id string) (history History, err error) {
 	return
 }
 
-// UpdateNoteContents .
-func (db *DB) UpdateNoteContents(id, contents string) (historyID string, err error) {
-	note, err := db.GetByID(id)
-	if err != nil {
-		return "", err
-	}
-	history := model.NewHistory(note.Contents, id)
-	note.SetContentsNow(contents)
-
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	err1 := addHistory(tx, note, history)
-	err2 := txCheckIncreaseTotalSize(tx, note.Size)
-	if err := util.WrapErrors(err1, err2); err != nil {
-		return "", err
-	}
-	err = tx.Commit()
-	return history.ID, err
-}
-
 // AddPatch .
 func (db *DB) AddPatch(id, patch string) (int, error) {
-	note, err := db.GetByID2(id)
+	note, err := db.GetByID(id)
 	if err != nil {
 		return 0, err
 	}
@@ -409,29 +422,6 @@ func (db *DB) AddPatch(id, patch string) (int, error) {
 	return len(note.Patches), err
 }
 
-// addHistory 添加新 history, 同时可能需要删除旧的 history.
-func addHistory(tx storm.Node, note Note, history *History) error {
-	histories, err := txUnprotectedHistories(tx, note.ID)
-	if err != nil {
-		return err
-	}
-	if len(histories) > config.HistoryLimit {
-		oldHistory := histories[0]
-		if err := deleteHistory(tx, oldHistory); err != nil {
-			return err
-		}
-	}
-
-	// 原笔记的体积转移至历史，因此只新增新笔记的体积。
-	if err := txCheckTotalSize(tx, note.Size); err != nil {
-		return err
-	}
-	if err := tx.Save(history); err != nil {
-		return err
-	}
-	return tx.Update(&note)
-}
-
 func (db *DB) DeleteHistory(oldHistory History) error {
 	return deleteHistory(db.DB, oldHistory)
 }
@@ -441,16 +431,6 @@ func deleteHistory(tx storm.Node, oldHistory History) error {
 		return err
 	}
 	return txIncreaseTotalSize(tx, -oldHistory.Size)
-}
-
-// NoteHistories .
-func (db *DB) NoteHistories(noteID string) (histories []History, err error) {
-	err = db.DB.Select(q.Eq("NoteID", noteID)).
-		OrderBy("CreatedAt").Find(&histories)
-	if err == storm.ErrNotFound {
-		err = nil
-	}
-	return
 }
 
 func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, err error) {

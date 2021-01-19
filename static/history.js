@@ -1,89 +1,58 @@
-let isProtected = false;
-
 const confirm_block = $('#confirm-block');
 const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
-const plaintext = $('.plaintext.contents');
-const markdown = $('.markdown.contents');
-const diff = $('.diff.contents');
+const diff = $('.diff');
+const number_input = $('#number');
+const go_btn = $('#go-btn');
+const export_btn = $('#export-btn');
+const previous_btn = $('#previous-btn');
+const next_btn = $('#next-btn');
 
 const id = getUrlParam('id');
-const note_id = getUrlParam('noteid');
+let note, current_n, max_n;
 
-ajaxGet('/api/history/'+id, null, that => {
-  const history = that.response;
-  const createdAt = dayjs(history.CreatedAt);
-  $('#datetime').text(createdAt.format('YYYY-MM-DD HH:mm:ss'));
-  $('#note-id').text('id:'+history.NoteID);
-  $('#history-id').text(history.ID);
-  $('#size').text(fileSizeToString(history.Size));
-  $('#histories').attr('href', '/html/note/history?id='+note_id);
-
-  const protected = $('.protected');
-  const protectBtn = $('#protect');
-  const unprotectBtn = $('#unprotect');
-  protectBtn.click(setProtected);
-  unprotectBtn.click(setProtected);
-  if (history.Protected) protectToggle();
-
-  function protectToggle() {
-    isProtected = !isProtected;
-    protected.toggle();
-    protectBtn.toggle();
-    unprotectBtn.toggle();
-  }
-
-  function setProtected(event) {
-    const form = new FormData();
-    form.append("id", history.ID);
-    form.append("protected", !isProtected);
-    ajaxPut(
-        form, '/api/history/protected', $(event.currentTarget), () => {
-      protectToggle();
-    });
-  }
-
-  plaintext.text(history.Contents);
-
-  const dirty = marked(history.Contents);
-  const clean = DOMPurify.sanitize(dirty);
-  markdown.html(clean);
-  
-  const clipboard = new ClipboardJS('#copy', {
-    text: () => { return history.Contents; }
-  });
-  clipboard.on('success', () => {
-    insertSuccessAlert('该历史版本内容已复制到剪贴板');
-  });
-  clipboard.on('error', e => {
-    console.error('Action:', e.action);
-    console.error('Trigger:', e.trigger);
-    insertErrorAlert('复制失败，详细信息见控制台');
-  });
-
-  ajaxGet('/api/note/'+note_id, null, that => {
-    const current_contents = that.response.Contents;
-    const diffString = Diff.createPatch(
-      " ", current_contents, history.Contents
-    );
-    const diffJson = Diff2Html.parse(diffString);
-    const diffHtml = Diff2Html.html(diffJson, { 
-      drawFileList: false,
-    });
-    diff.html(diffHtml);
-  });
+ajaxGet('/api/note/'+id, null, that => {
+  note = that.response;
+  $('#note-id')
+    .text('id:'+id)
+    .attr('href', '/html/note?id='+id);
+  max_n = note.Patches.length;
+  number_input.val(max_n).attr('max', max_n);
+  gotoHistory(max_n);
 }, function() {
   //onloadend
   $('#loading').hide();
 });
 
-$('input[name="note-type"]').change(event => {
-  plaintext.hide();
-  markdown.hide();
-  diff.hide();
-  const value = event.currentTarget.value;
-  $(`.${value}.contents`).show();
+function gotoHistory(n) {
+  if (current_n == n) return;
+  current_n = n;
+  const diffString = note.Patches[n-1];
+  const diffJson = Diff2Html.parse(diffString);
+  const diffHtml = Diff2Html.html(diffJson, { 
+    drawFileList: false,
+  });
+  diff.html(diffHtml);
+}
+
+go_btn.click(() => {
+  const n = number_input.val();
+  gotoHistory(current_n);
+});
+
+previous_btn.click(() => {
+  if (current_n == 1) return;
+  const n = current_n - 1;
+  number_input.val(n);
+  gotoHistory(n);
+});
+
+next_btn.click(() => {
+  if (current_n == max_n) return;
+  const n = current_n + 1;
+  number_input.val(n);
+  gotoHistory(n);
 });
 
 // 删除按钮

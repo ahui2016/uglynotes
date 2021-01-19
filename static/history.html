@@ -24,7 +24,7 @@
 .markdown {
   background-color: whitesmoke;
 }
-.contents {
+.diff {
   max-width: 600px;
   min-width: 400px;
   margin-bottom: 200px;
@@ -53,21 +53,8 @@
     </style>
   </head>
   <body>
-    <div>Note [<span id="note-id"></span>] .. 
-      <a id="histories">History</a>
-      <div id="head-buttons">
-        |
-        <button id="protect">Protect</button>
-        <button id="unprotect" style="display: none;">Unprotect</button> |
-        <a href="#" id="copy">Copy</a> |
-        <a id="delete" href="#">Delete</a>
-        <span id="confirm-block" style="display: none; color: red;">
-          delete this history?
-          <button id="yes">Yes</button>
-          <button id="no">No</button>
-        </span>  
-        |
-      </div>
+    <div>Note [<a id="note-id"></a>] .. 
+      <span>History</span>(<span id="count"></span>)
     </div>
 
     <p id="loading" class="alert-info">Loading...</p>
@@ -93,30 +80,13 @@
       </p>
     </template>
 
-    <div id="title-block">
-      <p style="font-size: smaller; color: #999;">
-        History ID: <span id="history-id"></span>
-        <span class="protected" style="display: none;">PROTECTED</span><br>
-        Created at: <span id="datetime"></span><br>
-        Size: <span id="size"></span>
-      </p>
-    </div>
+    <button id="previous-btn">Previous</button>
+    <button id="next-btn">Next</button>
+    <input type="number" id="number" min="1">
+    <button id="go-btn" title="查看指定的历史版本">Go</button>
+    <button id="export-btn" title="导出指定的历史版本">Export</button>
 
-    <div id="display-options">
-      Display as
-      <input type="radio" id="plaintext-btn" name="note-type" value="plaintext" checked>
-      <label for="plaintext-btn" id="plaintext-label">plaintext</label>
-      <input type="radio" id="markdown-btn" name="note-type" value="markdown">
-      <label for="markdown-btn">markdown</label>
-      <input type="radio" id="diff-btn" name="note-type" value="diff">
-      <label for="diff-btn">diff</label>
-    </div>
-
-    <pre class="plaintext contents"></pre>
-
-    <div class="markdown contents" style="display: none;"></div>
-
-    <div class="diff contents" style="display: none;"></div>
+    <div class="diff"></div>
 
     <script src="/public/util.js"></script>
     <script src="/static/history.js"></script>
