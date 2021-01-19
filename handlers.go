@@ -145,10 +145,20 @@ func exportAllNotes(c *fiber.Ctx) error {
 func trimContents(notes []Note) {
 	for i := range notes {
 		notes[i].Contents = ""
+		notes[i].Patches = []string{}
 	}
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
+	note, err := db.GetByID(c.Params("id"))
+	if err != nil {
+		return err
+	}
+	note.Patches = []string{}
+	return c.JSON(note)
+}
+
+func getNoteWithHistory(c *fiber.Ctx) error {
 	note, err := db.GetByID(c.Params("id"))
 	if err != nil {
 		return err
@@ -239,26 +249,6 @@ func notesSizeHandler(c *fiber.Ctx) error {
 		"totalSize": size,
 		"capacity":  config.DatabaseCapacity,
 	})
-}
-
-func getHistoryHandler(c *fiber.Ctx) error {
-	history, err := db.GetHistory(c.Params("id"))
-	if err != nil {
-		return err
-	}
-	return c.JSON(history)
-}
-
-func setProtected(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
-	historyID, err1 := getID(c)
-	protected, err2 := getProtected(c)
-	if err := util.WrapErrors(err1, err2); err != nil {
-		return err
-	}
-	return db.SetProtected(historyID, protected)
 }
 
 func setTagGroupProtected(c *fiber.Ctx) error {
@@ -422,14 +412,6 @@ func deleteTag(c *fiber.Ctx) error {
 		return err
 	}
 	return db.DeleteTag(name)
-}
-
-func deleteHistory(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
-	id := c.Params("id")
-	return db.DeleteHistory(History{ID: id})
 }
 
 func deleteNoteHistories(c *fiber.Ctx) error {

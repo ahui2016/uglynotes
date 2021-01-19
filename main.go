@@ -62,10 +62,8 @@ func main() {
 	api.Put("/note/tags", updateNoteTags)
 	api.Post("/note/patch", addPatch)
 
+	api.Get("/note/:id/history", getNoteWithHistory)
 	api.Delete("/note/:id/history", deleteNoteHistories)
-	api.Get("/history/:id", getHistoryHandler)
-	api.Put("/history/protected", setProtected)
-	api.Delete("/history/:id", deleteHistory)
 
 	api.Get("/tag/all", getAllTags)
 	api.Get("/tag/all-by-date", allTagsByDate)

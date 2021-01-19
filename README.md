@@ -105,4 +105,4 @@ $ ./uglynotes -config /path/to/another_settings.json &
 ## 备份/数据导出
 
 - 整个数据库只有一个文件 uglynotes.db (软件启动时会在终端打印该文件的位置)，因此只要备份这个文件就可以了。
-- 另外，访问 /export 可以将全部笔记（不包括历史版本）导出为 uglynotes.json, 放在与 uglynotes.db 同一个文件夹里。
+- 另外，访问 /export 可以将全部笔记（包括历史版本）导出为 uglynotes.json (与 uglynotes.db 同一个文件夹)。

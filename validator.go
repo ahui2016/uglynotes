@@ -40,17 +40,6 @@ func getTags(c *fiber.Ctx) ([]string, error) {
 	return tags, err
 }
 
-func getProtected(c *fiber.Ctx) (protected bool, err error) {
-	s, err := getFormValue(c, "protected")
-	if err != nil {
-		return
-	}
-	if s == "true" {
-		protected = true
-	}
-	return
-}
-
 func getParams(c *fiber.Ctx, key string) (string, error) {
 	return url.QueryUnescape(c.Params(key))
 }

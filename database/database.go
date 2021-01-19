@@ -391,12 +391,6 @@ func (db *DB) GetTag(name string) (tag Tag, err error) {
 	return
 }
 
-// GetHistory .
-func (db *DB) GetHistory(id string) (history History, err error) {
-	err = db.DB.One("ID", id, &history)
-	return
-}
-
 // AddPatch .
 func (db *DB) AddPatch(id, patch string) (int, error) {
 	note, err := db.GetByID(id)
@@ -422,17 +416,6 @@ func (db *DB) AddPatch(id, patch string) (int, error) {
 	return len(note.Patches), err
 }
 
-func (db *DB) DeleteHistory(oldHistory History) error {
-	return deleteHistory(db.DB, oldHistory)
-}
-
-func deleteHistory(tx storm.Node, oldHistory History) error {
-	if err := tx.DeleteStruct(&oldHistory); err != nil {
-		return err
-	}
-	return txIncreaseTotalSize(tx, -oldHistory.Size)
-}
-
 func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, err error) {
 	err = tx.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
 		OrderBy("CreatedAt").Find(&histories)
@@ -440,12 +423,6 @@ func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, 
 		err = nil
 	}
 	return
-}
-
-// SetProtected .
-func (db *DB) SetProtected(historyID string, protected bool) error {
-	return db.DB.UpdateField(
-		&History{ID: historyID}, "Protected", protected)
 }
 
 // SetTagGroupProtected .
