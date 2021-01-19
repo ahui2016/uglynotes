@@ -15,7 +15,7 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#note-type').text(note.Type);
   $('#size').text(fileSizeToString(note.Size));
   if (!note.Deleted) $('#edit').attr('href', '/html/note/edit?id='+note.ID);
-  $('#history').attr('href', '/html/note/history?id='+note.ID)
+  $('#history').attr('href', '/html/history?id='+note.ID)
 
   if (note.Deleted) {
     isDeleted = true;

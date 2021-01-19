@@ -4,10 +4,11 @@ const yes_btn = $('#yes');
 const no_btn = $('#no');
 const diff = $('.diff');
 const number_input = $('#number');
-const go_btn = $('#go-btn');
 const export_btn = $('#export-btn');
+const first_btn = $('#first-btn');
 const previous_btn = $('#previous-btn');
 const next_btn = $('#next-btn');
+const last_btn = $('#last-btn');
 
 const id = getUrlParam('id');
 let note, current_n, max_n;
@@ -18,15 +19,23 @@ ajaxGet('/api/note/'+id+'/history', null, that => {
     .text('id:'+id)
     .attr('href', '/html/note?id='+id);
   max_n = note.Patches.length;
-  number_input.val(max_n).attr('max', max_n);
-  gotoHistory(max_n);
+  number_input.attr('max', max_n);
+  gotoHistory(1);
+  showHistorySize(note);
 }, function() {
   //onloadend
   $('#loading').hide();
 });
 
+function showHistorySize(note) {
+  const initialValue = 0
+  let size = note.Patches.reduce(
+    (sum, patch) => { return sum + patch.length }, initialValue);
+  size = fileSizeToString(size);
+  $('#history-size').text(`共 ${note.Patches.length} 个历史版本，合计 ${size}`);
+}
+
 function gotoHistory(n) {
-  if (current_n == n) return;
   current_n = n;
   const diffString = note.Patches[n-1];
   const diffJson = Diff2Html.parse(diffString);
@@ -36,21 +45,48 @@ function gotoHistory(n) {
   diff.html(diffHtml);
 }
 
-go_btn.click(() => {
-  const n = number_input.val();
-  gotoHistory(current_n);
+first_btn.click(() => {
+  first_btn.prop('disabled', true);
+  previous_btn.prop('disabled', true);
+  next_btn.prop('disabled', false);
+  last_btn.prop('disabled', false);  
+  number_input.val(1);
+  gotoHistory(1);
+});
+
+last_btn.click(() => {
+  next_btn.prop('disabled', true);
+  last_btn.prop('disabled', true);
+  first_btn.prop('disabled', false);
+  previous_btn.prop('disabled', false);  
+  number_input.val(max_n);
+  gotoHistory(max_n);
 });
 
 previous_btn.click(() => {
-  if (current_n == 1) return;
-  const n = current_n - 1;
+  if (current_n == max_n) {
+    next_btn.prop('disabled', false);
+    last_btn.prop('disabled', false);  
+  }
+  const n = current_n - 1
+  if (n == 1) {
+    first_btn.prop('disabled', true);
+    previous_btn.prop('disabled', true);
+  }
   number_input.val(n);
   gotoHistory(n);
 });
 
 next_btn.click(() => {
-  if (current_n == max_n) return;
-  const n = current_n + 1;
+  if (current_n == 1) {
+    first_btn.prop('disabled', false);
+    previous_btn.prop('disabled', false);  
+  }
+  const n = current_n + 1
+  if (n == max_n) {
+    next_btn.prop('disabled', true);
+    last_btn.prop('disabled', true);
+  }
   number_input.val(n);
   gotoHistory(n);
 });
