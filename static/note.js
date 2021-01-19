@@ -9,6 +9,10 @@ let isDeleted = false;
 
 ajaxGet('/api/note/'+id, null, that => {
   const note = that.response;
+  
+  note.Contents = note.Patches.reduce((patched, patch) => {
+    return patched = Diff.applyPatch(patched, patch)}, "");
+
   const updatedAt = dayjs(note.UpdatedAt);
   $('#datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
   $('#id').text(note.ID);

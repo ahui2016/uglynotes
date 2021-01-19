@@ -2,7 +2,6 @@ package model
 
 import (
 	"errors"
-	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -36,10 +35,10 @@ func NewNoteType(noteType string) NoteType {
 
 // Note 表示一个数据表。
 type Note struct {
-	ID        string // primary key
-	Type      NoteType
-	Title     string
-	Contents  string
+	ID    string // primary key
+	Type  NoteType
+	Title string
+	// Contents  string // 历史版本系统升级后，Contents 已被废除，保留只是为了升级过渡。
 	Patches   []string
 	Size      int
 	Tags      []string // []Tag.Name
@@ -59,65 +58,49 @@ func NewNote(id string, noteType NoteType) *Note {
 	}
 }
 
-// SetContents 用于第一次填充内容，同时设置 size, 并根据笔记类型设置标题。
-// 请总是使用 SetContents 而不要直接操作 note.Contents, 以确保体积和标题正确。
-// 每篇笔记只使用一次 SetContents, 之后应使用 AddPatch.
-func (note *Note) SetContents(contents string) error {
-	size, title, err := getSizeTitle(contents, note.Type)
-	if err != nil {
-		return err
-	}
-	note.Title = title
-	note.Contents = contents
-	note.Size = size
-	return nil
-}
-
-// AddPatchNow combines AddPatch and UpdatedAtNow.
-func (note *Note) AddPatchNow(patch string) error {
-	if err := note.AddPatch(patch); err != nil {
+// AddPatchNow combines AddPatchSetTitle and UpdatedAtNow.
+func (note *Note) AddPatchNow(patch, contents string) error {
+	if err := note.AddPatchSetTitle(patch, contents); err != nil {
 		return err
 	}
 	note.UpdatedAtNow()
 	return nil
 }
 
-// AddPatch .
+// AddPatchSetTitle .
+func (note *Note) AddPatchSetTitle(patch, contents string) error {
+	note.SetTitle(contents)
+	return note.AddPatch(patch)
+}
+
+// AddPatch 填充内容，同时设置 size。
+// 请总是使用 AddPatch 而不要直接操作 note.Patches, 以确保体积和标题正确。
 func (note *Note) AddPatch(patch string) error {
-	contents, err := patchApply(patch, note.Contents)
-	if err != nil {
-		return err
-	}
-	if err := note.SetContents(contents); err != nil {
-		return err
-	}
 	note.Patches = append(note.Patches, patch)
+	return note.resetSize()
+}
+
+func (note *Note) resetSize() error {
+	size := 0
+	for i := range note.Patches {
+		size += len(note.Patches[i])
+	}
+	if size > config.NoteSizeLimit {
+		return errors.New("size limit exceeded")
+	}
+	note.Size = size
 	return nil
 }
 
-func getSizeTitle(contents string, noteType NoteType) (
-	size int, title string, err error) {
-	size = len(contents)
-	if size > config.NoteSizeLimit {
-		err = errors.New("size limit exceeded")
-		return
-	}
-	title = getTitle(contents, noteType)
-	if title == "" {
-		err = errors.New("note title is empty")
-		return
-	}
-	return
-}
-
-func getTitle(contents string, noteType NoteType) string {
+// SetTitle 设置限定长度的标题，其中 contents 必须事先 TrimSpace 并确保不是空字串。
+func (note *Note) SetTitle(contents string) {
 	title := firstLineLimit(contents, config.NoteTitleLimit)
-	if noteType == Markdown {
+	if note.Type == Markdown {
 		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
 			title = mdTitle
 		}
 	}
-	return title
+	note.Title = title
 }
 
 func diffGNU(s string) string {
@@ -127,14 +110,12 @@ func diffGNU(s string) string {
 }
 
 func patchApply(patch string, text string) (string, error) {
-	log.Print("patch: ", patch)
 	dmp := diffmatchpatch.New()
 	patches, err := dmp.PatchFromText(diffGNU(patch))
 	if err != nil {
 		return "", err
 	}
 	patched, _ := dmp.PatchApply(patches, text)
-	log.Print("patched: ", patched)
 	return patched, nil
 }
 

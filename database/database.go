@@ -3,7 +3,6 @@ package database
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -343,8 +342,9 @@ func (db *DB) ChangeType(id string, noteType NoteType) error {
 		return err
 	}
 	note.Type = noteType
-	// 这里可以优化性能，暂时先不优化。
-	note.SetContents(note.Contents)
+	if noteType == model.Markdown {
+		note.SetTitle(note.Title)
+	}
 	return db.DB.Update(&note)
 }
 
@@ -391,17 +391,16 @@ func (db *DB) GetTag(name string) (tag Tag, err error) {
 	return
 }
 
-// AddPatch .
-func (db *DB) AddPatch(id, patch string) (int, error) {
+// AddPatchSetTitle .
+func (db *DB) AddPatchSetTitle(id, patch, contents string) (int, error) {
 	note, err := db.GetByID(id)
 	if err != nil {
 		return 0, err
 	}
 	size := note.Size
-	if err := note.AddPatchNow(patch); err != nil {
+	if err := note.AddPatchNow(patch, contents); err != nil {
 		return 0, err
 	}
-	log.Print("AddPatch: ", note)
 
 	tx := db.mustBegin()
 	defer tx.Rollback()
@@ -443,7 +442,7 @@ func (db *DB) GetByTag(name string) (notes []Note, err error) {
 		if err != nil {
 			return
 		}
-		note.Contents = ""
+		note.Patches = nil
 		notes = append(notes, note)
 	}
 	return

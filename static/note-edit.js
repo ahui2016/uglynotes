@@ -75,6 +75,9 @@ function initEditForm(param_id) {
       previewBtn.show();
       oldNoteType = 'markdown';
     }
+
+    note.Contents = note.Patches.reduce((patched, patch) => {
+      return patched = Diff.applyPatch(patched, patch)}, "");
   
     textarea.val(note.Contents);
     oldContents = note.Contents;
@@ -163,10 +166,12 @@ function submit(event) {
     return;
   }
 
+  const patch = Diff.createPatch(" ", "", contents);
   const form = new FormData();
   const note_type = $('input[name="note-type"]:checked').val();
   form.append('note-type', note_type);
-  form.append('contents', contents);
+  form.append('title', contents.substring(0, NoteTitleLimit));
+  form.append('patch', patch);
   form.append('tags', JSON.stringify(Array.from(tags)));
 
   if (!event) autoUpdateCount++;
@@ -244,6 +249,7 @@ function update(event) {
     const patch = Diff.createPatch(" ", oldContents, contents);
     const form = new FormData();
     form.append('id', id);
+    form.append('title', contents.substring(0, NoteTitleLimit));
     form.append('patch', patch);
 
     if (!event) autoUpdateCount++;

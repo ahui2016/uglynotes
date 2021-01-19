@@ -13,7 +13,7 @@ const last_btn = $('#last-btn');
 const id = getUrlParam('id');
 let note, current_n, max_n;
 
-ajaxGet('/api/note/'+id+'/history', null, that => {
+ajaxGet('/api/note/'+id, null, that => {
   note = that.response;
   $('#note-id')
     .text('id:'+id)

@@ -4,6 +4,10 @@ const DelayOfAutoUpdate = 1000 * 60 * 5 // 5分钟
 // 自动保存（自动更新）次数的上限
 const AutoUpdateLimit = 100
 
+// NoteTitleLimit 限制标题的长度。
+// 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
+const NoteTitleLimit = 200
+
 // NoteSizeLimit 限制每篇笔记的体积。
 // 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
 const NoteSizeLimit = 1 << 19 // 512 KB

@@ -2,7 +2,6 @@ package main
 
 import (
 	"io/ioutil"
-	"log"
 	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/model"
@@ -144,21 +143,11 @@ func exportAllNotes(c *fiber.Ctx) error {
 
 func trimContents(notes []Note) {
 	for i := range notes {
-		notes[i].Contents = ""
-		notes[i].Patches = []string{}
+		notes[i].Patches = nil
 	}
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
-	note, err := db.GetByID(c.Params("id"))
-	if err != nil {
-		return err
-	}
-	note.Patches = []string{}
-	return c.JSON(note)
-}
-
-func getNoteWithHistory(c *fiber.Ctx) error {
 	note, err := db.GetByID(c.Params("id"))
 	if err != nil {
 		return err
@@ -182,14 +171,14 @@ func newNoteHandler(c *fiber.Ctx) error {
 
 func createNote(c *fiber.Ctx) (*Note, error) {
 	noteType, err1 := getNoteType(c)
-	contents, err2 := getFormValue(c, "contents")
-	tags, err3 := getTags(c)
-	if err := util.WrapErrors(err1, err2, err3); err != nil {
+	title, err2 := getFormValue(c, "title")
+	patch, err3 := getFormValue(c, "patch")
+	tags, err4 := getTags(c)
+	if err := util.WrapErrors(err1, err2, err3, err4); err != nil {
 		return nil, err
 	}
-
 	note := db.NewNote(noteType)
-	err1 = note.SetContents(contents)
+	err1 = note.AddPatchSetTitle(patch, title)
 	err2 = note.SetTags(tags)
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return nil, err
@@ -226,13 +215,13 @@ func addPatch(c *fiber.Ctx) error {
 	defer db.Unlock()
 
 	id, err1 := getID(c)
+	title, err2 := getFormValue(c, "title")
 	patch, err2 := getFormValue(c, "patch")
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return err
 	}
 
-	count, err := db.AddPatch(id, patch)
-	log.Print(count)
+	count, err := db.AddPatchSetTitle(id, patch, title)
 	if err != nil {
 		return err
 	}

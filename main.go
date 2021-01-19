@@ -62,7 +62,6 @@ func main() {
 	api.Put("/note/tags", updateNoteTags)
 	api.Post("/note/patch", addPatch)
 
-	api.Get("/note/:id/history", getNoteWithHistory)
 	api.Delete("/note/:id/history", deleteNoteHistories)
 
 	api.Get("/tag/all", getAllTags)
