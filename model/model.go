@@ -35,10 +35,10 @@ func NewNoteType(noteType string) NoteType {
 
 // Note 表示一个数据表。
 type Note struct {
-	ID    string // primary key
-	Type  NoteType
-	Title string
-	// Contents  string // 历史版本系统升级后，Contents 已被废除，保留只是为了升级过渡。
+	ID        string // primary key
+	Type      NoteType
+	Title     string
+	Contents  string // 历史版本系统升级后，Contents 已被废除，保留只是为了升级过渡。
 	Patches   []string
 	Size      int
 	Tags      []string // []Tag.Name

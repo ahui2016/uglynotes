@@ -103,15 +103,17 @@ func (db *DB) Upgrade() error {
 		return err
 	}
 	for _, note := range all {
-		histories, err1 := txNoteHistories(tx, note.ID)
-		if len(histories) == 0 {
-			continue
-		}
-		patch, err2 := getUnifiedDiffString("", histories[0].Contents)
-		if err := util.WrapErrors(err1, err2); err != nil {
+		histories, err := txNoteHistories(tx, note.ID)
+		if err != nil {
 			return err
 		}
-		note.Patches = append(note.Patches, patch)
+
+		// 加头加尾
+		first := new(History)
+		histories = append([]History{*first}, histories...)
+		last := History{Contents: note.Contents}
+		histories = append(histories, last)
+
 		for i := 1; i < len(histories); i++ {
 			a := histories[i-1].Contents
 			b := histories[i].Contents
@@ -122,9 +124,10 @@ func (db *DB) Upgrade() error {
 			note.Patches = append(note.Patches, patch)
 		}
 		query := tx.Select(q.Eq("NoteID", note.ID))
-		err1 = txDeleteHistories(tx, query)
-		err2 = tx.Save(&note)
-		err3 := txIncreaseTotalSize(tx, note.Size)
+		err1 := txDeleteHistories(tx, query)
+		note.Contents = "" // 清空 Contents, 历史版本系统升级后废除 Contents
+		err2 := tx.Save(&note)
+		err3 := txIncreaseTotalSize(tx, note.Size) // 估算 size，不准确但问题不大
 		if err := util.WrapErrors(err1, err2, err3); err != nil {
 			return err
 		}
@@ -135,6 +138,9 @@ func (db *DB) Upgrade() error {
 func txNoteHistories(tx storm.Node, noteID string) (histories []History, err error) {
 	err = tx.Select(q.Eq("NoteID", noteID)).
 		OrderBy("CreatedAt").Find(&histories)
+	if err == storm.ErrNotFound {
+		err = nil
+	}
 	return
 }
 
@@ -638,6 +644,9 @@ func txDeleteHistories(tx storm.Node, query storm.Query) error {
 		histories []History
 	)
 	err1 := query.Find(&histories)
+	if err1 == storm.ErrNotFound {
+		return nil
+	}
 	for i := range histories {
 		size += histories[i].Size
 	}
