@@ -19,7 +19,6 @@ ajaxGet('/api/note/'+id, null, that => {
     .text('id:'+id)
     .attr('href', '/html/note?id='+id);
   max_n = note.Patches.length;
-  number_input.attr('max', max_n);
   gotoHistory(1);
   showHistorySize(note);
 }, function() {
