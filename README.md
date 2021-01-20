@@ -109,6 +109,16 @@ $ ./uglynotes -config /path/to/another_settings.json &
 
 另外，“创建历史版本的间隔时间” 和 “自动保存（自动更新）次数的上限” 在 public/util.js 中设置，修改后不需要重启程序，而是需要在浏览器用 ctrl+shift+R 强制刷新。
 
+### 数据库文件夹的设置
+
+- 可使用 -dir 参数指定数据库文件夹：
+
+```
+$ ./uglynotes -dir /path/to/db-folder
+```
+
+- 如果不使用 -dir, 则默认在用户目录 ($HOME) 下创建数据库文件夹，文件夹名称可在 settings.json 中设置。
+
 
 ## 备份/数据导出
 
