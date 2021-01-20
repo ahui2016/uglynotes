@@ -77,15 +77,15 @@ func (note *Note) AddPatchSetTitle(patch, contents string) error {
 // AddPatch 填充内容，同时设置 size。
 // 请总是使用 AddPatch 而不要直接操作 note.Patches, 以确保体积和标题正确。
 func (note *Note) AddPatch(patch string) error {
+	if err := note.resetSize(patch); err != nil {
+		return err
+	}
 	note.Patches = append(note.Patches, patch)
-	return note.resetSize()
+	return nil
 }
 
-func (note *Note) resetSize() error {
-	size := 0
-	for i := range note.Patches {
-		size += len(note.Patches[i])
-	}
+func (note *Note) resetSize(patch string) error {
+	size := note.Size + len(patch)
 	if size > config.NoteSizeLimit {
 		return errors.New("size limit exceeded")
 	}

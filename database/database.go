@@ -406,7 +406,6 @@ func (db *DB) AddPatchSetTitle(id, patch, contents string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	size := note.Size
 	if err := note.AddPatchNow(patch, contents); err != nil {
 		return 0, err
 	}
@@ -415,7 +414,7 @@ func (db *DB) AddPatchSetTitle(id, patch, contents string) (int, error) {
 	defer tx.Rollback()
 
 	err1 := tx.Update(&note)
-	err2 := txCheckIncreaseTotalSize(tx, note.Size-size)
+	err2 := txCheckIncreaseTotalSize(tx, len(patch))
 
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return 0, err
