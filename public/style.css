@@ -46,8 +46,8 @@ pre {
 }
 
 .markdown-preview {
-    max-width: 600px;
-    min-width: 400px;
+    /* max-width: 600px;
+    min-width: 400px; */
     background-color: whitesmoke;
 }
 

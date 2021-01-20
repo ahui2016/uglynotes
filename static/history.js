@@ -4,6 +4,7 @@ const yes_btn = $('#yes');
 const no_btn = $('#no');
 const diff = $('.diff');
 const number_input = $('#number');
+const buttons = $('#buttons');
 const export_btn = $('#export-btn');
 const first_btn = $('#first-btn');
 const previous_btn = $('#previous-btn');
@@ -19,11 +20,16 @@ ajaxGet('/api/note/'+id, null, that => {
     .text('id:'+id)
     .attr('href', '/html/note?id='+id);
   max_n = note.Patches.length;
+  if (max_n < 2) {
+    next_btn.prop('disabled', true);
+    last_btn.prop('disabled', true);
+  }
   gotoHistory(1);
   showHistorySize(note);
 }, function() {
   //onloadend
   $('#loading').hide();
+  buttons.show();
 });
 
 function showHistorySize(note) {
@@ -53,22 +59,13 @@ first_btn.click(() => {
   gotoHistory(1);
 });
 
-last_btn.click(() => {
-  next_btn.prop('disabled', true);
-  last_btn.prop('disabled', true);
-  first_btn.prop('disabled', false);
-  previous_btn.prop('disabled', false);  
-  number_input.val(max_n);
-  gotoHistory(max_n);
-});
-
 previous_btn.click(() => {
   if (current_n == max_n) {
     next_btn.prop('disabled', false);
     last_btn.prop('disabled', false);  
   }
   const n = current_n - 1
-  if (n == 1) {
+  if (n <= 1) {
     first_btn.prop('disabled', true);
     previous_btn.prop('disabled', true);
   }
@@ -82,12 +79,21 @@ next_btn.click(() => {
     previous_btn.prop('disabled', false);  
   }
   const n = current_n + 1
-  if (n == max_n) {
+  if (n >= max_n) {
     next_btn.prop('disabled', true);
     last_btn.prop('disabled', true);
   }
   number_input.val(n);
   gotoHistory(n);
+});
+
+last_btn.click(() => {
+  next_btn.prop('disabled', true);
+  last_btn.prop('disabled', true);
+  first_btn.prop('disabled', false);
+  previous_btn.prop('disabled', false);  
+  number_input.val(max_n);
+  gotoHistory(max_n);
 });
 
 export_btn.click(event => {
@@ -112,7 +118,7 @@ function insertDownloadAlert(filename, contents) {
   alertElem.find('.alert-dismiss').click(event => {
     $(event.currentTarget).parent().remove();
   });
-  alertElem.insertAfter('#buttons');
+  alertElem.insertAfter(buttons);
 }
 
 // 删除按钮

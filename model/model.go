@@ -43,6 +43,7 @@ type Note struct {
 	Size      int
 	Tags      []string // []Tag.Name
 	Deleted   bool
+	Archived  bool
 	CreatedAt string `storm:"index"` // ISO8601
 	UpdatedAt string `storm:"index"`
 }

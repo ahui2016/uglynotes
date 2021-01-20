@@ -121,16 +121,19 @@ func (db *DB) Upgrade() error {
 			if err != nil {
 				return err
 			}
-			note.Patches = append(note.Patches, patch)
+			if patch != "" {
+				note.Patches = append(note.Patches, patch)
+			}
 		}
-		query := tx.Select(q.Eq("NoteID", note.ID))
-		err1 := txDeleteHistories(tx, query)
 		note.Contents = "" // 清空 Contents, 历史版本系统升级后废除 Contents
-		err2 := tx.Save(&note)
-		err3 := txIncreaseTotalSize(tx, note.Size) // 估算 size，不准确但问题不大
-		if err := util.WrapErrors(err1, err2, err3); err != nil {
+		err1 := tx.Save(&note)
+		err2 := txIncreaseTotalSize(tx, note.Size) // 估算 size，不准确但问题不大
+		if err := util.WrapErrors(err1, err2); err != nil {
 			return err
 		}
+	}
+	if err := tx.Drop("History"); err != nil {
+		return err
 	}
 	return tx.Commit()
 }

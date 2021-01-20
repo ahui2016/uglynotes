@@ -16,14 +16,6 @@
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
 
     <style>
-.plaintext {
-  white-space: pre-wrap;
-  white-space: -moz-pre-wrap;
-  background-color: whitesmoke;
-}
-.markdown {
-  background-color: whitesmoke;
-}
 .diff {
   max-width: 600px;
   min-width: 400px;
@@ -45,7 +37,7 @@
   overflow-y: inherit;
 }
 .d2h-code-line-ctn {
-  /* width: 480px; */
+  width: 480px;
   white-space: pre-wrap;
   white-space: -moz-pre-wrap;
 }
@@ -93,7 +85,7 @@
       </p>
     </template>
 
-    <div id="buttons" style="margin: 1em 0 1em 0;">
+    <div id="buttons" style="margin: 1em 0 1em 0; display: none;">
       <button id="first-btn" disabled>First</button>
       <button id="previous-btn" disabled>Previous</button>
       <input type="text" id="number" value="1" disabled>

@@ -23,13 +23,13 @@ let autoUpdateCount = 1;
 const higher = $('#higher');
 higher.click(function(){
   const rows = textarea.attr('rows');
-  textarea.attr('rows', parseInt(rows) + 5);
+  textarea.attr('rows', parseInt(rows) + 10);
 });
 
 const wider = $('#wider');
 wider.click(function(){
   const cols = textarea.attr('cols');
-  textarea.attr('cols', parseInt(cols) + 5);
+  textarea.attr('cols', parseInt(cols) + 10);
 });
 
 function toggle_higher_wider() {

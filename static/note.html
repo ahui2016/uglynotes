@@ -23,8 +23,8 @@
   background-color: whitesmoke;
 }
 .contents {
-  max-width: 600px;
-  min-width: 400px;
+  /* max-width: 600px;
+  min-width: 400px; */
   margin-bottom: 200px;
 }
 .tag {
@@ -50,8 +50,9 @@
     </style>
   </head>
   <body>
-    <div><a href="/home">uglynotes</a> ..
-      Note [id:<span id="id"></span>]
+    <div>Note [id:<span id="id"></span>]
+      <img id="about-page-icon" src="/public/info-circle.svg" alt="info"
+          title="显示/隐藏说明">
       <div id="head-buttons">
         |
         <a href="#" id="copy">Copy</a> |
@@ -66,6 +67,10 @@
         |
       </div>
     </div>
+
+    <p id="about-page-info" style="display: none;">
+      桌面电脑屏幕让浏览器占半屏可得到最佳显示效果
+    </p>
 
     <p id="loading" class="alert-info">Loading...</p>
 
