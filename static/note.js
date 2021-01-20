@@ -13,8 +13,10 @@ ajaxGet('/api/note/'+id, null, that => {
   note.Contents = note.Patches.reduce((patched, patch) => {
     return patched = Diff.applyPatch(patched, patch)}, "");
 
+  const createdAt = dayjs(note.CreatedAt);
   const updatedAt = dayjs(note.UpdatedAt);
-  $('#datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
+  $('#created-at').text(createdAt.format('YYYY-MM-DD HH:mm:ss'));
+  $('#updated-at').text(updatedAt.format('YYYY-MM-DD HH:mm:ss'));
   $('#id').text(note.ID);
   $('#note-type').text(note.Type);
   $('#size').text(fileSizeToString(note.Size));

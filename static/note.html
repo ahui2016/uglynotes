@@ -47,6 +47,11 @@
 #id {
   text-transform: uppercase;
 }
+#info-block {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: smaller;
+  color: #999;
+}
     </style>
   </head>
   <body>
@@ -69,7 +74,7 @@
     </div>
 
     <p id="about-page-info" style="display: none;">
-      桌面电脑屏幕让浏览器占半屏可得到最佳显示效果
+      电脑屏幕让浏览器占半屏可得到最佳显示效果
     </p>
 
     <p id="loading" class="alert-info">Loading...</p>
@@ -105,16 +110,17 @@
     </template>
 
     <div id="title-block">
-      <p style="font-size: smaller; color: #999;">Updated at: <span id="datetime"></span></p>
+      <p id="info-block">
+        Created at: <span id="created-at"></span><br>
+        Updated at: <span id="updated-at"></span><br>
+        Type: <span id="note-type"></span>
+        <span style="font-size: smaller;">(size: <span id="size"></span>)</span>
+      </p>
       <p id="tags" style="display: none;">
         <span style="color: #999;">Tags:</span>
         <template id="tag-tmpl">
           <a class="tag"></a>
         </template>
-      </p>
-      <p style="color: #999;">
-        Type: <span id="note-type"></span>
-        <span style="font-size: smaller;">(size: <span id="size"></span>)</span>
       </p>
     </div>
 
@@ -123,6 +129,6 @@
     <div class="markdown contents" style="display: none;"></div>
 
     <script src="/public/util.js"></script>
-    <script src="/static/note2.js"></script>
+    <script src="/static/note.js?date=20210120"></script>
   </body>
 </html>
