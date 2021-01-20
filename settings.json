@@ -6,11 +6,11 @@
     "Password": "abc",
     "Address": "127.0.0.1:80",
     "MaxAge": "2400h",
+    "NoteTitleLimit": 200,
     "NoteSizeLimit": 524288,
     "MaxBodySize": 524288,
     "DatabaseCapacity": 10485760,
     "ISO8601": "2006-01-02T15:04:05.999+00:00",
-    "NoteTitleLimit": 200,
-    "HistoryLimit": 100,
+    "HistoryLimit": 0,
     "TagGroupLimit": 100
 }

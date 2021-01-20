@@ -14,6 +14,7 @@ import (
 
 var (
 	cfgFlag      = flag.String("config", "", "run with a config file")
+	dbDirFlag    = flag.String("dir", "", "database directory")
 	settingsFile = "settings.json"
 )
 
@@ -34,6 +35,9 @@ func init() {
 	if *cfgFlag != "" {
 		settingsFile = *cfgFlag
 	}
+	if *dbDirFlag != "" {
+		dataDir = *dbDirFlag
+	}
 
 	setConfig()
 	setPaths()
@@ -46,7 +50,12 @@ func init() {
 }
 
 func setPaths() {
-	dataDir = filepath.Join(util.UserHomeDir(), config.DataFolderName)
+	if dataDir == "" {
+		if config.DataFolderName == "" {
+			log.Fatal("config.DataFolderName is empty")
+		}
+		dataDir = filepath.Join(util.UserHomeDir(), config.DataFolderName)
+	}
 	dbPath = filepath.Join(dataDir, config.DatabaseFileName)
 	exportPath = filepath.Join(dataDir, config.ExportFileName)
 }
