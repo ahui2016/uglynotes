@@ -146,7 +146,7 @@ function addNoteElem(note) {
   item.find('.datetime').text(updatedAt.format('MMM D, HH:mm'));
   const titleElem = item.find('.title');
   titleElem
-    .attr('href', '/html/note?id='+note.ID)
+    .attr('href', `/html/note?id=${note.ID}&date=${updatedAt.valueOf()}`)
     .text(note.Title);
   item.find('.tags').text(addPrefix(note.Tags, '#'));
   item.prependTo('ul');
