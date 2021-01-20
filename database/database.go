@@ -582,10 +582,6 @@ func (db *DB) DeleteNoteForever(id string) error {
 	if err := txDeleteOneNote(tx, id); err != nil {
 		return err
 	}
-	query := tx.Select(q.Eq("NoteID", id))
-	if err := txDeleteHistories(tx, query); err != nil {
-		return err
-	}
 	return tx.Commit()
 }
 

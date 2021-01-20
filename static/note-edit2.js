@@ -11,6 +11,7 @@ const submit_block = $('#submit-block');
 const confirm_block = $('#confirm-block');
 const update_block = $('#update-block');
 const update_btn = $('#update');
+const copy_btn = $('#copy');
 
 let id = '';
 let oldContents = '';
@@ -128,6 +129,7 @@ previewBtn.click(event => {
   plaintextBtn.hide();
   plaintextLabel.hide();
   toggle_higher_wider();
+  copy_btn.hide();
 });
 
 // 编辑按钮
@@ -139,6 +141,7 @@ editBtn.click(event => {
   previewBtn.show();
   editBtn.hide();
   toggle_higher_wider();
+  copy_btn.show();
   textarea.focus();
 });
 
