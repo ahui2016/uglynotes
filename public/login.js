@@ -36,3 +36,7 @@ submit_btn.click(event => {
     navi.show();
   });
 });
+
+function restoretags() {
+  ajaxGet('/reset-all-tags', null, ()=>{console.log('OK')});
+}

@@ -363,31 +363,34 @@ func (db *DB) UpdateTags(id string, tags []string) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	// 更新 note.Tags
-	if err := note.SetTags(tags); err != nil {
-		return err
-	}
-	if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
-		return err
-	}
-
 	toAdd, toDelete := util.SliceDifference(tags, note.Tags)
 
-	// 删除标签（从 tag.NoteIDs 里删除 id）
-	if err := deleteTags(tx, toDelete, note.ID); err != nil {
+	e1 := deleteTags(tx, toDelete, note.ID)
+	e2 := addTags(tx, toAdd, note.ID)
+	e3 := note.SetTags(tags)
+	e4 := tx.UpdateField(&note, "Tags", note.Tags)
+	e5 := saveTagGroup(tx, model.NewTagGroup(tags))
+
+	if err := util.WrapErrors(e1, e2, e3, e4, e5); err != nil {
 		return err
 	}
+	return tx.Commit()
+}
 
-	// 添加标签（将 id 添加到 tag.NoteIDs 里）
-	if err := addTags(tx, toAdd, note.ID); err != nil {
+// ResetAllTags .
+func (db *DB) ResetAllTags() error {
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	var all []Note
+	if err := tx.All(&all); err != nil {
 		return err
 	}
-
-	// 更新标签组
-	if err := saveTagGroup(tx, model.NewTagGroup(tags)); err != nil {
-		return err
+	for i := range all {
+		if err := addTags(tx, all[i].Tags, all[i].ID); err != nil {
+			return err
+		}
 	}
-
 	return tx.Commit()
 }
 
