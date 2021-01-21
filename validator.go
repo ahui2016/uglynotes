@@ -41,12 +41,20 @@ func getTags(c *fiber.Ctx) ([]string, error) {
 }
 
 func getProtected(c *fiber.Ctx) (protected bool, err error) {
-	s, err := getFormValue(c, "protected")
+	return getBool(c, "protected")
+}
+
+func getDeleted(c *fiber.Ctx) (protected bool, err error) {
+	return getBool(c, "deleted")
+}
+
+func getBool(c *fiber.Ctx, key string) (ok bool, err error) {
+	s, err := getFormValue(c, key)
 	if err != nil {
 		return
 	}
 	if s == "true" {
-		protected = true
+		ok = true
 	}
 	return
 }

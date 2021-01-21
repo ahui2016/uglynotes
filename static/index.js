@@ -1,4 +1,14 @@
-ajaxGet('/api/note/all', null, that => {
+const filter = getUrlParam('filter');
+
+let url = '/api/note/all';
+let not_found_msg = '数据库中没有笔记';
+
+if (filter == 'deleted') {
+  url = '/api/note/deleted';
+  not_found_msg = '数据库中没有标记为"已删除"的笔记'
+}
+
+ajaxGet(url, null, that => {
   that.response.forEach(addNoteElem);
 }, () => {
   // onloadend
@@ -7,7 +17,7 @@ ajaxGet('/api/note/all', null, that => {
   // onFail
   if (that.response && that.response.message == 'not found') {
     $('.alert').remove();
-    insertInfoAlert('数据库中没有笔记');
+    insertInfoAlert(not_found_msg);
   }
 });
 

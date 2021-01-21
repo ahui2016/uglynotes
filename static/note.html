@@ -65,10 +65,19 @@
         <a id="history">History</a> |
         <a id="delete" href="#">Delete</a>
         <span id="confirm-block" style="display: none; color: red;">
-          delete this note?
+          <span id="delete-confirm-msg">delete this note?</span>
           <button id="yes">Yes</button>
           <button id="no">No</button>
-        </span>  
+        </span>
+        <span id="undelete-block" style="display: none;">
+          |
+          <a id="undelete" href="#">Undelete</a>
+          <span id="undel-confirm-block" style="display: none;">
+            <span>undelete this note?</span>
+            <button id="undel-yes">Yes</button>
+            <button id="undel-no">No</button>
+          </span>
+        </span>
         |
       </div>
     </div>
@@ -129,6 +138,6 @@
     <div class="markdown contents" style="display: none;"></div>
 
     <script src="/public/util.js"></script>
-    <script src="/static/note.js?date=20210120"></script>
+    <script src="/static/note.js?date=1611198126790"></script>
   </body>
 </html>

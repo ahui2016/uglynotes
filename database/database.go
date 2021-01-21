@@ -188,13 +188,10 @@ func (db *DB) Insert(note *Note) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	if err := tx.Save(note); err != nil {
-		return err
-	}
-	if err := saveTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
-		return err
-	}
-	if err := addTags(tx, note.Tags, note.ID); err != nil {
+	err1 := tx.Save(note)
+	err2 := saveTagGroup(tx, model.NewTagGroup(note.Tags))
+	err3 := addTags(tx, note.Tags, note.ID)
+	if err := util.WrapErrors(err1, err2, err3); err != nil {
 		return err
 	}
 	if err := tx.Commit(); err != nil {
@@ -555,8 +552,8 @@ func (db *DB) SearchTitle(pattern string) ([]Note, error) {
 	return notes, err
 }
 
-// DeleteNote .
-func (db *DB) DeleteNote(id string) error {
+// SetNoteDeleted .
+func (db *DB) SetNoteDeleted(id string, deleted bool) error {
 	note, err := db.GetByID(id)
 	if err != nil {
 		return err
@@ -565,8 +562,13 @@ func (db *DB) DeleteNote(id string) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	err1 := deleteTags(tx, note.Tags, note.ID)
-	err2 := tx.UpdateField(&note, "Deleted", true)
+	var err1 error
+	if deleted {
+		err1 = deleteTags(tx, note.Tags, note.ID)
+	} else {
+		err1 = addTags(tx, note.Tags, note.ID)
+	}
+	err2 := tx.UpdateField(&note, "Deleted", deleted)
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return err
 	}

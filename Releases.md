@@ -1,5 +1,21 @@
 # Release 新版说明
 
+
+## 2021-01-21 (增加回收站)
+
+- 升级前：删除笔记只是做了一个”删除“标志，没有彻底删除。但没有做”回收站“页面。
+- 升级后：增加了回收站(入口在 login 页面), 可以进行复原或彻底删除。
+- 升级方法：
+
+```sh
+$ cd uglynotes
+$ git pull
+$ go build
+$ killall uglynotes
+$ ./uglynotes -config /path/to/settings.json &
+```
+
+
 ## 2021-01-20 (在 note.html 显示笔记创建日期)
 
 - 该更新不涉及 go 文件，只涉及 html 和 js 文件，因此，升级时只要 git pull 即可，不需要重新编译，也不需要重启程序。

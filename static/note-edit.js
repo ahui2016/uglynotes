@@ -206,11 +206,10 @@ function update(event) {
   const note_type = $('input[name="note-type"]:checked').val();
   if (note_type != oldNoteType) {
     const form = new FormData();
-    form.append('id', id);
     form.append('note-type', note_type)
 
     if (!event) autoUpdateCount++;
-    ajaxPut(form, '/api/note/type', update_btn, function() {
+    ajaxPut(form, `/api/note/${id}/type`, update_btn, function() {
       oldNoteType = note_type;
       insertSuccessAlert('笔记类型更新成功: ' + note_type);
     });
@@ -223,11 +222,10 @@ function update(event) {
       return;
     }
     const form = new FormData();
-    form.append('id', id);
     form.append('tags', JSON.stringify(Array.from(tags)));
 
     if (!event) autoUpdateCount++;
-    ajaxPut(form, '/api/note/tags', update_btn, function() {
+    ajaxPut(form, `/api/note/${id}/tags`, update_btn, function() {
       oldTags = tags;
       insertSuccessAlert('标签更新成功: ' + addPrefix(tags, ''));
     });
@@ -251,12 +249,11 @@ function update(event) {
   if (contents != oldContents) {
     const patch = Diff.createPatch(" ", oldContents, contents);
     const form = new FormData();
-    form.append('id', id);
     form.append('title', contents.substring(0, NoteTitleLimit));
     form.append('patch', patch);
 
     if (!event) autoUpdateCount++;
-    ajaxPost(form, '/api/note/patch', update_btn, that => {
+    ajaxPatch(form, '/api/note/'+id, update_btn, that => {
       oldContents = contents;
       updateSize(contents.length);
       let count = that.response.message;

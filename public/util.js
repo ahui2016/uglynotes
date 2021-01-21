@@ -78,8 +78,12 @@ function ajaxPost(form, url, btn, onSuccess, onloadend) {
   ajaxDo('POST', form, url, btn, onSuccess, onloadend);
 }
 
-function ajaxPut(form, url, btn, onSuccess, onloadend) {
-  ajaxDo('PUT', form, url, btn, onSuccess, onloadend);
+function ajaxPut(form, url, btn, onSuccess, onloadend, onFail) {
+  ajaxDo('PUT', form, url, btn, onSuccess, onloadend, onFail);
+}
+
+function ajaxPatch(form, url, btn, onSuccess, onloadend, onFail) {
+  ajaxDo('PATCH', form, url, btn, onSuccess, onloadend, onFail);
 }
 
 function ajaxDelete(url, btn, onSuccess, onloadend, onFail) {
@@ -151,6 +155,10 @@ function addNoteElem(note) {
   item.find('.tags').text(addPrefix(note.Tags, '#'));
   item.prependTo('ul');
 
+  if (note.Deleted) {
+    item.find('.confirm-msg').text('delete this note permanently?');
+  }
+
   const deleted = item.find('.deleted');
   const del_btn_block = item.find('.del-btn-block');
   const delete_btn = item.find('.delete');
@@ -168,20 +176,36 @@ function addNoteElem(note) {
 
   // 取消删除
   no_btn.click(delete_toggle);
-
+  
   // 确认删除
-  yes_btn.click(event => {
-    ajaxDelete('/api/note/'+note.ID, yes_btn, function() {
-      $('.alert').hide();
-      titleElem.removeAttr('href');
-      del_btn_block.hide();
-      deleted.show();
-    }, null, function() {
-      // onFail
-      const insertPoint = $(event.currentTarget).parent().parent().parent();
-      insertErrorAlert('删除失败', insertPoint);
-    });
+  yes_btn.click(() => {
+    if (note.Deleted) {
+      reallyDeleteNote();
+      return;
+    }
+    deleteNote();
   });
+
+  function deleteNote() {
+    const form = new FormData()
+    form.append('deleted', true)
+    ajaxPut(form, `/api/note/${note.ID}/deleted`, yes_btn, onDelete, null, onFail);
+  }
+
+  function reallyDeleteNote() {
+    ajaxDelete('/api/note/'+note.ID, yes_btn, onDelete, null, onFail);
+  }
+
+  function onDelete() {
+    $('.alert').hide();
+    titleElem.removeAttr('href');
+    del_btn_block.hide();
+    deleted.show();
+  }
+  function onFail(event) {
+    const insertPoint = $(event.currentTarget).parent().parent().parent();
+    insertErrorAlert('删除失败', insertPoint);
+  }
 }
 
 // 初始化页面说明。

@@ -1,9 +1,16 @@
 const id = getUrlParam('id');
 
+const edit_btn = $('#edit');
 const confirm_block = $('#confirm-block');
+const del_confirm_msg = $('#delete-confirm-msg');
 const delete_btn = $('#delete');
 const yes_btn = $('#yes');
 const no_btn = $('#no');
+const undelete_btn = $('#undelete');
+const undel_confirm_block = $('#undel-confirm-block');
+const undel_block = $('#undelete-block');
+const undel_yes_btn = $('#undel-yes');
+const undel_no_btn = $('#undel-no');
 
 let isDeleted = false;
 
@@ -20,12 +27,15 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#id').text(note.ID);
   $('#note-type').text(note.Type);
   $('#size').text(fileSizeToString(note.Size));
-  if (!note.Deleted) $('#edit').attr('href', '/html/note/edit?id='+note.ID);
+  edit_btn.attr('href', '/html/note/edit?id='+note.ID);
   $('#history').attr('href', '/html/history?id='+note.ID)
 
   if (note.Deleted) {
     isDeleted = true;
+    edit_btn.removeAttr('href');
     delete_btn.text('Delete forever');
+    del_confirm_msg.text('delete this note permanently?');
+    undel_block.show();
     insertInfoAlert('该笔记被标记为 “已删除”');
   }
 
@@ -73,6 +83,30 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#loading').hide();
 });
 
+// 恢复按钮
+undelete_btn.click(undelete_toggle)
+// 取消恢复
+undel_no_btn.click(undelete_toggle)
+
+function undelete_toggle(event) {
+  event.preventDefault();
+  undelete_btn.toggle();
+  undel_confirm_block.toggle();
+}
+
+// 确认恢复
+undel_yes_btn.click(() => {
+  const form = new FormData();
+  form.append('deleted', false);
+  ajaxPut(form, `/api/note/${id}/deleted`, yes_btn, () => {
+    isDeleted = false;
+    edit_btn.attr('href', '/html/note/edit?id='+id);
+    delete_btn.text('Delete');
+    del_confirm_msg.text('delete this note?');
+    undel_block.hide();
+    insertInfoAlert('该笔记已复原，可正常编辑');
+  });
+});
 
 // 删除按钮
 delete_btn.click(delete_toggle);
@@ -88,17 +122,25 @@ function delete_toggle(event) {
 
 // 确认删除
 yes_btn.click(event => {
-  let url = '/api/note/'+id;
+  let url = `/api/note/${id}/deleted`;
   let msg = `笔记 id:${id} 已删除`;
   if (isDeleted) {
-    url = '/api/note/deleted/'+id
+    url = '/api/note/'+id
     msg = `笔记 id:${id} 已彻底删除`;
   }
-  ajaxDelete(url, yes_btn, function() {
+  function onDelete() {
     $('.alert').hide();
     $('#head-buttons').hide();
     $('#title-block').hide();
     $('.contents').hide();
     insertSuccessAlert(msg);
-  });
+  }
+  if (isDeleted) {
+    ajaxDelete(url, yes_btn, onDelete);
+    return
+  }
+  const form = new FormData();
+  form.append('deleted', true);
+  ajaxPut(form, url, yes_btn, onDelete);
 });
+

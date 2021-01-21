@@ -190,9 +190,9 @@ func changeType(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
-	id, err1 := getID(c)
-	noteType, err2 := getNoteType(c)
-	if err := util.WrapErrors(err1, err2); err != nil {
+	id := c.Params("id")
+	noteType, err := getNoteType(c)
+	if err != nil {
 		return err
 	}
 	return db.ChangeType(id, noteType)
@@ -202,20 +202,20 @@ func updateNoteTags(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
-	id, err1 := getID(c)
-	tags, err2 := getTags(c)
-	if err := util.WrapErrors(err1, err2); err != nil {
+	id := c.Params("id")
+	tags, err := getTags(c)
+	if err != nil {
 		return err
 	}
 	return db.UpdateTags(id, tags)
 }
 
-func addPatch(c *fiber.Ctx) error {
+func patchNoteHandler(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
-	id, err1 := getID(c)
-	title, err2 := getFormValue(c, "title")
+	id := c.Params("id")
+	title, err1 := getFormValue(c, "title")
 	patch, err2 := getFormValue(c, "patch")
 	if err := util.WrapErrors(err1, err2); err != nil {
 		return err
@@ -226,7 +226,6 @@ func addPatch(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(fiber.Map{"message": count})
-	// return jsonMessage(c, strconv.Itoa(count))
 }
 
 func notesSizeHandler(c *fiber.Ctx) error {
@@ -376,12 +375,16 @@ func deleteTagGroup(c *fiber.Ctx) error {
 	return db.DB.DeleteStruct(&TagGroup{ID: groupID})
 }
 
-func deleteNote(c *fiber.Ctx) error {
+func setNoteDeleted(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
 	id := c.Params("id")
-	return db.DeleteNote(id)
+	deleted, err := getDeleted(c)
+	if err != nil {
+		return err
+	}
+	return db.SetNoteDeleted(id, deleted)
 }
 
 func deleteNoteForever(c *fiber.Ctx) error {
