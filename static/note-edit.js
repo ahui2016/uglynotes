@@ -88,7 +88,7 @@ function initEditForm(param_id) {
     oldTags = new Set(note.Tags);
 
     updateSize(note.Size);
-    enterEditMode();
+    enterEditMode(note.Patches.length);
     insertSuccessAlert('已获取笔记 id:' + note.ID.toUpperCase());
     insertSuccessAlert('已进入编辑模式');
 
@@ -184,16 +184,17 @@ function submit(event) {
     oldContents = contents;
     oldTags = tags;
     updateSize(contents.length);
-    enterEditMode();
+    enterEditMode(1);
     insertSuccessAlert('新笔记创建成功 id:' + id);
   });
 }
 
-function enterEditMode() {
+function enterEditMode(version) {
   $('title').text('Edit Note .. uglynotes');
   $('#where').text('Edit Note');
   $('#head-buttons').show();
   $('#readonly-mode').attr('href', '/html/note?id='+id);
+  $('#history').attr('href', `/html/history?id=${id}&version=${version}`);
   submit_block.hide();
   update_block.show();
 }
@@ -257,6 +258,7 @@ function update(event) {
       oldContents = contents;
       updateSize(contents.length);
       let count = that.response.message;
+      $('#history').attr('href', `/html/history?id=${id}&version=${count}`);
       insertSuccessAlert(`笔记内容更新，产生第 ${count} 个历史版本`);
     });
   }

@@ -28,7 +28,6 @@
       <p><a href="/html/tag/groups">Groups</a> - 标签组</p>
       <p><a href="/home?filter=deleted">Recycle Bin</a> - 回收站</p>
       <p><a href="/converter" target="_blank">Converter</a> - 图片压缩转码</p>
-      <!-- <p><a href="https://github.com/ahui2016/uglynotes" target="_blank">Repository</a> - GitHub 代码仓库</p> -->
       <p style="color: #666;">
         uglynotes version: 2021-01-22<br>
         <a id="repository" href="https://github.com/ahui2016/uglynotes" target="_blank">
@@ -37,5 +36,10 @@
       </p>
     </div>
 
+    <script>
+function restoretags() {
+  ajaxGet('/reset-all-tags', null, ()=>{console.log('OK')});
+}
+    </script>
   </body>
 </html>

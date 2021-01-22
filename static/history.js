@@ -19,18 +19,25 @@ ajaxGet('/api/note/'+id, null, that => {
   $('#note-id')
     .text('id:'+id)
     .attr('href', '/html/note?id='+id);
+
   max_n = note.Patches.length;
-  if (max_n < 2) {
-    next_btn.prop('disabled', true);
-    last_btn.prop('disabled', true);
-  }
-  gotoHistory(1);
+  const version = getUrlParam('version');
+  current_n = version_to_n(version);
+  gotoHistory(current_n);
   showHistorySize(note);
 }, function() {
   //onloadend
   $('#loading').hide();
   buttons.show();
 });
+
+function version_to_n(version) {
+  if (version == 'last') return max_n;
+  const n = parseInt(version);
+  if (isNaN(n) || n == 0) return 1;
+  if (n > max_n) return max_n;
+  return n
+}
 
 function showHistorySize(note) {
   const initialValue = 0
@@ -48,6 +55,15 @@ function gotoHistory(n) {
     drawFileList: false,
   });
   diff.html(diffHtml);
+  number_input.val(n);
+  if (n <= 1) {
+    first_btn.prop('disabled', true);
+    previous_btn.prop('disabled', true);
+  }
+  if (n >= max_n) {
+    next_btn.prop('disabled', true);
+    last_btn.prop('disabled', true);
+  }
 }
 
 first_btn.click(() => {
@@ -55,7 +71,6 @@ first_btn.click(() => {
   previous_btn.prop('disabled', true);
   next_btn.prop('disabled', false);
   last_btn.prop('disabled', false);  
-  number_input.val(1);
   gotoHistory(1);
 });
 
@@ -65,11 +80,6 @@ previous_btn.click(() => {
     last_btn.prop('disabled', false);  
   }
   const n = current_n - 1
-  if (n <= 1) {
-    first_btn.prop('disabled', true);
-    previous_btn.prop('disabled', true);
-  }
-  number_input.val(n);
   gotoHistory(n);
 });
 
@@ -79,11 +89,6 @@ next_btn.click(() => {
     previous_btn.prop('disabled', false);  
   }
   const n = current_n + 1
-  if (n >= max_n) {
-    next_btn.prop('disabled', true);
-    last_btn.prop('disabled', true);
-  }
-  number_input.val(n);
   gotoHistory(n);
 });
 
@@ -92,7 +97,6 @@ last_btn.click(() => {
   last_btn.prop('disabled', true);
   first_btn.prop('disabled', false);
   previous_btn.prop('disabled', false);  
-  number_input.val(max_n);
   gotoHistory(max_n);
 });
 

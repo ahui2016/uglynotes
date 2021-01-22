@@ -34,7 +34,3 @@ submit_btn.click(event => {
     window.location = '/home';
   });
 });
-
-function restoretags() {
-  ajaxGet('/reset-all-tags', null, ()=>{console.log('OK')});
-}

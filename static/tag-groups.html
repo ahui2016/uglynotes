@@ -30,9 +30,9 @@
 .protected {
   color: #999;
 }
-#tags-input {
-  width: 300px;
-}
+#check-tags-btn { vertical-align: top; }
+#handle-tags-btn { vertical-align: super; }
+
     </style>
   </head>
   <body>
@@ -47,7 +47,8 @@
     </p>
 
     <div style="margin-top: 1em;">
-      <input type="text" id="tags-input" placeholder="new tag groups" autocomplete="off" autofocus required>
+      <!-- <input type="text" id="tags-input" placeholder="new tag groups" autocomplete="off" autofocus required> -->
+      <textarea id="tags-input" cols="50" rows="2" placeholder="new tag group" autocomplete="off"></textarea>
       <button id="check-tags-btn">check</button>
       <button id="handle-tags-btn" style="display: none;">add</button>
     </div>
