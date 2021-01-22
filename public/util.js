@@ -153,6 +153,7 @@ function addNoteElem(note) {
     .attr('href', `/html/note?id=${note.ID}&date=${updatedAt.valueOf()}`)
     .text(note.Title);
   item.find('.tags').text(addPrefix(note.Tags, '#'));
+  item.find('.edit').click(() => {window.location = '/html/note/edit?id='+note.ID});
   item.prependTo('ul');
 
   if (note.Deleted) {

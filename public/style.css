@@ -78,10 +78,10 @@ pre {
 .li .id {
     text-transform: uppercase;
 }
-.li .del-btn-block {
+.li .buttons {
   display: none;
 }
-.li:hover .del-btn-block {
+.li:hover .buttons {
   display: inline;
 }
 .deleted {
