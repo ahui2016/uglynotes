@@ -51,12 +51,15 @@ function addTagGroup(group) {
   
   function setProtected(event) {
     const form = new FormData();
-    form.append("id", group.ID);
     form.append("protected", !group.Protected);
-    ajaxPut(
-      form, '/api/tag/group/protected', $(event.currentTarget), () => {
-      toggle_protect();
-    });
+    ajaxPut(form, `/api/tag/group/${group.ID}/protected`, $(event.currentTarget),
+      () => {
+        toggle_protect();
+      }, null, event => {
+        // onFail
+        insertErrorAlert('操作失败', $('#'+item_id));
+      }
+    );
   }
 
   if (group.Protected) toggle_protect();

@@ -76,7 +76,7 @@ func main() {
 	api.Get("/tag/group/all", allTagGroups)
 	api.Post("/tag/group", addTagGroup)
 	api.Delete("/tag/group/:id", deleteTagGroup)
-	api.Put("/tag/group/protected", setTagGroupProtected)
+	api.Put("/tag/group/:id/protected", setTagGroupProtected)
 
 	api.Get("/search/tags/:tags", searchTagGroup)
 	api.Get("/search/title/:pattern", searchTitle)

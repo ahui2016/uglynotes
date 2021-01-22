@@ -243,9 +243,9 @@ func setTagGroupProtected(c *fiber.Ctx) error {
 	db.Lock()
 	defer db.Unlock()
 
-	groupID, err1 := getID(c)
-	protected, err2 := getProtected(c)
-	if err := util.WrapErrors(err1, err2); err != nil {
+	groupID := c.Params("id")
+	protected, err := getProtected(c)
+	if err != nil {
 		return err
 	}
 	return db.SetTagGroupProtected(groupID, protected)

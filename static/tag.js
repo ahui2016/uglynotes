@@ -12,13 +12,19 @@ tagName.text(tag_name);
 ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
   $('#tag-name').show();
   $('#count-block').show();
-  if (!that.response) {
+  const notes = that.response;
+  if (!notes) {
     $('#count').text(0);
     return;
   }
-  $('#count').text(that.response.length);
+  $('#count').text(notes.length);
 
-  that.response.forEach(addNoteElem);
+  notes.sort((a, b) => {
+    if (a.UpdatedAt > b.UpdatedAt) return 1;
+    if (a.UpdatedAt < b.UpdatedAt) return -1;
+    return 0;
+  });
+  notes.forEach(addNoteElem);
 }, () => {
   // onloadend
   $('#loading').hide();
