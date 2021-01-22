@@ -1,7 +1,19 @@
 # Releases 新版说明
 
 
-## 2021-01-21 (fixed: 标签的问题)
+## 2021-01-22 (fix: 标签页面排序问题)
+
+**推荐程度**：本次更新修复了一个很小的 bug, 增加了几个小功能，建议等有空才更新。
+
+- fix: 标签页面的笔记列表应按更新日期排序，已修复。
+- add: 在笔记列表，每一项增加了一个 edit 按钮（原本需要先查看笔记才有 edit 按钮）。
+- add: 新增 home 页面（原本用 login 页面来展示站点地图，现在移到 home 页面了）。
+- add: 在 edit 页面增加 history 链接，方便查看历史版本。
+- add: history 网址增加了参数 version, 可通过网址指定展示哪个历史版本。
+- change: Tag Groups 页面的 input 改成 textarea (原本的输入框太小了)。
+
+
+## 2021-01-21 (fix: 标签的问题)
 
 **推荐程度**：本次更新修复了一个 bug, 建议尽快更新。
 
@@ -20,7 +32,7 @@ $ killall uglynotes
 $ ./uglynotes -config /path/to/settings.json &
 ```
 
-2. 登入网站后，在 login 页面按 F12 打开控制台，在控制台输入 `restoretags()` 按回车执行，即可修复 "标签表"。
+2. 登入网站后，在 home 页面按 F12 打开控制台，在控制台输入 `restoretags()` 按回车执行，即可修复 "标签表"。
 
 
 ## 2021-01-21 (增加回收站)
