@@ -5,9 +5,7 @@
     <link rel="stylesheet" href="/public/style.css">
 
     <title>Login .. uglynotes</title>
-
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
 
   </head>
   <body>
@@ -21,15 +19,6 @@
     <!-- 普通提示 -->
     <template id="alert-info-tmpl">
       <p class="alert-info">
-        <span class="alert-time"></span>
-        <span class="alert-message"></span>
-        <span class="alert-dismiss" title="dismiss">(&times;)</span>
-      </p>
-    </template>
-
-    <!-- 成功提示 -->
-    <template id="alert-success-tmpl">
-      <p class="alert alert-success">
         <span class="alert-time"></span>
         <span class="alert-message"></span>
         <span class="alert-dismiss" title="dismiss">(&times;)</span>
@@ -53,19 +42,7 @@
       <input type="submit" value="login" id="submit">
     </form>
 
-    <div id="navi" style="display: none;">
-      <p><a href="/html/note/new?tags=%E4%B8%8D%E9%87%8D%E8%A6%81%20%E5%BE%85%E5%A4%84%E7%90%86">New Note</a> - 创建新笔记</p>
-      <p><a href="/home">Index</a> - 笔记列表</p>
-      <p><a href="/html/search">Search</a> - 搜索</p>
-      <p><a href="/html/tags">Tags</a> - 标签列表</p>
-      <p><a href="/html/tag/groups">Groups</a> - 标签组</p>
-      <p><a href="/home?filter=deleted">Recycle Bin</a> - 回收站</p>
-      <p><a href="/converter" target="_blank">Converter</a> - 图片压缩转码</p>
-      <p><a href="https://github.com/ahui2016/uglynotes" target="_blank">Repository</a> - GitHub 代码仓库</p>
-      <p style="color: #666;">uglynotes version: 2021-01-22</p>
-    </div>
-
     <script src="/public/util.js"></script>
-    <script src="/public/login.js?date=1611219540612"></script>
+    <script src="/public/login.js?date=1611326716364"></script>
   </body>
 </html>

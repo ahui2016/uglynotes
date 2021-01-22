@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="/public/style.css">
+
+    <title>Home .. uglynotes</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <style>
+#repository {
+  color: #666;
+}
+#repository:hover {
+  color: #000;
+  background-color: #ddd;
+}
+    </style>
+  </head>
+  <body>
+    <p>uglynotes .. Home</p>
+
+    <div id="navi">
+      <p><a href="/html/note/new?tags=%E4%B8%8D%E9%87%8D%E8%A6%81%20%E5%BE%85%E5%A4%84%E7%90%86">New Note</a> - 创建新笔记</p>
+      <p><a href="/html/index">Index</a> - 笔记列表</p>
+      <p><a href="/html/search">Search</a> - 搜索</p>
+      <p><a href="/html/tags">Tags</a> - 标签列表</p>
+      <p><a href="/html/tag/groups">Groups</a> - 标签组</p>
+      <p><a href="/home?filter=deleted">Recycle Bin</a> - 回收站</p>
+      <p><a href="/converter" target="_blank">Converter</a> - 图片压缩转码</p>
+      <!-- <p><a href="https://github.com/ahui2016/uglynotes" target="_blank">Repository</a> - GitHub 代码仓库</p> -->
+      <p style="color: #666;">
+        uglynotes version: 2021-01-22<br>
+        <a id="repository" href="https://github.com/ahui2016/uglynotes" target="_blank">
+          github.com/ahui2016/uglynotes
+        </a>
+      </p>
+    </div>
+
+  </body>
+</html>

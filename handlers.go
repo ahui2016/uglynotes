@@ -29,11 +29,11 @@ func errorHandler(c *fiber.Ctx, err error) error {
 	return nil
 }
 
-func redirectToHome(c *fiber.Ctx) error {
-	return c.Redirect("/home")
+func homePage(c *fiber.Ctx) error {
+	return c.SendFile("./static/home.html")
 }
 
-func homePage(c *fiber.Ctx) error {
+func indexPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/index.html")
 }
 

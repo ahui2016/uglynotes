@@ -2,7 +2,6 @@ const loading = $('#loading');
 const pw_input = $('#password');
 const submit_btn = $('#submit');
 const formElem = $('form');
-const navi = $('#navi');
 
 ajaxGet('/check', null, that => {
   if (that.response.message == "OK") {
@@ -31,9 +30,8 @@ submit_btn.click(event => {
 
   ajaxPost(form, '/login', submit_btn, function() {
     $('.alert').remove();
-    insertSuccessAlert('登入成功')
-    formElem.hide();
-    navi.show();
+    submit_btn.prop('disabled', true);
+    window.location = '/home';
   });
 });
 

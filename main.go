@@ -28,7 +28,7 @@ func main() {
 	app.Use("/static", checkLoginHTML)
 	app.Static("/static", "./static")
 
-	app.Get("/", redirectToHome)
+	app.Get("/", func(c *fiber.Ctx) error { return c.Redirect("/home") })
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)
 	app.Get("/login", loginPage)
@@ -41,6 +41,7 @@ func main() {
 	})
 
 	htmlPage := app.Group("/html", checkLoginHTML)
+	htmlPage.Get("/index", indexPage)
 	htmlPage.Get("/note", notePage)
 	htmlPage.Get("/note/new", noteNewPage)
 	htmlPage.Get("/note/new2", noteNewPage2)
