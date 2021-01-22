@@ -6,7 +6,6 @@ const formElem = $('form');
 ajaxGet('/check', null, that => {
   if (that.response.message == "OK") {
     insertSuccessAlert('已登入')
-    navi.show();
     return;
   }
   formElem.show();
