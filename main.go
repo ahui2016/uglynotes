@@ -82,8 +82,9 @@ func main() {
 	api.Get("/search/tags/:tags", searchTagGroup)
 	api.Get("/search/title/:pattern", searchTitle)
 
-	// 导出全部笔记
-	api.Get("/export", exportAllNotes)
+	api.Get("/backup/db", downloadDatabase)
+	api.Get("/backup/export", exportAllNotes)
+	api.Get("/backup/json", downloadDatabaseJSON)
 
 	log.Fatal(app.Listen(config.Address))
 }

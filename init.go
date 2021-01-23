@@ -20,9 +20,9 @@ var (
 
 var (
 	config     settings.Settings
-	dataDir    string
-	dbPath     string
-	exportPath string
+	dataDir    string // 数据库文件夹
+	dbPath     string // 数据库文件
+	exportPath string // 数据库导出文件
 )
 
 var (

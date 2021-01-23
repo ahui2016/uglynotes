@@ -89,6 +89,14 @@ func searchPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/search.html")
 }
 
+func downloadDatabase(c *fiber.Ctx) error {
+	return c.SendFile(dbPath)
+}
+
+func downloadDatabaseJSON(c *fiber.Ctx) error {
+	return c.SendFile(exportPath)
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
