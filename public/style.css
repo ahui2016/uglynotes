@@ -2,7 +2,9 @@ body {
     background-color: #EEE;
     font-family: "Palatino Linotype", Palatino, Palladio, Baskerville, sans-serif;
 }
-
+a {
+    text-decoration: none;
+}
 code {
     background-color: beige;
 }
@@ -57,24 +59,16 @@ pre {
 }
 
 .li {
+    color: #999;
     margin: 20px 0 20px 0;
 }
-
 .li .datetime {
-    color: #999;
     font-size: smaller;
 }
-
 .li .tags {
-    color: #999;
     font-size: smaller;
 }
-
-.protected {
-    font-size: smaller;
-    background-color: lightgreen;
-}
-      
+     
 .li .id {
     text-transform: uppercase;
 }
@@ -84,9 +78,14 @@ pre {
 .li:hover .buttons {
   display: inline;
 }
+
 .deleted {
   color: #EEE;
   background-color: #999;
+}
+.protected {
+    font-size: smaller;
+    background-color: lightgreen;
 }
 
 #about-page-icon {
