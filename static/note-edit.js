@@ -1,4 +1,5 @@
 const loading = $('#loading');
+const formElem = $('form');
 const previewBtn = $('#preview-btn');
 const editBtn = $('#edit-btn');
 const plaintextBtn = $('#plaintext');
@@ -42,6 +43,7 @@ function toggle_higher_wider() {
 
 if (document.location.pathname == "/html/note/new") {
   loading.hide();
+  formElem.show();
   const param_tags = getUrlParam('tags');
   if (param_tags) {
     tagsElem.val(param_tags);
@@ -97,6 +99,7 @@ function initEditForm(param_id) {
 
 function onLoadend() {
   loading.hide();
+  formElem.show();
 }
 
 function onFail() {
