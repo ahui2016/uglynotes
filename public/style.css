@@ -14,6 +14,9 @@ pre {
     margin-left: 1em;
     margin-right: 1em;  
 }
+blockquote {
+    background-color: aliceblue;
+}
 
 #head-buttons {
     display: inline;
