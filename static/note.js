@@ -14,8 +14,9 @@ const undel_no_btn = $('#undel-no');
 
 let isDeleted = false;
 
+let note;
 ajaxGet('/api/note/'+id, null, that => {
-  const note = that.response;
+  note = that.response;
   
   note.Contents = note.Patches.reduce((patched, patch) => {
     return patched = Diff.applyPatch(patched, patch)}, "");
