@@ -85,8 +85,9 @@ func (db *DB) createIndexes() error {
 func (db *DB) reIndex() error {
 	// 不知道为啥 TagGroup 的 index 经常出问题
 	err1 := db.DB.ReIndex(&Note{})
-	err2 := db.DB.ReIndex(&TagGroup{})
-	return util.WrapErrors(err1, err2)
+	err2 := db.DB.Reindex(&Tag{})
+	err3 := db.DB.ReIndex(&TagGroup{})
+	return util.WrapErrors(err1, err2, err3)
 }
 
 // Upgrade 将旧的历史版本系统（全文保存）升级至新的历史版本系统（只保存差异）。

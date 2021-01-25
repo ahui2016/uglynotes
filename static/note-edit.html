@@ -25,6 +25,14 @@ svg {
 #contents {
   resize: none;
 }
+.about-shortcut-icon {
+    cursor: pointer;
+}
+#about-shortcut-info {
+    color: #eee;
+    background-color: darkseagreen;
+}
+
     </style>
   </head>
   <body>
@@ -56,9 +64,9 @@ svg {
         <a href="#" id="copy" data-clipboard-target="#contents">(copy)</a>
         <input type="radio" id="markdown" name="note-type" value="markdown">
         <label for="markdown">markdown</label>
-        <a id="preview-btn" href="#" style="display: none;">(preview)</a>
-        <a id="edit-btn" href="#" style="display: none;">(edit)</a>
-        <textarea id="contents" cols="70" rows="20" autofocus
+        <a id="preview-btn" accesskey="p"  href="#" style="display: none;">(preview)</a>
+        <a id="edit-btn" accesskey="e"  href="#" style="display: none;">(edit)</a>
+        <textarea id="contents" accesskey="c" cols="70" rows="20" autofocus
           style="display: block;"></textarea>
         <a id="higher" class="svg-btn" title="higher">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
@@ -74,16 +82,26 @@ svg {
       <div id="preview" class="markdown-preview" style="display: none;"></div>
       <p>
         <label for="tags" style="display: block;">Tags:</label>
-        <textarea id="tags" cols="70" rows="2"></textarea>
+        <textarea id="tags" accesskey="t" cols="70" rows="2"></textarea>
       </p>
       <p id="submit-block">
         <input type="submit" value="submit" id="submit">
+	<img class="about-shortcut-icon" src="/public/info-circle.svg" alt="info"
+             title="显示/隐藏说明">
       </p>
       <p id="update-block" style="display: none;">
         <button id="update">update</button>
+	<img class="about-shortcut-icon" src="/public/info-circle.svg" alt="info"
+             title="显示/隐藏说明">
       </p>
     </form>
 
+    <p id="about-shortcut-info" style="display: none;">
+      本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
+      预览、编辑、文本框。(详情请看 Releases.md)
+    </p>
+
+    
     <!-- 默认提示位置 -->
     <template id="alert-insert-after-here"></template>
 
@@ -117,6 +135,7 @@ svg {
     <footer> </footer>
 
     <script src="/public/util.js?date=20210120"></script>
-    <script src="/static/note-edit.js?date=1611372689503"></script>
+    <script src="/static/note-edit.js?date=1611556898315"></script>
+    
   </body>
 </html>

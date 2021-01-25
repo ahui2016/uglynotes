@@ -113,6 +113,10 @@ $('input[name="note-type"]').change(() => {
   previewBtn.toggle();
 });
 
+$('.about-shortcut-icon').click(() => {
+  $('#about-shortcut-info').toggle();
+});
+
 // 自动在标签前加井号，同时更新全局变量。
 tagsElem.blur(() => {
     tags = getTags();
@@ -122,6 +126,8 @@ tagsElem.blur(() => {
 // 预览按钮
 previewBtn.click(event => {
   event.preventDefault();
+  if (previewBtn.css('display') == 'none') return;
+
   const contents = $('#contents').val().trim();
   const dirty = marked(contents);
   const clean = DOMPurify.sanitize(dirty);
@@ -137,6 +143,7 @@ previewBtn.click(event => {
 
 // 编辑按钮
 editBtn.click(event => {
+  if (editBtn.css('display') == 'none') return;
   textarea.show();
   preview.hide();
   plaintextBtn.show();
