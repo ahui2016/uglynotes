@@ -180,9 +180,9 @@ func newNoteHandler(c *fiber.Ctx) error {
 func createNote(c *fiber.Ctx) (*Note, error) {
 	noteType, err1 := getNoteType(c)
 	title, err2 := getFormValue(c, "title")
-	patch, err3 := getFormValue(c, "patch")
-	tags, err4 := getTags(c)
-	if err := util.WrapErrors(err1, err2, err3, err4); err != nil {
+	tags, err3 := getTags(c)
+	patch := c.FormValue("patch") // 不能 TrimSpace!!
+	if err := util.WrapErrors(err1, err2, err3); err != nil {
 		return nil, err
 	}
 	note := db.NewNote(noteType)
@@ -223,9 +223,9 @@ func patchNoteHandler(c *fiber.Ctx) error {
 	defer db.Unlock()
 
 	id := c.Params("id")
-	title, err1 := getFormValue(c, "title")
-	patch, err2 := getFormValue(c, "patch")
-	if err := util.WrapErrors(err1, err2); err != nil {
+	patch := c.FormValue("patch") // 不能 TrimSpace!!
+	title, err := getFormValue(c, "title")
+	if err != nil {
 		return err
 	}
 

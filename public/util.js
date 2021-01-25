@@ -161,7 +161,7 @@ function addNoteElem(note) {
   }
 
   const deleted = item.find('.deleted');
-  const del_btn_block = item.find('.del-btn-block');
+  const buttons = item.find('.buttons');
   const delete_btn = item.find('.delete');
   const confirm_block = item.find('.confirm-block');
   const no_btn = item.find('.no-btn');
@@ -200,7 +200,7 @@ function addNoteElem(note) {
   function onDelete() {
     $('.alert').hide();
     titleElem.removeAttr('href');
-    del_btn_block.hide();
+    buttons.hide();
     deleted.show();
   }
   function onFail(event) {

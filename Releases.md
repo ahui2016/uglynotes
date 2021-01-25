@@ -1,6 +1,25 @@
 # Releases 新版说明
 
 
+## 2021-01-25 (fix: 关于 patch 的一个 bug)
+
+**推荐程度**：本次更新修复了一个 bug, 建议尽快更新。
+
+- 修复前：对 patch 进行了 TrimSpace 操作，导致在某些情况下 patchApply 失败 (受影响的笔记无法打开)。
+- 修复后：正确处理 pathc, 但之前受影响的笔记需要手动恢复。
+
+### 修复方法：
+
+更新代码及重新编译、重启程序；
+
+```sh
+$ cd uglynotes
+$ git pull
+$ go build
+$ killall uglynotes
+$ ./uglynotes -config /path/to/settings.json &
+```
+
 ## 2021-01-23 (增加备份/导出功能)
 
 **推荐程度**：本次更新主要新增一个功能，建议需要该功能的用户更新。
@@ -30,15 +49,6 @@
 ### 修复方法：
 
 1. 更新代码及重新编译、重启程序；
-
-```sh
-$ cd uglynotes
-$ git pull
-$ go build
-$ killall uglynotes
-$ ./uglynotes -config /path/to/settings.json &
-```
-
 2. 登入网站后，在 home 页面按 F12 打开控制台，在控制台输入 `restoretags()` 按回车执行，即可修复 "标签表"。
 
 
