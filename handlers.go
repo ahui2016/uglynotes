@@ -334,6 +334,7 @@ func allTagGroups(c *fiber.Ctx) error {
 	return c.JSON(groups)
 }
 
+// TODO: 如果只有一个标签，则不使用 db.SearchTagGroup
 func searchTagGroup(c *fiber.Ctx) error {
 	tags, err := getTagGroup(c)
 	if err != nil {
