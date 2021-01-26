@@ -99,9 +99,16 @@ func DeleteFromSlice(slice []string, i int) []string {
 	return append(slice[:i], slice[i+1:]...)
 }
 
+// MustMarshalIndent .
+func MustMarshalIndent(data interface{}) []byte {
+	dataJSON, err := json.MarshalIndent(data, "", "    ")
+	Panic(err)
+	return dataJSON
+}
+
 // MustMarshal .
 func MustMarshal(data interface{}) []byte {
-	dataJSON, err := json.MarshalIndent(data, "", "    ")
+	dataJSON, err := json.Marshal(data)
 	Panic(err)
 	return dataJSON
 }

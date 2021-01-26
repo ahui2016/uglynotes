@@ -1,8 +1,11 @@
 package database
 
 import (
+	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	"github.com/asdine/storm/v3/q"
 	"github.com/gofiber/fiber/v2/middleware/session"
 	"github.com/ianbruene/go-difflib/difflib"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const cookieName = "uglynotesCookie"
@@ -29,6 +33,84 @@ type (
 	IncreaseID = model.IncreaseID
 	Set        = stringset.Set
 )
+
+type DB2 struct {
+	path string
+	DB   *sql.DB
+}
+
+func (db *DB2) Open(dbPath string) (err error) {
+	if db.DB, err = sql.open("sqlite3", dbPath+"?_fk=1"); err != nil {
+		return err
+	}
+	db.path = dbPath
+	return nil
+}
+
+func (db *DB2) FillGroup(group []TagGroup) error {
+	questions := make([]string, 0, len(group))
+	values := make([]interface{}, 0, len(group)*5)
+	for i := range group {
+		questions = append(questions, "(?,?,?,?,?)")
+		values = append(values, group[i].ID)
+		values = append(values, util.MustMarshal(group[i].Tags))
+		values = append(values, btoi(group[i].Protected))
+		values = append(values, group[i].CreatedAt)
+		values = append(values, group[i].UpdatedAt)
+	}
+	stmt := fmt.Sprintf(
+		"INSERT INTO taggroup (id, tags, protected, created_at, updated_at) VALUES %s",
+		strings.Join(values, ","))
+	_, err := db.DB.Exec(stmt, values...)
+	return err
+}
+
+func (db *DB2) AllTagGroups() (group []TagGroup, err error) {
+	rows, err := db.DB.Query("SELECT * FROM taggroup")
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id, createdAt, updatedAt string
+		var protected int
+		var tagsJSON []byte
+		err = rows.Scan(&id, &tags, &protected, &createdAt, &updatedAt)
+		if err != nil {
+			return err
+		}
+		group = append(group, TagGroup{
+			ID:        id,
+			Tags:      mustGetTags(tagsJSON),
+			Protected: itob(protected),
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		})
+	}
+	if err = rows.Err(); err != nil {
+		return err
+	}
+	return
+}
+
+func btoi(b bool) int {
+	if b {
+		return 1
+	}
+	return 0
+}
+func itob(i int) bool {
+	if i > 0 {
+		return true
+	}
+	return false
+}
+func mustGetTags(data []byte) []string {
+	var tags []string
+	err = json.Unmarshal(data, &tags)
+	util.Panic(err)
+	return tags
+}
 
 // DB .
 type DB struct {

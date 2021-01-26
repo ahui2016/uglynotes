@@ -146,7 +146,7 @@ func exportAllNotes(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(exportPath, util.MustMarshal(notes), 0600)
+	return ioutil.WriteFile(exportPath, util.MustMarshalIndent(notes), 0600)
 }
 
 func trimContents(notes []Note) {

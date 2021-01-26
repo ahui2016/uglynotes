@@ -7,6 +7,7 @@ import (
 	"log"
 	"path/filepath"
 
+
 	"github.com/ahui2016/uglynotes/database"
 	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/util"
@@ -23,10 +24,13 @@ var (
 	dataDir    string // 数据库文件夹
 	dbPath     string // 数据库文件
 	exportPath string // 数据库导出文件
+
+	dbPath2	   string
 )
 
 var (
 	db          = new(database.DB)
+	db2	    = new(database.DB2)
 	passwordTry = 0
 )
 
@@ -47,6 +51,10 @@ func init() {
 	err := db.Open(dbPath)
 	util.Panic(err)
 	log.Print(dbPath)
+
+	dbPath2 = dbPath + "2"
+	err = db2.open(dbPath)
+	util.Panic(err)
 }
 
 func setPaths() {
