@@ -53,7 +53,7 @@ func init() {
 	log.Print(dbPath)
 
 	dbPath2 = dbPath + "2"
-	err = db2.open(dbPath)
+	err = db2.Open(dbPath)
 	util.Panic(err)
 }
 
