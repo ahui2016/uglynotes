@@ -327,7 +327,7 @@ func allTagsByDate(c *fiber.Ctx) error {
 }
 
 func allTagGroups(c *fiber.Ctx) error {
-	groups, err := db.AllTagGroups()
+	groups, err := db2.AllTagGroups()
 	if err != nil {
 		return err
 	}

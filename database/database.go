@@ -37,62 +37,116 @@ type (
 type DB2 struct {
 	path string
 	DB   *sql.DB
+	Sess *session.Store
+	sync.Mutex
 }
 
 func (db *DB2) Open(dbPath string) (err error) {
 	if db.DB, err = sql.Open("sqlite3", dbPath+"?_fk=1"); err != nil {
 		return err
 	}
+	if _, err = db.DB.Exec(CreateTables); err != nil {
+		return err
+	}
 	db.path = dbPath
-	return nil
+	// db.Sess = session.New(session.Config{
+	// 	Expiration: mustParseDuration(config.MaxAge),
+	// 	CookieName: cookieName,
+	// })
+	err1 := db.initFirstID()
+	err2 := db.initTotalSize()
+	return util.WrapErrors(err1, err2)
+}
+func (db *DB2) Close() error {
+	return db.DB.Close()
 }
 
-func (db *DB2) FillGroup(group []TagGroup) error {
-	questions := make([]string, 0, len(group))
-	values := make([]interface{}, 0, len(group)*5)
-	for i := range group {
+func (db *DB2) mustBegin() *sql.TX {
+	tx, err := db.DB.Begin()
+	util.Panic(err)
+	return tx
+}
+
+func mustPrepare(tx *sql.TX, query string) *sql.Stmt {
+	stmt, err := tx.Prepare(query)
+	util.Panic(err)
+	return stmt
+}
+
+func (db *DB2) ImportNotes(notes []Note) error {
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	stmtInsertNote := mustPrepare(tx, InsertNote)
+	defer stmtInsertNote.Close()
+
+	stmtInsertPatch := mustPrepare(tx, InsertPatch)
+	defer stmtInsertPatch.Close()
+
+}
+
+func insertPatch(stmt *sql.Stmt, diff string) (err error) {
+	_, err = stmt.Exec(model.NextTimeID(), diff)
+	return
+}
+
+
+func (db *DB2) FillGroups(groups []TagGroup) error {
+	questions := make([]string, 0, len(groups))
+	values := make([]interface{}, 0, len(groups)*5)
+	for _, group := range groups {
 		questions = append(questions, "(?,?,?,?,?)")
-		values = append(values, group[i].ID)
-		values = append(values, util.MustMarshal(group[i].Tags))
-		values = append(values, btoi(group[i].Protected))
-		values = append(values, group[i].CreatedAt)
-		values = append(values, group[i].UpdatedAt)
+		values = append(values, group.ID)
+		values = append(values, util.MustMarshal(group.Tags))
+		values = append(values, btoi(group.Protected))
+		values = append(values, group.CreatedAt)
+		values = append(values, group.UpdatedAt)
 	}
 	stmt := fmt.Sprintf(
 		"INSERT INTO taggroup (id, tags, protected, created_at, updated_at) VALUES %s",
 		strings.Join(questions, ","))
-	_, err := db.DB.Exec(stmt, values...)
+	result, err := db.DB.Exec(stmt, values...)
+	return err
+}
+func (db *DB2) DropTagGroup() error {
+	_, err := db.DB.Exec("DROP TABLE IF EXISTS taggroup")
 	return err
 }
 
-func (db *DB2) AllTagGroups() (group []TagGroup, err error) {
+func (db *DB2) AllTagGroups() (groups []TagGroup, err error) {
 	rows, err := db.DB.Query("SELECT * FROM taggroup")
 	if err != nil {
-		return nil, err
+		return
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var id, createdAt, updatedAt string
-		var protected int
-		var tagsJSON []byte
-		err = rows.Scan(&id, &tagsJSON, &protected, &createdAt, &updatedAt)
+		var group *TagGroup
+		group, err = scanTagGroup(rows)
 		if err != nil {
-			return nil, err
+			return
 		}
-		group = append(group, TagGroup{
-			ID:        id,
-			Tags:      mustGetTags(tagsJSON),
-			Protected: itob(protected),
-			CreatedAt: createdAt,
-			UpdatedAt: updatedAt,
-		})
+		groups = append(groups, *group)
 	}
-	if err = rows.Err(); err != nil {
-		return nil, err
-	}
+	err = rows.Err()
 	return
 }
 
+func scanTagGroup(rows *sql.Rows) (*TagGroup, error) {
+	var id, createdAt, updatedAt string
+	var protected int
+	var tagsJSON []byte
+	err := rows.Scan(&id, &tagsJSON, &protected, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &TagGroup{
+		ID:        id,
+		Tags:      mustGetTags(tagsJSON),
+		Protected: itob(protected),
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
+	}, nil
+}
 func btoi(b bool) int {
 	if b {
 		return 1

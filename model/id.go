@@ -68,3 +68,14 @@ func RandomID() string {
 	idInt64 := timestamp*max + n.Int64()
 	return strconv.FormatInt(idInt64, 36)
 }
+
+// TimeID 返回一个基于时间的 ID, 与 IncreaseID 无关。
+func TimeID() string {
+	unixMicro := time.Now().UnixNano() / 1000
+	return strconv.FormatInt(unixMicro, 36)
+}
+
+func NextTimeID() string {
+	time.Sleep(100 * time.Microsecond)
+	return TimeID()
+}

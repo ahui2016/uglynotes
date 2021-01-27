@@ -53,8 +53,10 @@ func init() {
 	log.Print(dbPath)
 
 	dbPath2 = dbPath + "2"
-	err = db2.Open(dbPath)
+	util.Panic(db2.Open(dbPath2))
+	groups, err := db.AllTagGroups()
 	util.Panic(err)
+	util.Panic(db2.FillGroups(groups))
 }
 
 func setPaths() {
