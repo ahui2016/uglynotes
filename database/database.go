@@ -102,22 +102,22 @@ func (db *DB2) ImportNotes(notes []Note) (err error) {
 
 	for _, note := range notes {
 		if err = importNote(stmtInsertNote, note); err != nil {
-			return
+			return fmt.Errorf("importNote: %v", err)
 		}
 		if err = importTagGroup(stmtGetTagGroupID, stmtInsertTagGroup,
 			stmtUpdateTagGroupNow, note.Tags); err != nil {
-			return
+			return fmt.Errorf("importTagGroup: %v", err)
 		}
 		if err = importTags(stmtGetTagID, stmtInsertTag, stmtInsertNoteTag,
 			note.ID, note.Tags); err != nil {
-			return err
+			return fmt.Errorf("importTags: %v", err)
 		}
 		if err = importPatches(stmtInsertPatch, stmtInsertNotePatch,
 			note.ID, note.Patches); err != nil {
-			return
+			return fmt.Errorf("importPatches: %v", err)
 		}
 	}
-	return
+	return tx.Commit()
 }
 
 func importNote(stmtAdd *sql.Stmt, note Note) (err error) {
@@ -544,6 +544,79 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 		}
 	}
 	return nil
+}
+
+func (db *DB2) AllNotes() (notes []*Note, err error) {
+	rows, err := db.DB.Query(stmt.GetNotes)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var note Note
+		note, err = scanNote(rows)
+		if err != nil {
+			return
+		}
+		notes = append(notes, &note)
+	}
+	if err = rows.Err(); err != nil {
+		return
+	}
+
+	stmtGetTagNames, err := db.DB.Prepare(stmt.GetTagNamesByNote)
+	if err != nil {
+		return
+	}
+	defer stmtGetTagNames.Close()
+	err = refillTags(stmtGetTagNames, notes)
+	return
+}
+
+func refillTags(stmtGet *sql.Stmt, notes []*Note) error {
+	for _, note := range notes {
+		rows, err := stmtGet.Query(note.ID)
+		if err != nil {
+			return err
+		}
+		defer rows.Close()
+		for rows.Next() {
+			var tagName string
+			err = rows.Scan(&tagName)
+			if err != nil {
+				return err
+			}
+			note.Tags = append(note.Tags, tagName)
+		}
+		if err = rows.Err(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func scanTagName(rows *sql.Rows) (name string, err error) {
+	err = rows.Scan(&name)
+	return
+}
+
+func scanNote(rows *sql.Rows) (note Note, err error) {
+	var deleted int
+	err = rows.Scan(
+		&note.ID,
+		&note.Type,
+		&note.Title,
+		&note.Size,
+		&deleted,
+		&note.RemindAt,
+		&note.CreatedAt,
+		&note.UpdatedAt,
+	)
+	if err != nil {
+		return
+	}
+	note.Deleted = itob(deleted)
+	return
 }
 
 // AllNotes .

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"unicode/utf8"
 
@@ -124,11 +125,11 @@ func checkLogin(c *fiber.Ctx) error {
 }
 
 func getAllNotes(c *fiber.Ctx) error {
-	notes, err := db.AllNotes()
+	notes, err := db2.AllNotes()
 	if err != nil {
 		return err
 	}
-	trimContents(notes)
+	// trimContents(notes)
 	return c.JSON(notes)
 }
 
@@ -421,4 +422,16 @@ func deleteNoteHistories(c *fiber.Ctx) error {
 
 	id := c.Params("id")
 	return db.DeleteNoteHistory(id)
+}
+
+func importNotes(c *fiber.Ctx) error {
+	var notes []Note
+	blob, err := ioutil.ReadFile(exportPath)
+	if err != nil {
+		return err
+	}
+	if err = json.Unmarshal(blob, &notes); err != nil {
+		return err
+	}
+	return db2.ImportNotes(notes)
 }

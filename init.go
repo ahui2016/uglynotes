@@ -54,9 +54,6 @@ func init() {
 
 	dbPath2 = dbPath + "2"
 	util.Panic(db2.Open(dbPath2))
-	groups, err := db.AllTagGroups()
-	util.Panic(err)
-	util.Panic(db2.FillGroups(groups))
 }
 
 func setPaths() {

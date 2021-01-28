@@ -7,6 +7,7 @@
     <title>Home .. uglynotes</title>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
     <style>
 #repository {
   color: #666;
@@ -41,10 +42,14 @@
       </p>
     </div>
 
+    <script src="/public/util.js?date=1611542182622"></script>
     <script>
-function restoretags() {
-  ajaxGet('/reset-all-tags', null, ()=>{console.log('OK')});
-}
+      function restoretags() {
+	ajaxGet('/reset-all-tags', null, ()=>{console.log('OK')});
+      }
+      function importnotes() {
+	ajaxGet('/import-notes', null,  ()=>{console.log('OK')});
+      }
     </script>
   </body>
 </html>

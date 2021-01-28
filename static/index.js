@@ -9,16 +9,14 @@ if (filter == 'deleted') {
 }
 
 ajaxGet(url, null, that => {
+  if (!that.response || that.response.length == 0) {
+    insertInfoAlert(not_found_msg);
+    return;
+  }
   that.response.forEach(addNoteElem);
 }, () => {
   // onloadend
   $('#loading').hide();
-}, that => {
-  // onFail
-  if (that.response && that.response.message == 'not found') {
-    $('.alert').remove();
-    insertInfoAlert(not_found_msg);
-  }
 });
 
 ajaxGet("/api/note/all/size", null, that => {

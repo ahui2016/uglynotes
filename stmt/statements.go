@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS patch
 CREATE TABLE IF NOT EXISTS note_patch
 (
   note_id     text    REFERENCES note(ID) ON DELETE CASCADE,
-  patch_id    text    REFERENCES tag(ID)  ON DELETE CASCADE,
+  patch_id    text    REFERENCES patch(ID)  ON DELETE CASCADE,
   UNIQUE (note_id, patch_id)
 );
 
@@ -65,7 +65,7 @@ CREATE INDEX IF NOT EXISTS idx_file_update ON file(updated_at);
 CREATE TABLE IF NOT EXISTS note_file
 (
   note_id    text    REFERENCES note(ID) ON DELETE CASCADE,
-  file_id    text    REFERENCES tag(ID)  ON DELETE CASCADE,
+  file_id    text    REFERENCES file(ID)  ON DELETE CASCADE,
   UNIQUE (note_id, file_id)
 );
 
@@ -98,12 +98,13 @@ const GetTextValue = `SELECT text_value FROM metadata WHERE name=?;`
 const UpdateTextValue = `UPDATE metadata SET text_value=? WHERE name=?;`
 
 const GetNote = `SELECT * FROM note WHERE id=?;`
+const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
 const InsertNote = `INSERT INTO note (
     id, type, title, size, deleted, remind_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`
-const GetTagID = `SELECT * FROM tag WHERE name=?;`
+const GetTagID = `SELECT id FROM tag WHERE name=?;`
 const InsertTag = `INSERT INTO tag (id, name, created_at) VALUES (?, ?, ?);`
 const InsertNoteTag = `INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?);`
 
@@ -116,9 +117,14 @@ const InsertFile = `INSERT INTO file (
 const InsertNoteFile = `INSERT INTO note_file (note_id, file_id) VALUES (?, ?);`
 
 const GetTagGroup = `SELECT * FROM taggroup WHERE id=?;`
-const GetTagGroupID = `SELECT id, protected, created_at, updated_at
-    FROM taggroup WHERE tags=?;`
+const GetTagGroupID = `SELECT id FROM taggroup WHERE tags=?;`
 const InsertTagGroup = `INSERT INTO taggroup (
     id, tags, protected, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?);`
 const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
+
+const GetTagNamesByNote = `SELECT tag.name FROM note
+    INNER JOIN note_tag ON note.id = note_tag.note_id
+    INNER JOIN tag ON note_tag.tag_id = tag.id
+    WHERE note.deleted = 0 and note.id=?`
+

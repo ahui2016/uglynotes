@@ -40,6 +40,7 @@ func main() {
 	app.Get("/reset-all-tags", func(c *fiber.Ctx) error {
 		return db.ResetAllTags()
 	})
+	app.Get("/import-notes", importNotes)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)
