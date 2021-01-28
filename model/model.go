@@ -263,7 +263,7 @@ func NewTagGroup(tags []string) *TagGroup {
 	now := TimeNow()
 	return &TagGroup{
 		ID:        RandomID(),
-		Tags:      stringset.UniqueSort(tags),
+		Tags:      tags,
 		CreatedAt: now,
 		UpdatedAt: now,
 	}

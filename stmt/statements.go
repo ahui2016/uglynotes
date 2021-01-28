@@ -1,4 +1,4 @@
-package database
+package stmt
 
 const CreateTables = `
 
@@ -30,7 +30,8 @@ CREATE INDEX IF NOT EXISTS idx_tag_create ON tag(created_at);
 CREATE TABLE IF NOT EXISTS note_tag
 (
   note_id   text    REFERENCES note(ID) ON DELETE CASCADE,
-  tag_id    text    REFERENCES tag(ID)  ON DELETE CASCADE
+  tag_id    text    REFERENCES tag(ID)  ON DELETE CASCADE,
+  UNIQUE (note_id, tag_id)
 );
 
 CREATE TABLE IF NOT EXISTS patch
@@ -42,7 +43,8 @@ CREATE TABLE IF NOT EXISTS patch
 CREATE TABLE IF NOT EXISTS note_patch
 (
   note_id     text    REFERENCES note(ID) ON DELETE CASCADE,
-  patch_id    text    REFERENCES tag(ID)  ON DELETE CASCADE
+  patch_id    text    REFERENCES tag(ID)  ON DELETE CASCADE,
+  UNIQUE (note_id, patch_id)
 );
 
 CREATE TABLE IF NOT EXISTS file
@@ -63,7 +65,8 @@ CREATE INDEX IF NOT EXISTS idx_file_update ON file(updated_at);
 CREATE TABLE IF NOT EXISTS note_file
 (
   note_id    text    REFERENCES note(ID) ON DELETE CASCADE,
-  file_id    text    REFERENCES tag(ID)  ON DELETE CASCADE
+  file_id    text    REFERENCES tag(ID)  ON DELETE CASCADE,
+  UNIQUE (note_id, file_id)
 );
 
 CREATE TABLE IF NOT EXISTS taggroup
@@ -83,7 +86,7 @@ CREATE TABLE IF NOT EXISTS metadata
   name         text    NOT NULL UNIQUE,
   int_value    int     DEFAULT NULL,
   text_value   text    DEFAULT NULL
-)
+);
 `
 
 const InsertIntValue = `INSERT INTO metadata (name, int_value) VALUES (?, ?);`
@@ -100,6 +103,7 @@ const InsertNote = `INSERT INTO note (
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`
+const GetTagID = `SELECT * FROM tag WHERE name=?;`
 const InsertTag = `INSERT INTO tag (id, name, created_at) VALUES (?, ?, ?);`
 const InsertNoteTag = `INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?);`
 
@@ -111,3 +115,10 @@ const InsertFile = `INSERT INTO file (
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 const InsertNoteFile = `INSERT INTO note_file (note_id, file_id) VALUES (?, ?);`
 
+const GetTagGroup = `SELECT * FROM taggroup WHERE id=?;`
+const GetTagGroupID = `SELECT id, protected, created_at, updated_at
+    FROM taggroup WHERE tags=?;`
+const InsertTagGroup = `INSERT INTO taggroup (
+    id, tags, protected, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?);`
+const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`

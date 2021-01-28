@@ -11,6 +11,7 @@ import (
 
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/settings"
+	"github.com/ahui2016/uglynotes/stmt"
 	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
@@ -45,7 +46,7 @@ func (db *DB2) Open(dbPath string) (err error) {
 	if db.DB, err = sql.Open("sqlite3", dbPath+"?_fk=1"); err != nil {
 		return err
 	}
-	if _, err = db.DB.Exec(CreateTables); err != nil {
+	if _, err = db.DB.Exec(stmt.CreateTables); err != nil {
 		return err
 	}
 	db.path = dbPath
@@ -61,35 +62,149 @@ func (db *DB2) Close() error {
 	return db.DB.Close()
 }
 
-func (db *DB2) mustBegin() *sql.TX {
+func (db *DB2) mustBegin() *sql.Tx {
 	tx, err := db.DB.Begin()
 	util.Panic(err)
 	return tx
 }
 
-func mustPrepare(tx *sql.TX, query string) *sql.Stmt {
+func mustPrepare(tx *sql.Tx, query string) *sql.Stmt {
 	stmt, err := tx.Prepare(query)
 	util.Panic(err)
 	return stmt
 }
 
-func (db *DB2) ImportNotes(notes []Note) error {
+func (db *DB2) ImportNotes(notes []Note) (err error) {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	stmtInsertNote := mustPrepare(tx, InsertNote)
+	stmtInsertNote := mustPrepare(tx, stmt.InsertNote)
 	defer stmtInsertNote.Close()
 
-	stmtInsertPatch := mustPrepare(tx, InsertPatch)
+	stmtInsertPatch := mustPrepare(tx, stmt.InsertPatch)
 	defer stmtInsertPatch.Close()
+	stmtInsertNotePatch := mustPrepare(tx, stmt.InsertNotePatch)
+	defer stmtInsertNotePatch.Close()
 
-}
+	stmtGetTagID := mustPrepare(tx, stmt.GetTagID)
+	defer stmtGetTagID.Close()
+	stmtInsertTag := mustPrepare(tx, stmt.InsertTag)
+	defer stmtInsertTag.Close()
+	stmtInsertNoteTag := mustPrepare(tx, stmt.InsertNoteTag)
+	defer stmtInsertNoteTag.Close()
 
-func insertPatch(stmt *sql.Stmt, diff string) (err error) {
-	_, err = stmt.Exec(model.NextTimeID(), diff)
+	stmtGetTagGroupID := mustPrepare(tx, stmt.GetTagGroupID)
+	defer stmtGetTagID.Close()
+	stmtInsertTagGroup := mustPrepare(tx, stmt.InsertTagGroup)
+	defer stmtInsertTagGroup.Close()
+	stmtUpdateTagGroupNow := mustPrepare(tx, stmt.UpdateTagGroupNow)
+	defer stmtUpdateTagGroupNow.Close()
+
+	for _, note := range notes {
+		if err = importNote(stmtInsertNote, note); err != nil {
+			return
+		}
+		if err = importTagGroup(stmtGetTagGroupID, stmtInsertTagGroup,
+			stmtUpdateTagGroupNow, note.Tags); err != nil {
+			return
+		}
+		if err = importTags(stmtGetTagID, stmtInsertTag, stmtInsertNoteTag,
+			note.ID, note.Tags); err != nil {
+			return err
+		}
+		if err = importPatches(stmtInsertPatch, stmtInsertNotePatch,
+			note.ID, note.Patches); err != nil {
+			return
+		}
+	}
 	return
 }
 
+func importNote(stmtAdd *sql.Stmt, note Note) (err error) {
+	_, err = stmtAdd.Exec(
+		note.ID,
+		note.Type,
+		note.Title,
+		note.Size,
+		btoi(note.Deleted),
+		"",
+		note.CreatedAt,
+		note.UpdatedAt,
+	)
+	return
+}
+
+func importTagGroup(
+	stmtGet, stmtAdd, stmtUpdate *sql.Stmt, tags []string) error {
+	groupID, err := getID1(stmtGet, util.MustMarshal(tags))
+	if err == sql.ErrNoRows {
+		g := model.NewTagGroup(tags)
+		_, err = stmtAdd.Exec(g.ID, util.MustMarshal(g.Tags),
+			btoi(g.Protected), g.CreatedAt, g.UpdatedAt)
+		return err
+	}
+	return updateNow(stmtUpdate, groupID)
+}
+
+func updateNow(stmtUpdate *sql.Stmt, id string) error {
+	_, err := stmtUpdate.Exec(model.TimeNow(), id)
+	return err
+}
+
+// getID1 gets an ID by one argument.
+func getID1(stmtGet *sql.Stmt, arg interface{}) (id string, err error) {
+	row := stmtGet.QueryRow(arg)
+	err = row.Scan(&id)
+	return
+}
+
+func importTags(stmtGet, stmtAdd, stmt3 *sql.Stmt, noteID string,
+	tags []string) (err error) {
+	for _, tagName := range tags {
+		err = importTag(stmtGet, stmtAdd, stmt3, noteID, tagName)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func importTag(
+	stmtGet, stmtAdd, stmt3 *sql.Stmt, noteID string, name string) error {
+	tagID, err := getID1(stmtGet, name)
+	if err == sql.ErrNoRows {
+		tagID = model.RandomID()
+		_, err = stmtAdd.Exec(tagID, name, model.TimeNow())
+	}
+	if err != nil {
+		return err
+	}
+	_, err = stmt3.Exec(noteID, tagID)
+	return err
+}
+
+// func getTagID(stmtGet *sql.Stmt, name string) (tagID string, err error) {
+// 	row := stmtGet.QueryRow(name)
+// 	err = row.Scan(&tagID)
+// 	return
+// }
+
+func importPatches(stmt1, stmt2 *sql.Stmt, noteID string, patches []string) (
+	err error) {
+	for _, diff := range patches {
+		if err = importPatch(stmt1, stmt2, noteID, diff); err != nil {
+			return
+		}
+	}
+	return
+}
+
+func importPatch(stmt1, stmt2 *sql.Stmt, noteID, diff string) error {
+	patchID := model.NextTimeID()
+	_, err1 := stmt1.Exec(patchID, diff)
+	_, err2 := stmt2.Exec(noteID, patchID)
+	return util.WrapErrors(err1, err2)
+}
 
 func (db *DB2) FillGroups(groups []TagGroup) error {
 	questions := make([]string, 0, len(groups))
@@ -105,7 +220,7 @@ func (db *DB2) FillGroups(groups []TagGroup) error {
 	stmt := fmt.Sprintf(
 		"INSERT INTO taggroup (id, tags, protected, created_at, updated_at) VALUES %s",
 		strings.Join(questions, ","))
-	result, err := db.DB.Exec(stmt, values...)
+	_, err := db.DB.Exec(stmt, values...)
 	return err
 }
 func (db *DB2) DropTagGroup() error {

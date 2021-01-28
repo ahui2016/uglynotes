@@ -1,10 +1,12 @@
 package database
 
 import (
+	"database/sql"
 	"errors"
 
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/ahui2016/uglynotes/settings"
+	"github.com/ahui2016/uglynotes/stmt"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
 )
@@ -18,8 +20,8 @@ const (
 
 func (db *DB2) getCurrentID() (id IncreaseID, err error) {
 	var strID string
-	row = db.DB.QueryRow(GetTextValue, currentIdKey)
-	if err = row.Scan(&textID); err != nil {
+	row := db.DB.QueryRow(stmt.GetTextValue, currentIdKey)
+	if err = row.Scan(&strID); err != nil {
 		return
 	}
 	return model.ParseID(strID)
@@ -28,19 +30,19 @@ func (db *DB2) initFirstID() (err error) {
 	_, err = db.getCurrentID()
 	if err == sql.ErrNoRows {
 		_, err = db.DB.Exec(
-			InsertTextValue, currentIdKey, model.FirstID().String())
+			stmt.InsertTextValue, currentIdKey, model.FirstID().String())
 	}
 	return
 }
 func (db *DB2) getTotalSize() (size int, err error) {
-	row = db.DB.QueryRow(GetIntValue, totalSizeKey)
+	row := db.DB.QueryRow(stmt.GetIntValue, totalSizeKey)
 	err = row.Scan(&size)
 	return
 }
 func (db *DB2) initTotalSize() (err error) {
 	_, err = db.getTotalSize()
 	if err == sql.ErrNoRows {
-		_, err = db.DB.Exec(InsertIntValue, totalSizeKey, 0)
+		_, err = db.DB.Exec(stmt.InsertIntValue, totalSizeKey, 0)
 	}
 	return
 }
