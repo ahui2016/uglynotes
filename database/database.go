@@ -54,8 +54,8 @@ func (db *DB2) Open(dbPath string) (err error) {
 	// 	Expiration: mustParseDuration(config.MaxAge),
 	// 	CookieName: cookieName,
 	// })
-	err1 := db.initFirstID()
-	err2 := db.initTotalSize()
+	err1 := initFirstID(db.DB)
+	err2 := initTotalSize(db.DB)
 	return util.WrapErrors(err1, err2)
 }
 func (db *DB2) Close() error {
@@ -115,6 +115,9 @@ func (db *DB2) ImportNotes(notes []Note) (err error) {
 		if err = importPatches(stmtInsertPatch, stmtInsertNotePatch,
 			note.ID, note.Patches); err != nil {
 			return fmt.Errorf("importPatches: %v", err)
+		}
+		if err = increaseTotalSize(tx, note.Size); err != nil {
+			return err
 		}
 	}
 	return tx.Commit()
@@ -182,12 +185,6 @@ func importTag(
 	_, err = stmt3.Exec(noteID, tagID)
 	return err
 }
-
-// func getTagID(stmtGet *sql.Stmt, name string) (tagID string, err error) {
-// 	row := stmtGet.QueryRow(name)
-// 	err = row.Scan(&tagID)
-// 	return
-// }
 
 func importPatches(stmt1, stmt2 *sql.Stmt, noteID string, patches []string) (
 	err error) {
@@ -547,7 +544,15 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 }
 
 func (db *DB2) AllNotes() (notes []*Note, err error) {
-	rows, err := db.DB.Query(stmt.GetNotes)
+	return db.getNotes(stmt.GetNotes)
+}
+
+func (db *DB2) AllDeletedNotes() (notes []*Note, err error) {
+	return db.getNotes(stmt.GetDeletedNotes)
+}
+
+func (db *DB2) getNotes(stmtGetNotes string) (notes []*Note, err error) {
+	rows, err := db.DB.Query(stmtGetNotes)
 	if err != nil {
 		return
 	}

@@ -99,6 +99,7 @@ const UpdateTextValue = `UPDATE metadata SET text_value=? WHERE name=?;`
 
 const GetNote = `SELECT * FROM note WHERE id=?;`
 const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
+const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;`
 const InsertNote = `INSERT INTO note (
     id, type, title, size, deleted, remind_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
@@ -126,5 +127,5 @@ const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
 const GetTagNamesByNote = `SELECT tag.name FROM note
     INNER JOIN note_tag ON note.id = note_tag.note_id
     INNER JOIN tag ON note_tag.tag_id = tag.id
-    WHERE note.deleted = 0 and note.id=?`
+    WHERE  note.id=?`
 

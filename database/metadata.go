@@ -18,33 +18,50 @@ const (
 	totalSizeKey   = "total-size-key"
 )
 
-func (db *DB2) getCurrentID() (id IncreaseID, err error) {
+type TX interface {
+	Exec(string, ...interface{}) (sql.Result, error)
+	QueryRow(string, ...interface{}) *sql.Row
+}
+
+func (db *DB2) GetTotalSize() (size int, err error) {
+	return getTotalSize(db.DB)
+}
+
+func getCurrentID(tx TX) (id IncreaseID, err error) {
 	var strID string
-	row := db.DB.QueryRow(stmt.GetTextValue, currentIdKey)
+	row := tx.QueryRow(stmt.GetTextValue, currentIdKey)
 	if err = row.Scan(&strID); err != nil {
 		return
 	}
 	return model.ParseID(strID)
 }
-func (db *DB2) initFirstID() (err error) {
-	_, err = db.getCurrentID()
+func initFirstID(tx TX) (err error) {
+	_, err = getCurrentID(tx)
 	if err == sql.ErrNoRows {
-		_, err = db.DB.Exec(
+		_, err = tx.Exec(
 			stmt.InsertTextValue, currentIdKey, model.FirstID().String())
 	}
 	return
 }
-func (db *DB2) getTotalSize() (size int, err error) {
-	row := db.DB.QueryRow(stmt.GetIntValue, totalSizeKey)
+func getTotalSize(tx TX) (size int, err error) {
+	row := tx.QueryRow(stmt.GetIntValue, totalSizeKey)
 	err = row.Scan(&size)
 	return
 }
-func (db *DB2) initTotalSize() (err error) {
-	_, err = db.getTotalSize()
+func initTotalSize(tx TX) (err error) {
+	_, err = getTotalSize(tx)
 	if err == sql.ErrNoRows {
-		_, err = db.DB.Exec(stmt.InsertIntValue, totalSizeKey, 0)
+		_, err = tx.Exec(stmt.InsertIntValue, totalSizeKey, 0)
 	}
 	return
+}
+func increaseTotalSize(tx TX, addition int) error {
+	size, err := getTotalSize(tx)
+	if err != nil {
+		return err
+	}
+	_, err = tx.Exec(stmt.UpdateIntValue, size+addition, totalSizeKey)
+	return err
 }
 
 func (db *DB) initFirstID() error {
@@ -76,6 +93,11 @@ func (db *DB) mustGetNextID() IncreaseID {
 	return nextID
 }
 
+// GetTotalSize .
+func (db *DB) GetTotalSize() (size int, err error) {
+	return txGetTotalSize(db.DB)
+}
+
 func (db *DB) initTotalSize() (err error) {
 	_, err = db.GetTotalSize()
 	if err != nil && err != storm.ErrNotFound {
@@ -85,11 +107,6 @@ func (db *DB) initTotalSize() (err error) {
 		return db.setTotalSize(0)
 	}
 	return
-}
-
-// GetTotalSize .
-func (db *DB) GetTotalSize() (size int, err error) {
-	return txGetTotalSize(db.DB)
 }
 
 func txGetTotalSize(tx storm.Node) (size int, err error) {

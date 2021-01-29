@@ -134,11 +134,11 @@ func getAllNotes(c *fiber.Ctx) error {
 }
 
 func getDeletedNotes(c *fiber.Ctx) error {
-	notes, err := db.AllDeletedNotes()
+	notes, err := db2.AllDeletedNotes()
 	if err != nil {
 		return err
 	}
-	trimContents(notes)
+	// trimContents(notes)
 	return c.JSON(notes)
 }
 
@@ -238,7 +238,7 @@ func patchNoteHandler(c *fiber.Ctx) error {
 }
 
 func notesSizeHandler(c *fiber.Ctx) error {
-	size, err := db.GetTotalSize()
+	size, err := db2.GetTotalSize()
 	if err != nil {
 		return err
 	}
