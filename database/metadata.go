@@ -18,11 +18,6 @@ const (
 	totalSizeKey   = "total-size-key"
 )
 
-type TX interface {
-	Exec(string, ...interface{}) (sql.Result, error)
-	QueryRow(string, ...interface{}) *sql.Row
-}
-
 func (db *DB2) GetTotalSize() (size int, err error) {
 	return getTotalSize(db.DB)
 }

@@ -33,7 +33,21 @@ type (
 	TagGroup   = model.TagGroup
 	IncreaseID = model.IncreaseID
 	Set        = stringset.Set
+	Stmt       = sql.Stmt
 )
+
+var stmtGetTagNamesByNote, stmtGetNote, stmtGetNotes, stmtGetDeletedNotes,
+	stmtGetPatchesByNote *Stmt
+
+type TX interface {
+	Exec(string, ...interface{}) (sql.Result, error)
+	QueryRow(string, ...interface{}) *sql.Row
+	Prepare(string) (*Stmt, error)
+}
+
+type Row interface {
+	Scan(...interface{}) error
+}
 
 type DB2 struct {
 	path string
@@ -54,11 +68,13 @@ func (db *DB2) Open(dbPath string) (err error) {
 	// 	Expiration: mustParseDuration(config.MaxAge),
 	// 	CookieName: cookieName,
 	// })
+	db.prepareStatements()
 	err1 := initFirstID(db.DB)
 	err2 := initTotalSize(db.DB)
 	return util.WrapErrors(err1, err2)
 }
 func (db *DB2) Close() error {
+	closeStatements()
 	return db.DB.Close()
 }
 
@@ -68,10 +84,26 @@ func (db *DB2) mustBegin() *sql.Tx {
 	return tx
 }
 
-func mustPrepare(tx *sql.Tx, query string) *sql.Stmt {
+func mustPrepare(tx TX, query string) *Stmt {
 	stmt, err := tx.Prepare(query)
 	util.Panic(err)
 	return stmt
+}
+
+func (db *DB2) prepareStatements() {
+	stmtGetTagNamesByNote = mustPrepare(db.DB, stmt.GetTagNamesByNote)
+	stmtGetNote = mustPrepare(db.DB, stmt.GetNote)
+	stmtGetNotes = mustPrepare(db.DB, stmt.GetNotes)
+	stmtGetDeletedNotes = mustPrepare(db.DB, stmt.GetDeletedNotes)
+	stmtGetPatchesByNote = mustPrepare(db.DB, stmt.GetPatchesByNote)
+}
+
+func closeStatements() {
+	stmtGetTagNamesByNote.Close()
+	stmtGetNote.Close()
+	stmtGetNotes.Close()
+	stmtGetDeletedNotes.Close()
+	stmtGetPatchesByNote.Close()
 }
 
 func (db *DB2) ImportNotes(notes []Note) (err error) {
@@ -123,7 +155,7 @@ func (db *DB2) ImportNotes(notes []Note) (err error) {
 	return tx.Commit()
 }
 
-func importNote(stmtAdd *sql.Stmt, note Note) (err error) {
+func importNote(stmtAdd *Stmt, note Note) (err error) {
 	_, err = stmtAdd.Exec(
 		note.ID,
 		note.Type,
@@ -138,8 +170,8 @@ func importNote(stmtAdd *sql.Stmt, note Note) (err error) {
 }
 
 func importTagGroup(
-	stmtGet, stmtAdd, stmtUpdate *sql.Stmt, tags []string) error {
-	groupID, err := getID1(stmtGet, util.MustMarshal(tags))
+	stmtGet, stmtAdd, stmtUpdate *Stmt, tags []string) error {
+	groupID, err := getText1(stmtGet, util.MustMarshal(tags))
 	if err == sql.ErrNoRows {
 		g := model.NewTagGroup(tags)
 		_, err = stmtAdd.Exec(g.ID, util.MustMarshal(g.Tags),
@@ -149,19 +181,19 @@ func importTagGroup(
 	return updateNow(stmtUpdate, groupID)
 }
 
-func updateNow(stmtUpdate *sql.Stmt, id string) error {
+func updateNow(stmtUpdate *Stmt, id string) error {
 	_, err := stmtUpdate.Exec(model.TimeNow(), id)
 	return err
 }
 
-// getID1 gets an ID by one argument.
-func getID1(stmtGet *sql.Stmt, arg interface{}) (id string, err error) {
+// getText1 gets a text value by one argument.
+func getText1(stmtGet *Stmt, arg interface{}) (text string, err error) {
 	row := stmtGet.QueryRow(arg)
-	err = row.Scan(&id)
+	err = row.Scan(&text)
 	return
 }
 
-func importTags(stmtGet, stmtAdd, stmt3 *sql.Stmt, noteID string,
+func importTags(stmtGet, stmtAdd, stmt3 *Stmt, noteID string,
 	tags []string) (err error) {
 	for _, tagName := range tags {
 		err = importTag(stmtGet, stmtAdd, stmt3, noteID, tagName)
@@ -173,8 +205,8 @@ func importTags(stmtGet, stmtAdd, stmt3 *sql.Stmt, noteID string,
 }
 
 func importTag(
-	stmtGet, stmtAdd, stmt3 *sql.Stmt, noteID string, name string) error {
-	tagID, err := getID1(stmtGet, name)
+	stmtGet, stmtAdd, stmt3 *Stmt, noteID string, name string) error {
+	tagID, err := getText1(stmtGet, name)
 	if err == sql.ErrNoRows {
 		tagID = model.RandomID()
 		_, err = stmtAdd.Exec(tagID, name, model.TimeNow())
@@ -186,17 +218,17 @@ func importTag(
 	return err
 }
 
-func importPatches(stmt1, stmt2 *sql.Stmt, noteID string, patches []string) (
+func importPatches(stmt1, stmt2 *Stmt, noteID string, patches []string) (
 	err error) {
 	for _, diff := range patches {
-		if err = importPatch(stmt1, stmt2, noteID, diff); err != nil {
+		if err = insertPatch(stmt1, stmt2, noteID, diff); err != nil {
 			return
 		}
 	}
 	return
 }
 
-func importPatch(stmt1, stmt2 *sql.Stmt, noteID, diff string) error {
+func insertPatch(stmt1, stmt2 *Stmt, noteID, diff string) error {
 	patchID := model.NextTimeID()
 	_, err1 := stmt1.Exec(patchID, diff)
 	_, err2 := stmt2.Exec(noteID, patchID)
@@ -497,6 +529,28 @@ func (db *DB) checkExist(id string) error {
 	return nil
 }
 
+func (db *DB2) GetByID(id string) (note Note, err error) {
+	row := stmtGetNote.QueryRow(id)
+	if note, err = scanNote(row); err != nil {
+		return
+	}
+
+	tags, err := getTextArray(stmtGetTagNamesByNote, note.ID)
+	if err != nil {
+		return
+	}
+	note.Tags = tags
+
+	patches, err := getTextArray(stmtGetPatchesByNote, note.ID)
+	if err != nil {
+		return
+	}
+	note.Patches = patches
+	return
+}
+
+func refillPatches() {}
+
 // GetByID .
 func (db *DB) GetByID(id string) (note Note, err error) {
 	err = db.DB.One("ID", id, &note)
@@ -544,70 +598,64 @@ func deleteTags(tx storm.Node, tagsToDelete []string, noteID string) error {
 }
 
 func (db *DB2) AllNotes() (notes []*Note, err error) {
-	return db.getNotes(stmt.GetNotes)
+	return db.getNotes(stmtGetNotes)
 }
 
 func (db *DB2) AllDeletedNotes() (notes []*Note, err error) {
-	return db.getNotes(stmt.GetDeletedNotes)
+	return db.getNotes(stmtGetDeletedNotes)
 }
 
-func (db *DB2) getNotes(stmtGetNotes string) (notes []*Note, err error) {
-	rows, err := db.DB.Query(stmtGetNotes)
+func (db *DB2) getNotes(stmtGet *Stmt) (notes []*Note, err error) {
+	rows, err := stmtGet.Query()
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
-		var note Note
-		note, err = scanNote(rows)
+		note, err := scanNote(rows)
 		if err != nil {
-			return
+			return nil, err
 		}
 		notes = append(notes, &note)
 	}
 	if err = rows.Err(); err != nil {
 		return
 	}
+	for _, note := range notes {
+		tags, err := getTextArray(stmtGetTagNamesByNote, note.ID)
+		if err != nil {
+			return nil, err
+		}
+		note.Tags = tags
+	}
+	return
+}
 
-	stmtGetTagNames, err := db.DB.Prepare(stmt.GetTagNamesByNote)
+func getTextArray(stmtGet *Stmt, arg string) (textArray []string, err error) {
+	rows, err := stmtGet.Query(arg)
 	if err != nil {
 		return
 	}
-	defer stmtGetTagNames.Close()
-	err = refillTags(stmtGetTagNames, notes)
-	return
-}
-
-func refillTags(stmtGet *sql.Stmt, notes []*Note) error {
-	for _, note := range notes {
-		rows, err := stmtGet.Query(note.ID)
+	defer rows.Close()
+	for rows.Next() {
+		text, err := scanText1(rows)
 		if err != nil {
-			return err
+			return nil, err
 		}
-		defer rows.Close()
-		for rows.Next() {
-			var tagName string
-			err = rows.Scan(&tagName)
-			if err != nil {
-				return err
-			}
-			note.Tags = append(note.Tags, tagName)
-		}
-		if err = rows.Err(); err != nil {
-			return err
-		}
+		textArray = append(textArray, text)
 	}
-	return nil
-}
-
-func scanTagName(rows *sql.Rows) (name string, err error) {
-	err = rows.Scan(&name)
+	err = rows.Err()
 	return
 }
 
-func scanNote(rows *sql.Rows) (note Note, err error) {
+func scanText1(row Row) (text string, err error) {
+	err = row.Scan(&text)
+	return
+}
+
+func scanNote(row Row) (note Note, err error) {
 	var deleted int
-	err = rows.Scan(
+	err = row.Scan(
 		&note.ID,
 		&note.Type,
 		&note.Title,
@@ -727,6 +775,35 @@ func (db *DB) ResetAllTags() error {
 // GetTag .
 func (db *DB) GetTag(name string) (tag Tag, err error) {
 	err = db.DB.One("Name", name, &tag)
+	return
+}
+
+func (db *DB2) AddPatchSetTitle(id, patch, title string) (size int, err error) {
+	var note Note
+	size = len(patch)
+	if note, err = db.GetByID(id); err != nil {
+		return
+	}
+	if err = note.UpdateTitleSizeNow(title, size); err != nil {
+		return
+	}
+	
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	stmt1 := mustPrepare(tx, stmt.InsertPatch)
+	defer stmt1.Close()
+	stmt2 := mustPrepare(tx, stmt.InsertNotePatch)
+	defer stmt2.Close()
+
+	if err = insertPatch(stmt1, stmt2, id, patch); err != nil {
+		return
+	}
+	if _, err = tx.Exec(stmt.UpdateTitleSizeNow,
+		note.Title, note.Size, note.UpdatedAt, note.ID); err != nil {
+		return
+	}
+	err = tx.Commit()
 	return
 }
 

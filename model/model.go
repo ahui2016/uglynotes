@@ -64,7 +64,7 @@ func (note *Note) AddPatchNow(patch, contents string) error {
 	if err := note.AddPatchSetTitle(patch, contents); err != nil {
 		return err
 	}
-	note.UpdatedAtNow()
+	note.UpdatedAt = TimeNow()
 	return nil
 }
 
@@ -77,15 +77,21 @@ func (note *Note) AddPatchSetTitle(patch, contents string) error {
 // AddPatch 填充内容，同时设置 size。
 // 请总是使用 AddPatch 而不要直接操作 note.Patches, 以确保体积和标题正确。
 func (note *Note) AddPatch(patch string) error {
-	if err := note.resetSize(patch); err != nil {
+	if err := note.resetSize(len(patch)); err != nil {
 		return err
 	}
 	note.Patches = append(note.Patches, patch)
 	return nil
 }
 
-func (note *Note) resetSize(patch string) error {
-	size := note.Size + len(patch)
+func (note *Note) UpdateTitleSizeNow(title string, patchSize int) error {
+	note.SetTitle(title)
+	note.UpdatedAt = TimeNow()
+	return note.resetSize(patchSize)
+}
+
+func (note *Note) resetSize(patchSize int) error {
+	size := note.Size + patchSize
 	if size > config.NoteSizeLimit {
 		return errors.New("size limit exceeded")
 	}
@@ -118,11 +124,6 @@ func patchApply(patch string, text string) (string, error) {
 	}
 	patched, _ := dmp.PatchApply(patches, text)
 	return patched, nil
-}
-
-// UpdatedAtNow updates note.UpdatedAt to TimeNow().
-func (note *Note) UpdatedAtNow() {
-	note.UpdatedAt = TimeNow()
 }
 
 // SetTags 对标签进行一些验证和处理（例如除重和排序）。

@@ -103,6 +103,8 @@ const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;
 const InsertNote = `INSERT INTO note (
     id, type, title, size, deleted, remind_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
+const UpdateTitleSizeNow = `UPDATE note SET title=?, size=?, updated_at=?
+    WHERE id=?;`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`
 const GetTagID = `SELECT id FROM tag WHERE name=?;`
@@ -127,5 +129,9 @@ const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
 const GetTagNamesByNote = `SELECT tag.name FROM note
     INNER JOIN note_tag ON note.id = note_tag.note_id
     INNER JOIN tag ON note_tag.tag_id = tag.id
-    WHERE  note.id=?`
+    WHERE note.id=?;`
 
+const GetPatchesByNote = `SELECT patch.diff FROM note
+    INNER JOIN note_patch ON note.id = note_patch.note_id
+    INNER JOIN patch ON note_patch.patch_id = patch.id
+    WHERE note.id=?;`

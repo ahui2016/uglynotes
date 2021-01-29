@@ -157,7 +157,7 @@ func trimContents(notes []Note) {
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
-	note, err := db.GetByID(c.Params("id"))
+	note, err := db2.GetByID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func patchNoteHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	count, err := db.AddPatchSetTitle(id, patch, title)
+	count, err := db2.AddPatchSetTitle(id, patch, title)
 	if err != nil {
 		return err
 	}
