@@ -99,17 +99,24 @@ const UpdateTextValue = `UPDATE metadata SET text_value=? WHERE name=?;`
 
 const GetNote = `SELECT * FROM note WHERE id=?;`
 const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
+const GetNoteSize = `SELECT size FROM note WHERE id=?;`
 const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;`
 const InsertNote = `INSERT INTO note (
     id, type, title, size, deleted, remind_at, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?);`
 const UpdateTitleSizeNow = `UPDATE note SET title=?, size=?, updated_at=?
     WHERE id=?;`
+const SetNoteDeleted = `UPDATE note SET deleted=? WHERE id=?;`
+const DeleteNote = `DELETE FROM note WHERE id=?;`
+const ChangeNoteType = `UPDATE note SET type=? WHERE id=?;`
+const SetTypeTitle = `UPDATE note SET type=?, title=? WHERE id=?;`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`
 const GetTagID = `SELECT id FROM tag WHERE name=?;`
 const InsertTag = `INSERT INTO tag (id, name, created_at) VALUES (?, ?, ?);`
 const InsertNoteTag = `INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?);`
+const DeleteTagsByNote = `DELETE FROM note_tag WHERE note_id=?;`
+const DeleteTags = `DELETE FROM note_tag WHERE note_id=? and tag_id=?;`
 
 const InsertPatch = `INSERT INTO patch (id, diff) VALUES (?, ?);`
 const InsertNotePatch = `INSERT INTO note_patch (note_id, patch_id) VALUES (?, ?);`
@@ -125,6 +132,10 @@ const InsertTagGroup = `INSERT INTO taggroup (
     id, tags, protected, created_at, updated_at)
     VALUES (?, ?, ?, ?, ?);`
 const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
+
+const GetNotesByTagName = `SELECT note_tag.note_id FROM tag
+    INNER JOIN note_tag ON tag.id = note_tag.tag_id
+    WHERE tag.name=?;`
 
 const GetTagNamesByNote = `SELECT tag.name FROM note
     INNER JOIN note_tag ON note.id = note_tag.note_id

@@ -55,7 +55,11 @@ func increaseTotalSize(tx TX, addition int) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.Exec(stmt.UpdateIntValue, size+addition, totalSizeKey)
+	totalSize := size + addition
+	if totalSize > settings.Config.DatabaseCapacity {
+		return errors.New("超过数据库总容量上限")
+	}
+	_, err = tx.Exec(stmt.UpdateIntValue, totalSize, totalSizeKey)
 	return err
 }
 

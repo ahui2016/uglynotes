@@ -37,9 +37,6 @@ func main() {
 	app.Get("/check", checkLogin)
 	app.Get("/converter", converterPage)
 
-	app.Get("/reset-all-tags", func(c *fiber.Ctx) error {
-		return db.ResetAllTags()
-	})
 	app.Get("/import-notes", importNotes)
 
 	htmlPage := app.Group("/html", checkLoginHTML)

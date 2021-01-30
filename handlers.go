@@ -196,33 +196,25 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 }
 
 func changeType(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	id := c.Params("id")
 	noteType, err := getNoteType(c)
 	if err != nil {
 		return err
 	}
-	return db.ChangeType(id, noteType)
+	return db2.ChangeType(id, noteType)
 }
 
 func updateNoteTags(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	id := c.Params("id")
+	
 	tags, err := getTags(c)
 	if err != nil {
 		return err
 	}
-	return db.UpdateTags(id, tags)
+	return db2.UpdateTags(id, tags)
 }
 
 func patchNoteHandler(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	id := c.Params("id")
 	patch := c.FormValue("patch") // 不能 TrimSpace!!
 	title, err := getFormValue(c, "title")
@@ -304,7 +296,7 @@ func getNotesByTag(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	notes, err := db.GetByTag(tagName)
+	notes, err := db2.GetNotesByTagName(tagName)
 	if err != nil {
 		return err
 	}
@@ -386,23 +378,17 @@ func deleteTagGroup(c *fiber.Ctx) error {
 }
 
 func setNoteDeleted(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	id := c.Params("id")
 	deleted, err := getDeleted(c)
 	if err != nil {
 		return err
 	}
-	return db.SetNoteDeleted(id, deleted)
+	return db2.SetNoteDeleted(id, deleted)
 }
 
 func deleteNoteForever(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	id := c.Params("id")
-	return db.DeleteNoteForever(id)
+	return db2.DeleteNoteForever(id)
 }
 
 func deleteTag(c *fiber.Ctx) error {
