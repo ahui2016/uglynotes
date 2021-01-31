@@ -49,7 +49,14 @@ type Note struct {
 }
 
 // NewNote .
-func NewNote(id string, noteType NoteType) *Note {
+func NewNote(id, title, patch string, noteType NoteType, tags []string) (
+	*Note, error) {
+	note := newNote(id, noteType)
+	err1 := note.AddPatchSetTitle(patch, title)
+	err2 := note.SetTags(tags)
+	return note, util.WrapErrors(err1, err2)
+}
+func newNote(id string, noteType NoteType) *Note {
 	now := TimeNow()
 	return &Note{
 		ID:        id,

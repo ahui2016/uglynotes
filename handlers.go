@@ -165,14 +165,11 @@ func getNoteHandler(c *fiber.Ctx) error {
 }
 
 func newNoteHandler(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	note, err := createNote(c)
 	if err != nil {
-		return jsonError(c, err.Error(), 400)
+		return err
 	}
-	if err := db.Insert(note); err != nil {
+	if err := db2.Insert(note); err != nil {
 		return err
 	}
 	return jsonMessage(c, note.ID)
@@ -186,13 +183,7 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 	if err := util.WrapErrors(err1, err2, err3); err != nil {
 		return nil, err
 	}
-	note := db.NewNote(noteType)
-	err1 = note.AddPatchSetTitle(patch, title)
-	err2 = note.SetTags(tags)
-	if err := util.WrapErrors(err1, err2); err != nil {
-		return nil, err
-	}
-	return note, nil
+	return db2.NewNote(title, patch, noteType, tags)
 }
 
 func changeType(c *fiber.Ctx) error {

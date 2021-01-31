@@ -122,30 +122,31 @@ func (db *DB2) ImportNotes(notes []Note) (err error) {
 	defer tx.Rollback()
 
 	for _, note := range notes {
-		if err = importNote(tx, note); err != nil {
-			return fmt.Errorf("importNote: %v", err)
-		}
-		if err = addTagGroup(tx, note.Tags); err != nil {
-			return fmt.Errorf("importTagGroup: %v", err)
-		}
-		if err = addTags(tx, note.Tags, note.ID); err != nil {
-			return fmt.Errorf("addTags: %v", err)
-		}
-		if err = addPatches(tx, note.ID, note.Patches); err != nil {
-			return fmt.Errorf("importPatches: %v", err)
-		}
-		if err = increaseTotalSize(tx, note.Size); err != nil {
-			return err
+		if err = addNoteTagPatch(tx, &note); err != nil {
+			return
 		}
 	}
 	return tx.Commit()
 }
 
-func importNote(tx TX, note Note) (err error) {
-	stmtInsertNote := mustPrepare(tx, stmt.InsertNote)
-	defer stmtInsertNote.Close()
+func addNoteTagPatch(tx TX, note *Note) (err error) {
+		if err = insertNote(tx, note); err != nil {
+			return fmt.Errorf("insertNote: %v", err)
+		}
+		if err = addTagGroup(tx, note.Tags); err != nil {
+			return fmt.Errorf("addTagGroup: %v", err)
+		}
+		if err = addTags(tx, note.Tags, note.ID); err != nil {
+			return fmt.Errorf("addTags: %v", err)
+		}
+		if err = addPatches(tx, note.ID, note.Patches); err != nil {
+			return fmt.Errorf("addPatches: %v", err)
+		}
+		return increaseTotalSize(tx, note.Size)
+}
 
-	_, err = stmtInsertNote.Exec(
+func insertNote(tx TX, note *Note) (err error) {
+	_, err = tx.Exec(stmt.InsertNote,
 		note.ID,
 		note.Type,
 		note.Title,
@@ -459,33 +460,20 @@ func (db *DB) noNeedToUpgrade() bool {
 }
 
 // NewNote .
-func (db *DB) NewNote(noteType model.NoteType) *Note {
+func (db *DB2) NewNote(title, patch string, noteType NoteType, tags []string) (
+	*Note, error) {
 	id := db.mustGetNextID()
-	return model.NewNote(id.String(), noteType)
+	return model.NewNote(id, title, patch, noteType, tags)
 }
 
 // Insert .
-func (db *DB) Insert(note *Note) error {
-	if err := db.checkTotalSize(note.Size); err != nil {
-		return err
-	}
-	if err := db.checkExist(note.ID); err != nil {
-		return err
-	}
-
+func (db *DB2) Insert(note *Note) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
-
-	err1 := tx.Save(note)
-	err2 := saveTagGroup(tx, model.NewTagGroup(note.Tags))
-	// err3 := addTags(tx, note.Tags, note.ID)
-	if err := util.WrapErrors(err1, err2); err != nil {
+	if err := addNoteTagPatch(tx, note); err != nil {
 		return err
 	}
-	if err := tx.Commit(); err != nil {
-		return err
-	}
-	return db.increaseTotalSize(note.Size)
+	return tx.Commit()
 }
 
 // SaveTagGroup .

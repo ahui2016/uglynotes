@@ -76,17 +76,20 @@ func (db *DB) getCurrentID() (id IncreaseID, err error) {
 	return
 }
 
-func (db *DB) getNextID() (nextID IncreaseID, err error) {
+func (db *DB2) getNextID() (nextID string, err error) {
+	db.Lock()
+	defer db.Unlock()
+
 	var currentID IncreaseID
-	if currentID, err = db.getCurrentID(); err != nil {
+	if currentID, err = getCurrentID(db.DB); err != nil {
 		return
 	}
-	nextID = currentID.Increase()
-	err = db.DB.Set(metadataBucket, currentIdKey, &nextID)
+	nextID = currentID.Increase().String()
+	_, err = db.DB.Exec(stmt.UpdateTextValue, nextID, currentIdKey)
 	return
 }
 
-func (db *DB) mustGetNextID() IncreaseID {
+func (db *DB2) mustGetNextID() string {
 	nextID, err := db.getNextID()
 	util.Panic(err)
 	return nextID
