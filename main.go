@@ -66,12 +66,10 @@ func main() {
 	api.Put("/note/:id/type", changeType)
 	api.Put("/note/:id/tags", updateNoteTags)
 
-	api.Delete("/note/:id/history", deleteNoteHistories)
-
-	api.Get("/tag/all", getAllTags)
-	api.Get("/tag/all-by-date", allTagsByDate)
+	api.Get("/tag/all/:sortby", allTagsByName)
 	api.Get("/tag/:name/notes", getNotesByTag)
-	api.Put("/tag", renameTag)
+	api.Get("/tag/:name/id", getTagID)
+	api.Put("/tag/:id", renameTag)
 	api.Delete("/tag/:name", deleteTag)
 	api.Get("/tag/group/all", allTagGroups)
 	api.Post("/tag/group", addTagGroup)

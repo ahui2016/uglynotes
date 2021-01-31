@@ -28,7 +28,6 @@ var config = settings.Config
 type (
 	Note       = model.Note
 	NoteType   = model.NoteType
-	History    = model.History
 	Tag        = model.Tag
 	TagGroup   = model.TagGroup
 	IncreaseID = model.IncreaseID
@@ -38,7 +37,7 @@ type (
 
 var stmtGetTagNamesByNote, stmtGetNote, stmtGetNotes, stmtGetDeletedNotes,
 	stmtGetPatchesByNote, stmtSetNoteDeleted, stmtGetNoteSize,
-	stmtChangeNoteType, stmtSetTypeTitle, stmtGetNotesByTagName *Stmt
+	stmtChangeNoteType, stmtSetTypeTitle, stmtGetTagID *Stmt
 
 type TX interface {
 	Exec(string, ...interface{}) (sql.Result, error)
@@ -101,7 +100,7 @@ func (db *DB2) prepareStatements() {
 	stmtGetNoteSize = mustPrepare(db.DB, stmt.GetNoteSize)
 	stmtChangeNoteType = mustPrepare(db.DB, stmt.ChangeNoteType)
 	stmtSetTypeTitle = mustPrepare(db.DB, stmt.SetTypeTitle)
-	stmtGetNotesByTagName = mustPrepare(db.DB, stmt.GetNotesByTagName)
+	stmtGetTagID = mustPrepare(db.DB, stmt.GetTagID)
 }
 
 func closeStatements() {
@@ -114,7 +113,7 @@ func closeStatements() {
 	stmtGetNoteSize.Close()
 	stmtChangeNoteType.Close()
 	stmtSetTypeTitle.Close()
-	stmtGetNotesByTagName.Close()
+	stmtGetTagID.Close()
 }
 
 func (db *DB2) ImportNotes(notes []Note) (err error) {
@@ -130,19 +129,19 @@ func (db *DB2) ImportNotes(notes []Note) (err error) {
 }
 
 func addNoteTagPatch(tx TX, note *Note) (err error) {
-		if err = insertNote(tx, note); err != nil {
-			return fmt.Errorf("insertNote: %v", err)
-		}
-		if err = addTagGroup(tx, note.Tags); err != nil {
-			return fmt.Errorf("addTagGroup: %v", err)
-		}
-		if err = addTags(tx, note.Tags, note.ID); err != nil {
-			return fmt.Errorf("addTags: %v", err)
-		}
-		if err = addPatches(tx, note.ID, note.Patches); err != nil {
-			return fmt.Errorf("addPatches: %v", err)
-		}
-		return increaseTotalSize(tx, note.Size)
+	if err = insertNote(tx, note); err != nil {
+		return fmt.Errorf("insertNote: %v", err)
+	}
+	if err = addTagGroup(tx, note.Tags); err != nil {
+		return fmt.Errorf("addTagGroup: %v", err)
+	}
+	if err = addTags(tx, note.Tags, note.ID); err != nil {
+		return fmt.Errorf("addTags: %v", err)
+	}
+	if err = addPatches(tx, note.ID, note.Patches); err != nil {
+		return fmt.Errorf("addPatches: %v", err)
+	}
+	return increaseTotalSize(tx, note.Size)
 }
 
 func insertNote(tx TX, note *Note) (err error) {
@@ -187,6 +186,10 @@ func getTagGroupID(stmtGet *Stmt, tags []string) (string, error) {
 	return getText1(stmtGet, util.MustMarshal(tags))
 }
 
+func (db *DB2) GetTagID(tagName string) (string, error) {
+	return getText1(stmtGetTagID, tagName)
+}
+
 // getText1 gets a text value by one argument.
 func getText1(stmtGet *Stmt, arg interface{}) (text string, err error) {
 	row := stmtGet.QueryRow(arg)
@@ -201,7 +204,7 @@ func addTags(tx TX, tags []string, noteID string) (err error) {
 	defer stmtInsertTag.Close()
 	stmtInsertNoteTag := mustPrepare(tx, stmt.InsertNoteTag)
 	defer stmtInsertNoteTag.Close()
-	
+
 	for _, tagName := range tags {
 		err = addTag(
 			stmtGetTagID, stmtInsertTag, stmtInsertNoteTag, noteID, tagName)
@@ -378,64 +381,6 @@ func (db *DB) reIndex() error {
 	return util.WrapErrors(err1, err2, err3)
 }
 
-// Upgrade 将旧的历史版本系统（全文保存）升级至新的历史版本系统（只保存差异）。
-func (db *DB) Upgrade() error {
-	if db.noNeedToUpgrade() {
-		return nil
-	}
-
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	var all []Note
-	if err := tx.All(&all); err != nil {
-		return err
-	}
-	for _, note := range all {
-		histories, err := txNoteHistories(tx, note.ID)
-		if err != nil {
-			return err
-		}
-
-		// 加头加尾
-		first := new(History)
-		histories = append([]History{*first}, histories...)
-		last := History{Contents: note.Contents}
-		histories = append(histories, last)
-
-		for i := 1; i < len(histories); i++ {
-			a := histories[i-1].Contents
-			b := histories[i].Contents
-			patch, err := getUnifiedDiffString(a, b)
-			if err != nil {
-				return err
-			}
-			if patch != "" {
-				note.Patches = append(note.Patches, patch)
-			}
-		}
-		note.Contents = "" // 清空 Contents, 历史版本系统升级后废除 Contents
-		err1 := tx.Save(&note)
-		err2 := txIncreaseTotalSize(tx, note.Size) // 估算 size，不准确但问题不大
-		if err := util.WrapErrors(err1, err2); err != nil {
-			return err
-		}
-	}
-	if err := tx.Drop("History"); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func txNoteHistories(tx storm.Node, noteID string) (histories []History, err error) {
-	err = tx.Select(q.Eq("NoteID", noteID)).
-		OrderBy("CreatedAt").Find(&histories)
-	if err == storm.ErrNotFound {
-		err = nil
-	}
-	return
-}
-
 func getUnifiedDiffString(a, b string) (string, error) {
 	diff := difflib.LineDiffParams{
 		A:        difflib.SplitLines(a),
@@ -444,19 +389,6 @@ func getUnifiedDiffString(a, b string) (string, error) {
 		ToFile:   " ",
 	}
 	return difflib.GetUnifiedDiffString(diff)
-}
-
-func (db *DB) noNeedToUpgrade() bool {
-	var histories []History
-	err := db.DB.All(&histories)
-	if err == storm.ErrNotFound {
-		return true
-	}
-	util.Panic(err)
-	if len(histories) == 0 {
-		return true
-	}
-	return false
 }
 
 // NewNote .
@@ -662,14 +594,30 @@ func (db *DB) AllNotesWithDeleted() (notes []Note, err error) {
 }
 
 // AllTags fetches all tags, sorted by "Name".
-func (db *DB) AllTags() (tags []Tag, err error) {
-	err = db.DB.AllByIndex("Name", &tags)
-	return
+func (db *DB2) AllTagsByName() (tags []Tag, err error) {
+	return db.getAllTags(stmt.AllTagsByName)
 }
 
 // AllTagsByDate fetches all tags, sorted by "CreatedAt".
-func (db *DB) AllTagsByDate() (tags []Tag, err error) {
-	err = db.DB.AllByIndex("CreatedAt", &tags)
+func (db *DB2) AllTagsByDate() (tags []Tag, err error) {
+	return db.getAllTags(stmt.AllTagsByDate)
+}
+
+func (db *DB2) getAllTags(stmtGet string) (tags []Tag, err error) {
+	rows, err := db.DB.Query(stmtGet)
+	if err != nil {
+		return
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tag Tag
+		err = rows.Scan(&tag.ID, &tag.Name, &tag.CreatedAt, &tag.Count)
+		if err != nil {
+			return
+		}
+		tags = append(tags, tag)
+	}
+	err = rows.Err()
 	return
 }
 
@@ -712,7 +660,7 @@ func (db *DB2) UpdateTags(id string, tags []string) error {
 	}
 	tx := db.mustBegin()
 	defer tx.Rollback()
-	
+
 	toAdd, toDelete := util.SliceDifference(tags, oldTags)
 
 	e1 := deleteTags(tx, toDelete, id)
@@ -778,15 +726,6 @@ func (db *DB) AddPatchSetTitle(id, patch, contents string) (int, error) {
 	return len(note.Patches), err
 }
 
-func txUnprotectedHistories(tx storm.Node, noteID string) (histories []History, err error) {
-	err = tx.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false)).
-		OrderBy("CreatedAt").Find(&histories)
-	if err == storm.ErrNotFound {
-		err = nil
-	}
-	return
-}
-
 // SetTagGroupProtected .
 func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
 	return db.DB.UpdateField(
@@ -794,10 +733,12 @@ func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
 }
 
 func (db *DB2) GetNotesByTagName(tagName string) (notes []Note, err error) {
-	noteIDs, err := getNoteIDs(tagName)
+	noteIDs, err := db.getNoteIDs(tagName)
 	if err != nil {
-		return nil, fmt.Errorf("tag[%s] %w", tagName, err)
+		return nil, fmt.Errorf("tag id[%s] %w", tagName, err)
 	}
+
+	// 这里改成批量查询或改用复杂的 sql 可优化性能。
 	for _, id := range noteIDs {
 		note, err := getNote(id)
 		if err != nil {
@@ -808,9 +749,11 @@ func (db *DB2) GetNotesByTagName(tagName string) (notes []Note, err error) {
 	return
 }
 
-func getNoteIDs(tagName string) (noteIDs []string, err error) {
-	rows, err := stmtGetNotesByTagName.Query(tagName)
-	if err != nil { return }
+func (db *DB2) getNoteIDs(tagName string) (noteIDs []string, err error) {
+	rows, err := db.DB.Query(stmt.GetNotesByTagName, tagName)
+	if err != nil {
+		return
+	}
 	defer rows.Close()
 	for rows.Next() {
 		var id string
@@ -820,69 +763,13 @@ func getNoteIDs(tagName string) (noteIDs []string, err error) {
 		noteIDs = append(noteIDs, id)
 	}
 	err = rows.Err()
-	return 
+	return
 }
 
 // RenameTag .
-func (db *DB) RenameTag(oldName, newName string) error {
-	_, err := db.GetTag(newName)
-	if err != nil && err != storm.ErrNotFound {
-		return fmt.Errorf("tag[%s] %w", newName, err)
-	}
-	if err == nil {
-		return errors.New("标签名称 [" + newName + "] 已存在")
-	}
-
-	tag, err := db.GetTag(oldName)
-	if err != nil {
-		return fmt.Errorf("tag[%s] %w", oldName, err)
-	}
-
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	if err := renameTag(tx, tag, newName); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func renameTag(tx storm.Node, tag Tag, newName string) error {
-	err1 := notesRenameTag(tx, tag, newName)
-	err2 := tagGroupsRenameTag(tx, tag.Name, newName)
-	err3 := tx.DeleteStruct(&tag)
-
-	tag.Name = newName
-	err4 := tx.Save(&tag)
-	return util.WrapErrors(err1, err2, err3, err4)
-}
-
-func notesRenameTag(tx storm.Node, tag Tag, newName string) error {
-	for _, noteID := range tag.NoteIDs {
-		var note Note
-		if err := tx.One("ID", noteID, &note); err != nil {
-			return fmt.Errorf("id[%s] %w", noteID, err)
-		}
-		note.RenameTag(tag.Name, newName)
-		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func tagGroupsRenameTag(tx storm.Node, oldName, newName string) error {
-	groups, err := txAllTagGroups(tx)
-	if err != nil {
-		return err
-	}
-	for _, group := range groups {
-		group.RenameTag(oldName, newName)
-		if err := tx.UpdateField(&group, "Tags", group.Tags); err != nil {
-			return err
-		}
-	}
-	return nil
+func (db *DB2) RenameTag(id, newName string) (err error) {
+	_, err = db.DB.Exec(stmt.RenameTag, newName, id)
+	return
 }
 
 // SearchTagGroup 通过标签组搜索笔记。
@@ -895,7 +782,8 @@ func (db *DB) SearchTagGroup(tags []string) ([]Note, error) {
 		if err := db.DB.One("Name", tags[i], &tag); err != nil {
 			return nil, fmt.Errorf("Tag[%s] %w", tags[i], err)
 		}
-		idGroups = append(idGroups, stringset.NewSet(tag.NoteIDs))
+		// idGroups = append(idGroups, stringset.NewSet(tag.NoteIDs))
+		idGroups = append(idGroups, stringset.NewSet([]string{}))
 	}
 	noteIDs := stringset.Intersect(idGroups).Slice()
 	return db.getByIDs(noteIDs)
@@ -977,53 +865,10 @@ func (db *DB) DeleteTag(name string) error {
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	err1 := notesDeleteTag(tx, tag)
+	// err1 := notesDeleteTag(tx, tag)
 	err2 := tx.DeleteStruct(&tag)
-	if err := util.WrapErrors(err1, err2); err != nil {
+	if err := util.WrapErrors(err2); err != nil {
 		return err
 	}
 	return tx.Commit()
-}
-
-func notesDeleteTag(tx storm.Node, tag Tag) error {
-	for _, noteID := range tag.NoteIDs {
-		var note Note
-		if err := tx.One("ID", noteID, &note); err != nil {
-			return fmt.Errorf("id[%s] %w", noteID, err)
-		}
-		note.DeleteTag(tag.Name)
-		if err := tx.UpdateField(&note, "Tags", note.Tags); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// DeleteNoteHistory .
-func (db *DB) DeleteNoteHistory(noteID string) error {
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	query := tx.Select(q.Eq("NoteID", noteID), q.Eq("Protected", false))
-	if err := txDeleteHistories(tx, query); err != nil {
-		return err
-	}
-	return tx.Commit()
-}
-
-func txDeleteHistories(tx storm.Node, query storm.Query) error {
-	var (
-		size      int
-		histories []History
-	)
-	err1 := query.Find(&histories)
-	if err1 == storm.ErrNotFound {
-		return nil
-	}
-	for i := range histories {
-		size += histories[i].Size
-	}
-	err2 := txIncreaseTotalSize(tx, -size)
-	err3 := query.Delete(&History{})
-	return util.WrapErrors(err1, err2, err3)
 }

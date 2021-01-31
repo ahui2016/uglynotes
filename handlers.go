@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"unicode/utf8"
 
@@ -13,7 +14,7 @@ import (
 type (
 	Note     = model.Note
 	NoteType = model.NoteType
-	History  = model.History
+	Tag      = model.Tag
 	TagGroup = model.TagGroup
 )
 
@@ -110,9 +111,6 @@ func loginHandler(c *fiber.Ctx) error {
 		}
 		return jsonError(c, "Wrong Password", 400)
 	}
-	if err := db.Upgrade(); err != nil {
-		return err
-	}
 	passwordTry = 0
 	return db.SessionSet(c)
 }
@@ -197,7 +195,7 @@ func changeType(c *fiber.Ctx) error {
 
 func updateNoteTags(c *fiber.Ctx) error {
 	id := c.Params("id")
-	
+
 	tags, err := getTags(c)
 	if err != nil {
 		return err
@@ -243,13 +241,6 @@ func setTagGroupProtected(c *fiber.Ctx) error {
 	return db.SetTagGroupProtected(groupID, protected)
 }
 
-func shortHistories(histories []History) {
-	for i := range histories {
-		title := headLimit(histories[i].Contents, config.NoteTitleLimit)
-		histories[i].Contents = title
-	}
-}
-
 // headLimit 返回 s 开头限定长度的内容，其中 s 必须事先 TrimSpace 并确保不是空字串。
 // 该函数会尽量确保最后一个字符是有效的 utf8 字符，但当限定长度的内容的全部字符都无效时，
 // 则按原样返回限定长度的内容。
@@ -270,16 +261,25 @@ func headLimit(s string, limit int) (head string) {
 	return head
 }
 
-func renameTag(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
-	oldName, err1 := getFormValue(c, "old-name")
-	newName, err2 := getFormValue(c, "new-name")
-	if err := util.WrapErrors(err1, err2); err != nil {
+func getTagID(c *fiber.Ctx) error {
+	tagName, err := getParams(c, "name")
+	if err != nil {
 		return err
 	}
-	return db.RenameTag(oldName, newName)
+	id, err := db2.GetTagID(tagName)
+	if err != nil {
+		return err
+	}
+	return jsonMessage(c, id)
+}
+
+func renameTag(c *fiber.Ctx) error {
+	id := c.Params("id")
+	newName, err := getFormValue(c, "new-name")
+	if err != nil {
+		return err
+	}
+	return db2.RenameTag(id, newName)
 }
 
 func getNotesByTag(c *fiber.Ctx) error {
@@ -294,16 +294,16 @@ func getNotesByTag(c *fiber.Ctx) error {
 	return c.JSON(notes)
 }
 
-func getAllTags(c *fiber.Ctx) error {
-	tags, err := db.AllTags()
-	if err != nil {
-		return err
+func allTagsByName(c *fiber.Ctx) (err error) {
+	var tags []Tag
+	switch sortby := c.Params("sortby"); sortby {
+	case "by-name":
+		tags, err = db2.AllTagsByName()
+	case "by-date":
+		tags, err = db2.AllTagsByDate()
+	default:
+		err = errors.New("path not found: /tag/all/" + sortby)
 	}
-	return c.JSON(tags)
-}
-
-func allTagsByDate(c *fiber.Ctx) error {
-	tags, err := db.AllTagsByDate()
 	if err != nil {
 		return err
 	}
@@ -391,14 +391,6 @@ func deleteTag(c *fiber.Ctx) error {
 		return err
 	}
 	return db.DeleteTag(name)
-}
-
-func deleteNoteHistories(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
-	id := c.Params("id")
-	return db.DeleteNoteHistory(id)
 }
 
 func importNotes(c *fiber.Ctx) error {

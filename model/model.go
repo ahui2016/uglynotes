@@ -38,10 +38,9 @@ type Note struct {
 	ID        string // primary key
 	Type      NoteType
 	Title     string
-	Contents  string // 历史版本系统升级后，Contents 已被废除，保留只是为了升级过渡。
 	Patches   []string
 	Size      int
-	Tags      []string // []Tag.Name
+	Tags      []string
 	Deleted   bool
 	RemindAt  string `storm:"index"`
 	CreatedAt string `storm:"index"` // ISO8601
@@ -144,80 +143,30 @@ func (note *Note) SetTags(tags []string) error {
 	return nil
 }
 
-func purify(tags []string) (purified []string) {
+func purify(tags []string) []string {
 	re := regexp.MustCompile(`[#;,，'"/\+\n]`)
 	for i := range tags {
-		purified = append(purified, re.ReplaceAllString(tags[i], ""))
+		tags[i] = re.ReplaceAllString(tags[i], "")
 	}
-	return
-}
-
-// RenameTag .
-func (note *Note) RenameTag(oldName, newName string) {
-	note.Tags = stringset.AddAndDelete(note.Tags, oldName, newName)
-}
-
-// DeleteTag .
-func (note *Note) DeleteTag(tag string) {
-	i := util.StringIndex(note.Tags, tag)
-	if i < 0 {
-		return
-	}
-	note.Tags = util.DeleteFromSlice(note.Tags, i)
-}
-
-// History 数据表，用于保存笔记的历史记录。
-type History struct {
-	ID        string // primary key, random
-	NoteID    string `storm:"index"`
-	Contents  string
-	Size      int
-	Protected bool
-	CreatedAt string `storm:"index"` // ISO8601
-}
-
-// NewHistory .
-func NewHistory(contents, noteID string) *History {
-	return &History{
-		ID:        RandomID(),
-		NoteID:    noteID,
-		Contents:  contents,
-		Size:      len(contents),
-		CreatedAt: TimeNow(),
-	}
+	return tags
 }
 
 // Tag .
 type Tag struct {
-	Name      string `storm:"id"`
-	NoteIDs   []string
-	CreatedAt string `storm:"index"` // ISO8601
+	ID        string
+	Name      string
+	Count     int
+	CreatedAt string // ISO8601
 }
 
 // NewTag .
-func NewTag(name, noteID string) *Tag {
+func NewTag(name string) *Tag {
 	return &Tag{
+		ID:        RandomID(),
 		Name:      name,
-		NoteIDs:   []string{noteID},
+		Count:     0,
 		CreatedAt: TimeNow(),
 	}
-}
-
-// Add .
-func (tag *Tag) Add(noteID string) {
-	if util.HasString(tag.NoteIDs, noteID) {
-		return
-	}
-	tag.NoteIDs = append(tag.NoteIDs, noteID)
-}
-
-// Remove .
-func (tag *Tag) Remove(id string) {
-	i := util.StringIndex(tag.NoteIDs, id)
-	if i < 0 {
-		return
-	}
-	tag.NoteIDs = util.DeleteFromSlice(tag.NoteIDs, i)
 }
 
 // TimeNow .
