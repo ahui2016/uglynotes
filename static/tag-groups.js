@@ -127,6 +127,7 @@ handle_tags_btn.click(() => {
   const form = new FormData();
   form.append('tags', JSON.stringify(Array.from(tagsSet)));
   ajaxPost(form, '/api/tag/group', handle_tags_btn, that => {
+    console.log('group: ', that.response);
     addTagGroup(that.response);
     $('.alert').remove();
     insertSuccessAlert('新标签组添加成功');  

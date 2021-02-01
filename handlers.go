@@ -7,6 +7,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/stmt"
+	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/gofiber/fiber/v2"
 )
@@ -230,15 +232,12 @@ func notesSizeHandler(c *fiber.Ctx) error {
 }
 
 func setTagGroupProtected(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	groupID := c.Params("id")
 	protected, err := getProtected(c)
 	if err != nil {
 		return err
 	}
-	return db.SetTagGroupProtected(groupID, protected)
+	return db2.SetTagGroupProtected(groupID, protected)
 }
 
 // headLimit 返回 s 开头限定长度的内容，其中 s 必须事先 TrimSpace 并确保不是空字串。
@@ -294,7 +293,7 @@ func getNotesByTag(c *fiber.Ctx) error {
 	return c.JSON(notes)
 }
 
-func allTagsByName(c *fiber.Ctx) (err error) {
+func allTagsSorted(c *fiber.Ctx) (err error) {
 	var tags []Tag
 	switch sortby := c.Params("sortby"); sortby {
 	case "by-name":
@@ -346,26 +345,21 @@ func searchTitle(c *fiber.Ctx) error {
 }
 
 func addTagGroup(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	tags, err := getTags(c)
 	if err != nil {
 		return err
 	}
-	group := model.NewTagGroup(tags)
-	if err := db.SaveTagGroup(group); err != nil {
+
+	sorted := stringset.UniqueSort(tags)
+	group := model.NewTagGroup(sorted)
+	if err := db2.AddTagGroup(group); err != nil {
 		return err
 	}
 	return c.JSON(group)
 }
 
 func deleteTagGroup(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
-	groupID := c.Params("id")
-	return db.DB.DeleteStruct(&TagGroup{ID: groupID})
+	return db2.Exec(stmt.DeleteTagGroup, c.Params("id"))
 }
 
 func setNoteDeleted(c *fiber.Ctx) error {
@@ -383,14 +377,11 @@ func deleteNoteForever(c *fiber.Ctx) error {
 }
 
 func deleteTag(c *fiber.Ctx) error {
-	db.Lock()
-	defer db.Unlock()
-
 	name, err := getParams(c, "name")
 	if err != nil {
 		return err
 	}
-	return db.DeleteTag(name)
+	return db2.DeleteTag(name)
 }
 
 func importNotes(c *fiber.Ctx) error {

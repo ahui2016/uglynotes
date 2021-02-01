@@ -58,10 +58,10 @@ type DB2 struct {
 
 func (db *DB2) Open(dbPath string) (err error) {
 	if db.DB, err = sql.Open("sqlite3", dbPath+"?_fk=1"); err != nil {
-		return err
+		return
 	}
-	if _, err = db.DB.Exec(stmt.CreateTables); err != nil {
-		return err
+	if err = db.Exec(stmt.CreateTables); err != nil {
+		return
 	}
 	db.path = dbPath
 	// db.Sess = session.New(session.Config{
@@ -116,6 +116,16 @@ func closeStatements() {
 	stmtGetTagID.Close()
 }
 
+func (db *DB2) Exec(query string, args ...interface{}) (err error) {
+	_, err = db.DB.Exec(query, args...)
+	return
+}
+
+func exec(aStmt *Stmt, args ...interface{}) (err error) {
+	_, err = aStmt.Exec(args...)
+	return
+}
+
 func (db *DB2) ImportNotes(notes []Note) (err error) {
 	tx := db.mustBegin()
 	defer tx.Rollback()
@@ -132,7 +142,7 @@ func addNoteTagPatch(tx TX, note *Note) (err error) {
 	if err = insertNote(tx, note); err != nil {
 		return fmt.Errorf("insertNote: %v", err)
 	}
-	if err = addTagGroup(tx, note.Tags); err != nil {
+	if err = addTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
 		return fmt.Errorf("addTagGroup: %v", err)
 	}
 	if err = addTags(tx, note.Tags, note.ID); err != nil {
@@ -158,7 +168,11 @@ func insertNote(tx TX, note *Note) (err error) {
 	return
 }
 
-func addTagGroup(tx TX, tags []string) error {
+func (db *DB2) AddTagGroup(group *TagGroup) error {
+	return addTagGroup(db.DB, group)
+}
+
+func addTagGroup(tx TX, group *TagGroup) error {
 	stmtGetTagGroupID := mustPrepare(tx, stmt.GetTagGroupID)
 	defer stmtGetTagGroupID.Close()
 	stmtInsertTagGroup := mustPrepare(tx, stmt.InsertTagGroup)
@@ -166,20 +180,48 @@ func addTagGroup(tx TX, tags []string) error {
 	stmtUpdateTagGroupNow := mustPrepare(tx, stmt.UpdateTagGroupNow)
 	defer stmtUpdateTagGroupNow.Close()
 
-	groupID, err := getTagGroupID(stmtGetTagGroupID, tags)
+	groupID, err := getTagGroupID(stmtGetTagGroupID, group.Tags)
 
-	if err == sql.ErrNoRows {
-		g := model.NewTagGroup(tags)
-		_, err = stmtInsertTagGroup.Exec(g.ID, util.MustMarshal(g.Tags),
-			g.Protected, g.CreatedAt, g.UpdatedAt)
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
-	return updateNow(stmtUpdateTagGroupNow, groupID)
+	if err == sql.ErrNoRows {
+		err = exec(stmtInsertTagGroup,
+			group.ID,
+			util.MustMarshal(group.Tags),
+			group.Protected,
+			group.CreatedAt,
+			group.UpdatedAt)
+	} else {
+		// err == nil
+		err = updateNow(stmtUpdateTagGroupNow, groupID)
+	}
+	if err != nil {
+		return err
+	}
+	return deleteOldTagGroup(tx)
+}
+
+func deleteOldTagGroup(tx TX) (err error) {
+	var count int
+	row := tx.QueryRow(stmt.TagGroupCount)
+	if err = row.Scan(&count); err != nil {
+		return
+	}
+	if count < settings.Config.TagGroupLimit {
+		return
+	}
+	var groupID string
+	row = tx.QueryRow(stmt.LastTagGroup)
+	if err = row.Scan(&groupID); err != nil {
+		return
+	}
+	_, err = tx.Exec(stmt.DeleteTagGroup, groupID)
+	return
 }
 
 func updateNow(stmtUpdate *Stmt, arg string) error {
-	_, err := stmtUpdate.Exec(model.TimeNow(), arg)
-	return err
+	return exec(stmtUpdate, model.TimeNow(), arg)
 }
 
 func getTagGroupID(stmtGet *Stmt, tags []string) (string, error) {
@@ -219,13 +261,12 @@ func addTag(stmtGet, stmtAdd, stmt3 *Stmt, noteID string, name string) error {
 	tagID, err := getText1(stmtGet, name)
 	if err == sql.ErrNoRows {
 		tagID = model.RandomID()
-		_, err = stmtAdd.Exec(tagID, name, model.TimeNow())
+		err = exec(stmtAdd, tagID, name, model.TimeNow())
 	}
 	if err != nil {
 		return err
 	}
-	_, err = stmt3.Exec(noteID, tagID)
-	return err
+	return exec(stmt3, noteID, tagID)
 }
 
 func addPatches(tx TX, noteID string, patches []string) (
@@ -246,8 +287,8 @@ func addPatches(tx TX, noteID string, patches []string) (
 
 func addPatch(stmt1, stmt2 *Stmt, noteID, diff string) error {
 	patchID := model.NextTimeID()
-	_, err1 := stmt1.Exec(patchID, diff)
-	_, err2 := stmt2.Exec(noteID, patchID)
+	err1 := exec(stmt1, patchID, diff)
+	err2 := exec(stmt2, noteID, patchID)
 	return util.WrapErrors(err1, err2)
 }
 
@@ -265,16 +306,14 @@ func (db *DB2) FillGroups(groups []TagGroup) error {
 	stmt := fmt.Sprintf(
 		"INSERT INTO taggroup (id, tags, protected, created_at, updated_at) VALUES %s",
 		strings.Join(questions, ","))
-	_, err := db.DB.Exec(stmt, values...)
-	return err
+	return db.Exec(stmt, values...)
 }
 func (db *DB2) DropTagGroup() error {
-	_, err := db.DB.Exec("DROP TABLE IF EXISTS taggroup")
-	return err
+	return db.Exec("DROP TABLE IF EXISTS taggroup")
 }
 
 func (db *DB2) AllTagGroups() (groups []TagGroup, err error) {
-	rows, err := db.DB.Query("SELECT * FROM taggroup")
+	rows, err := db.DB.Query(stmt.AllTagGroups)
 	if err != nil {
 		return
 	}
@@ -406,45 +445,6 @@ func (db *DB2) Insert(note *Note) error {
 		return err
 	}
 	return tx.Commit()
-}
-
-// SaveTagGroup .
-func (db *DB) SaveTagGroup(tagGroup *TagGroup) error {
-	return saveTagGroup(db.DB, tagGroup)
-}
-
-func saveTagGroup(tx storm.Node, tagGroup *TagGroup) (err error) {
-	if len(tagGroup.Tags) < 2 {
-		return
-	}
-	err = tx.Save(tagGroup)
-	if err == storm.ErrAlreadyExists {
-		if err = tx.One("Tags", tagGroup.Tags, tagGroup); err != nil {
-			return
-		}
-		err = tx.UpdateField(tagGroup, "UpdatedAt", model.TimeNow())
-	}
-	return deleteOldTagGroup(tx)
-}
-
-func deleteOldTagGroup(tx storm.Node) (err error) {
-	groups, err := notProtectedTagGroups(tx)
-	if err != nil {
-		return err
-	}
-	if len(groups) > settings.Config.TagGroupLimit {
-		oldGroup := groups[0]
-		err = tx.DeleteStruct(&oldGroup)
-	}
-	return
-}
-
-func notProtectedTagGroups(tx storm.Node) (groups []TagGroup, err error) {
-	err = tx.Select(q.Eq("Protected", false)).OrderBy("UpdatedAt").Find(&groups)
-	if err == storm.ErrNotFound {
-		err = nil
-	}
-	return
 }
 
 // 检查 ID 冲突
@@ -645,11 +645,9 @@ func (db *DB2) ChangeType(id string, noteType NoteType) error {
 	note.Type = noteType
 	if noteType == model.Markdown {
 		note.SetTitle(note.Title)
-		_, err = stmtSetTypeTitle.Exec(noteType, note.Title, id)
-		return err
+		return exec(stmtSetTypeTitle, noteType, note.Title, id)
 	}
-	_, err = stmtChangeNoteType.Exec(noteType, id)
-	return err
+	return exec(stmtChangeNoteType, noteType, id)
 }
 
 // UpdateTags .
@@ -658,14 +656,15 @@ func (db *DB2) UpdateTags(id string, tags []string) error {
 	if err != nil {
 		return err
 	}
+	newTags := stringset.UniqueSort(tags)
+	toAdd, toDelete := util.SliceDifference(newTags, oldTags)
+
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
-	toAdd, toDelete := util.SliceDifference(tags, oldTags)
-
 	e1 := deleteTags(tx, toDelete, id)
 	e2 := addTags(tx, toAdd, id)
-	e3 := addTagGroup(tx, tags)
+	e3 := addTagGroup(tx, model.NewTagGroup(newTags))
 
 	if err := util.WrapErrors(e1, e2, e3); err != nil {
 		return err
@@ -727,9 +726,8 @@ func (db *DB) AddPatchSetTitle(id, patch, contents string) (int, error) {
 }
 
 // SetTagGroupProtected .
-func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
-	return db.DB.UpdateField(
-		&TagGroup{ID: groupID}, "Protected", protected)
+func (db *DB2) SetTagGroupProtected(groupID string, protected bool) error {
+	return db.Exec(stmt.SetTagGroupProtected, protected, groupID)
 }
 
 func (db *DB2) GetNotesByTagName(tagName string) (notes []Note, err error) {
@@ -767,9 +765,8 @@ func (db *DB2) getNoteIDs(tagName string) (noteIDs []string, err error) {
 }
 
 // RenameTag .
-func (db *DB2) RenameTag(id, newName string) (err error) {
-	_, err = db.DB.Exec(stmt.RenameTag, newName, id)
-	return
+func (db *DB2) RenameTag(id, newName string) error {
+	return db.Exec(stmt.RenameTag, newName, id)
 }
 
 // SearchTagGroup 通过标签组搜索笔记。
@@ -810,9 +807,8 @@ func (db *DB) SearchTitle(pattern string) ([]Note, error) {
 	return notes, err
 }
 
-func (db *DB2) SetNoteDeleted(id string, deleted bool) (err error) {
-	_, err = stmtSetNoteDeleted.Exec(deleted, id)
-	return
+func (db *DB2) SetNoteDeleted(id string, deleted bool) error {
+	return exec(stmtSetNoteDeleted, deleted, id)
 }
 
 func (db *DB2) DeleteNoteForever(id string) error {
@@ -856,19 +852,6 @@ func txDeleteOneNote(tx storm.Node, id string) error {
 }
 
 // DeleteTag .
-func (db *DB) DeleteTag(name string) error {
-	tag, err := db.GetTag(name)
-	if err != nil {
-		return fmt.Errorf("tag[%s] %w", name, err)
-	}
-
-	tx := db.mustBegin()
-	defer tx.Rollback()
-
-	// err1 := notesDeleteTag(tx, tag)
-	err2 := tx.DeleteStruct(&tag)
-	if err := util.WrapErrors(err2); err != nil {
-		return err
-	}
-	return tx.Commit()
+func (db *DB2) DeleteTag(name string) error {
+	return db.Exec(stmt.DeleteTagByName, name)
 }

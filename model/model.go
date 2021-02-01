@@ -33,14 +33,26 @@ func NewNoteType(noteType string) NoteType {
 	return Plaintext
 }
 
-// Note 表示一个数据表。
-type Note struct {
+type OldNote struct {
 	ID        string // primary key
 	Type      NoteType
 	Title     string
 	Patches   []string
 	Size      int
 	Tags      []string
+	Deleted   bool
+	RemindAt  string `storm:"index"`
+	CreatedAt string `storm:"index"` // ISO8601
+	UpdatedAt string `storm:"index"`
+}
+
+type Note struct {
+	ID        string // primary key
+	Type      NoteType
+	Title     string
+	Patches   []string
+	Size      int
+	Tags      []tagset.Tag
 	Deleted   bool
 	RemindAt  string `storm:"index"`
 	CreatedAt string `storm:"index"` // ISO8601
@@ -209,10 +221,10 @@ func getMarkdownTitle(s string) string {
 // TagGroup 标签组，其中 Tags 应该除重和排序。
 type TagGroup struct {
 	ID        string   // primary key, random
-	Tags      []string `storm:"unique"`
+	Tags      []string
 	Protected bool
-	CreatedAt string `storm:"index"` // ISO8601
-	UpdatedAt string `storm:"index"`
+	CreatedAt string // ISO8601
+	UpdatedAt string
 }
 
 // NewTagGroup .

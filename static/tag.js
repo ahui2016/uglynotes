@@ -15,6 +15,10 @@ ajaxGet(`/api/tag/${tag_name}/id`, null, that => {
 });
 
 ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
+  if (!that.response) {
+    insertErrorAlert('找不到相关笔记');
+    return;
+  }
   $('#tag-name').show();
   $('#count-block').show();
   const notes = that.response;
@@ -100,7 +104,7 @@ yes_btn.click(event => {
     $('#head-buttons').hide();
     $('p').hide();
     $('ul').hide();
-    insertSuccessAlert(`标签 ${tag_name} 已删除`);
+    insertSuccessAlert(`已删除标签: ${tag_name}`);
   });
 });
 
