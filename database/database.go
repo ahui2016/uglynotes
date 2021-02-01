@@ -13,6 +13,7 @@ import (
 	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/stmt"
 	"github.com/ahui2016/uglynotes/stringset"
+	"github.com/ahui2016/uglynotes/tagset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/asdine/storm/v3"
 	"github.com/asdine/storm/v3/q"
@@ -35,7 +36,7 @@ type (
 	Stmt       = sql.Stmt
 )
 
-var stmtGetTagNamesByNote, stmtGetNote, stmtGetNotes, stmtGetDeletedNotes,
+var stmtGetTagByNote, stmtGetNote, stmtGetNotes, stmtGetDeletedNotes,
 	stmtGetPatchesByNote, stmtSetNoteDeleted, stmtGetNoteSize,
 	stmtChangeNoteType, stmtSetTypeTitle, stmtGetTagID *Stmt
 
@@ -91,7 +92,6 @@ func mustPrepare(tx TX, query string) *Stmt {
 }
 
 func (db *DB2) prepareStatements() {
-	stmtGetTagNamesByNote = mustPrepare(db.DB, stmt.GetTagNamesByNote)
 	stmtGetNote = mustPrepare(db.DB, stmt.GetNote)
 	stmtGetNotes = mustPrepare(db.DB, stmt.GetNotes)
 	stmtGetDeletedNotes = mustPrepare(db.DB, stmt.GetDeletedNotes)
@@ -104,7 +104,6 @@ func (db *DB2) prepareStatements() {
 }
 
 func closeStatements() {
-	stmtGetTagNamesByNote.Close()
 	stmtGetNote.Close()
 	stmtGetNotes.Close()
 	stmtGetDeletedNotes.Close()
@@ -142,11 +141,12 @@ func addNoteTagPatch(tx TX, note *Note) (err error) {
 	if err = insertNote(tx, note); err != nil {
 		return fmt.Errorf("insertNote: %v", err)
 	}
-	if err = addTagGroup(tx, model.NewTagGroup(note.Tags)); err != nil {
+	group := model.NewTagGroup(tagset.ToNames(note.Tags))
+	if err = addTagGroup(tx, group); err != nil {
 		return fmt.Errorf("addTagGroup: %v", err)
 	}
-	if err = addTags(tx, note.Tags, note.ID); err != nil {
-		return fmt.Errorf("addTags: %v", err)
+	if err = addTagNames(tx, tagset.ToNames(note.Tags), note.ID); err != nil {
+		return fmt.Errorf("addTagNames: %v", err)
 	}
 	if err = addPatches(tx, note.ID, note.Patches); err != nil {
 		return fmt.Errorf("addPatches: %v", err)
@@ -239,7 +239,7 @@ func getText1(stmtGet *Stmt, arg interface{}) (text string, err error) {
 	return
 }
 
-func addTags(tx TX, tags []string, noteID string) (err error) {
+func addTagNames(tx TX, tagNames []string, noteID string) (err error) {
 	stmtGetTagID := mustPrepare(tx, stmt.GetTagID)
 	defer stmtGetTagID.Close()
 	stmtInsertTag := mustPrepare(tx, stmt.InsertTag)
@@ -247,7 +247,7 @@ func addTags(tx TX, tags []string, noteID string) (err error) {
 	stmtInsertNoteTag := mustPrepare(tx, stmt.InsertNoteTag)
 	defer stmtInsertNoteTag.Close()
 
-	for _, tagName := range tags {
+	for _, tagName := range tagNames {
 		err = addTag(
 			stmtGetTagID, stmtInsertTag, stmtInsertNoteTag, noteID, tagName)
 		if err != nil {
@@ -431,10 +431,10 @@ func getUnifiedDiffString(a, b string) (string, error) {
 }
 
 // NewNote .
-func (db *DB2) NewNote(title, patch string, noteType NoteType, tags []string) (
-	*Note, error) {
+func (db *DB2) NewNote(
+	title, patch string, noteType NoteType, tagNames []string) (*Note, error) {
 	id := db.mustGetNextID()
-	return model.NewNote(id, title, patch, noteType, tags)
+	return model.NewNote(id, title, patch, noteType, tagNames)
 }
 
 // Insert .
@@ -467,7 +467,7 @@ func (db *DB2) GetByID(id string) (note Note, err error) {
 		return
 	}
 
-	tags, err := getTextArray(stmtGetTagNamesByNote, id)
+	tags, err := db.getSimpleTagsByNote(id)
 	if err != nil {
 		return
 	}
@@ -478,6 +478,28 @@ func (db *DB2) GetByID(id string) (note Note, err error) {
 		return
 	}
 	note.Patches = patches
+	return
+}
+
+func (db *DB2) getSimpleTagsByNote(id string) ([]tagset.Tag, error) {
+	rows, err := db.DB.Query(stmt.GetTagsByNote, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	return scanSimpleTags(rows)
+}
+
+func scanSimpleTags(rows *sql.Rows) (tags []tagset.Tag, err error) {
+	for rows.Next() {
+		var tag tagset.Tag
+		err = rows.Scan(&tag.ID, &tag.Name)
+		if err != nil {
+			return
+		}
+		tags = append(tags, tag)
+	}
+	err = rows.Err()
 	return
 }
 
@@ -528,7 +550,7 @@ func (db *DB2) getNotes(stmtGet *Stmt) (notes []*Note, err error) {
 		return
 	}
 	for _, note := range notes {
-		tags, err := getTextArray(stmtGetTagNamesByNote, note.ID)
+		tags, err := db.getSimpleTagsByNote(note.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -651,20 +673,21 @@ func (db *DB2) ChangeType(id string, noteType NoteType) error {
 }
 
 // UpdateTags .
-func (db *DB2) UpdateTags(id string, tags []string) error {
-	oldTags, err := getTextArray(stmtGetTagNamesByNote, id)
+func (db *DB2) UpdateTags(id string, tagNames []string) error {
+	oldTags, err := db.getSimpleTagsByNote(id)
 	if err != nil {
 		return err
 	}
-	newTags := stringset.UniqueSort(tags)
-	toAdd, toDelete := util.SliceDifference(newTags, oldTags)
+	oldTagNames := tagset.ToNames(oldTags)
+	newTagNames := stringset.UniqueSort(tagNames)
+	toAdd, toDelete := util.SliceDifference(newTagNames, oldTagNames)
 
 	tx := db.mustBegin()
 	defer tx.Rollback()
 
 	e1 := deleteTags(tx, toDelete, id)
-	e2 := addTags(tx, toAdd, id)
-	e3 := addTagGroup(tx, model.NewTagGroup(newTags))
+	e2 := addTagNames(tx, toAdd, id)
+	e3 := addTagGroup(tx, model.NewTagGroup(newTagNames))
 
 	if err := util.WrapErrors(e1, e2, e3); err != nil {
 		return err

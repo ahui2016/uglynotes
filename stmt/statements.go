@@ -154,7 +154,7 @@ const AllTagsByDate = `SELECT tag.id, tag.name, tag.created_at,
     (SELECT count(*) FROM note_tag WHERE note_tag.tag_id = tag.id)
     FROM tag ORDER BY tag.created_at;`
 
-const GetTagNamesByNote = `SELECT tag.name FROM note
+const GetTagsByNote = `SELECT tag.id, tag.name FROM note
     INNER JOIN note_tag ON note.id = note_tag.note_id
     INNER JOIN tag ON note_tag.tag_id = tag.id
     WHERE note.id=?;`

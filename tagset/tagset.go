@@ -11,6 +11,21 @@ type Tag struct {
 	Name string
 }
 
+func TagsFrom(tagNames []string) (tags []Tag) {
+	for i := range tagNames {
+		tag := Tag{Name: tagNames[i]}
+		tags = append(tags, tag)
+	}
+	return
+}
+
+func ToNames(tags []Tag) (names []string) {
+	for i := range tags {
+		names = append(names, tags[i].Name)
+	}
+	return
+}
+
 func NewSet(tags []Tag) *Set {
 	set := &Set{make(map[string]string)}
 	for _, tag := range tags {
@@ -34,9 +49,7 @@ func (set *Set) Delete(tag Tag) {
 
 func (set *Set) Slice() (tags []Tag) {
 	for k, v := range set.Map {
-		if set.Has(k) {
-			tags = append(tags, Tag{k, v})
-		}
+		tags = append(tags, Tag{k, v})
 	}
 	return
 }

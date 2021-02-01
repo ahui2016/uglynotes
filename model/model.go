@@ -9,6 +9,7 @@ import (
 
 	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/stringset"
+	"github.com/ahui2016/uglynotes/tagset"
 	"github.com/ahui2016/uglynotes/util"
 	"github.com/sergi/go-diff/diffmatchpatch"
 )
@@ -59,12 +60,30 @@ type Note struct {
 	UpdatedAt string `storm:"index"`
 }
 
+func NoteFrom(oldNote OldNote) Note {
+	var tags []tagset.Tag
+	for _, name := range oldNote.Tags {
+		tags = append(tags, tagset.Tag{Name: name})
+	}
+	return Note{
+		ID:        oldNote.ID,
+		Type:      oldNote.Type,
+		Title:     oldNote.Title,
+		Patches:   oldNote.Patches,
+		Size:      oldNote.Size,
+		Tags:      tags,
+		Deleted:   oldNote.Deleted,
+		CreatedAt: oldNote.CreatedAt,
+		UpdatedAt: oldNote.UpdatedAt,
+	}
+}
+
 // NewNote .
-func NewNote(id, title, patch string, noteType NoteType, tags []string) (
+func NewNote(id, title, patch string, noteType NoteType, tagNames []string) (
 	*Note, error) {
 	note := newNote(id, noteType)
 	err1 := note.AddPatchSetTitle(patch, title)
-	err2 := note.SetTags(tags)
+	err2 := note.SetNewTags(tagNames)
 	return note, util.WrapErrors(err1, err2)
 }
 func newNote(id string, noteType NoteType) *Note {
@@ -144,14 +163,15 @@ func patchApply(patch string, text string) (string, error) {
 	return patched, nil
 }
 
-// SetTags 对标签进行一些验证和处理（例如除重和排序）。
+// SetNewTags 对标签进行一些验证和处理（例如除重和排序）。
 // 尽量不要直接操作 note.Tags
-func (note *Note) SetTags(tags []string) error {
-	sorted := stringset.UniqueSort(tags)
+func (note *Note) SetNewTags(tagNames []string) error {
+	sorted := stringset.UniqueSort(tagNames)
 	if len(sorted) < 2 {
 		return errors.New("too few tags (at least two)")
 	}
-	note.Tags = purify(sorted)
+	purified := purify(sorted)
+	note.Tags = tagset.TagsFrom(purified)
 	return nil
 }
 
@@ -220,7 +240,7 @@ func getMarkdownTitle(s string) string {
 
 // TagGroup 标签组，其中 Tags 应该除重和排序。
 type TagGroup struct {
-	ID        string   // primary key, random
+	ID        string // primary key, random
 	Tags      []string
 	Protected bool
 	CreatedAt string // ISO8601

@@ -385,13 +385,17 @@ func deleteTag(c *fiber.Ctx) error {
 }
 
 func importNotes(c *fiber.Ctx) error {
-	var notes []Note
 	blob, err := ioutil.ReadFile(exportPath)
 	if err != nil {
 		return err
 	}
-	if err = json.Unmarshal(blob, &notes); err != nil {
+	var oldNotes []model.OldNote
+	if err = json.Unmarshal(blob, &oldNotes); err != nil {
 		return err
+	}
+	var notes []Note
+	for i := range oldNotes {
+		notes = append(notes, model.NoteFrom(oldNotes[i]))
 	}
 	return db2.ImportNotes(notes)
 }
