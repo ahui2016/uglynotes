@@ -84,10 +84,11 @@ function initEditForm(param_id) {
   
     textarea.val(note.Contents);
     oldContents = note.Contents;
-  
-    tagsElem.val(addPrefix(note.Tags, '#'));
-    tags = new Set(note.Tags);
-    oldTags = new Set(note.Tags);
+
+    const tagNames = toTagNames(note.Tags);
+    tagsElem.val(addPrefix(tagNames, '#'));
+    tags = new Set(tagNames);
+    oldTags = new Set(tagNames);
 
     updateSize(note.Size);
     enterEditMode(note.Patches.length);

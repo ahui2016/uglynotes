@@ -35,7 +35,7 @@ function addTagItem(tag, insertPoint) {
   const nameElem = item.find('.name');
   nameElem
     .text(tag.Name)
-    .attr('href', '/html/tag/?name=' + encodeURIComponent(tag.Name));
+    .attr('href', '/html/tag/?id=' + tag.ID);
   
   item.find('.count').text(tag.Count);
   if (tag.Count == 0) {
@@ -63,7 +63,7 @@ function addTagItem(tag, insertPoint) {
     // 确认删除
     yes_btn.click(event => {
       event.preventDefault();
-      ajaxDelete('/api/tag/'+encodeURIComponent(tag.Name), yes_btn, function() {
+      ajaxDelete('/api/tag/'+tag.ID, yes_btn, function() {
         $('.alert').hide();
         nameElem.removeAttr('href');
         del_btn_block.hide();

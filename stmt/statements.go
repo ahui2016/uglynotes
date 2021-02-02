@@ -113,13 +113,14 @@ const ChangeNoteType = `UPDATE note SET type=? WHERE id=?;`
 const SetTypeTitle = `UPDATE note SET type=?, title=? WHERE id=?;`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`
+const GetTagByName = `SELECT * FROM tag WHERE name=?;`
 const GetTagID = `SELECT id FROM tag WHERE name=?;`
 const InsertTag = `INSERT INTO tag (id, name, created_at) VALUES (?, ?, ?);`
 const RenameTag = `UPDATE tag SET name=? WHERE id=?; `
+const DeleteTag = `DELETE FROM tag WHERE id=?;`
 const InsertNoteTag = `INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?);`
 const DeleteTagsByNote = `DELETE FROM note_tag WHERE note_id=?;`
 const DeleteTags = `DELETE FROM note_tag WHERE note_id=? and tag_id=?;`
-const DeleteTagByName = `DELETE FROM tag WHERE name=?;`
 
 const InsertPatch = `INSERT INTO patch (id, diff) VALUES (?, ?);`
 const InsertNotePatch = `INSERT INTO note_patch (note_id, patch_id) VALUES (?, ?);`
@@ -141,10 +142,6 @@ const InsertTagGroup = `INSERT INTO taggroup (
     VALUES (?, ?, ?, ?, ?);`
 const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
 const SetTagGroupProtected = `UPDATE taggroup SET protected=? WHERE id=?;`
-
-const GetNotesByTagName = `SELECT note_tag.note_id FROM tag
-    INNER JOIN note_tag ON tag.id = note_tag.tag_id
-    WHERE tag.name=?;`
 
 const AllTagsByName = `SELECT tag.id, tag.name, tag.created_at,
     (SELECT count(*) FROM note_tag WHERE note_tag.tag_id = tag.id)

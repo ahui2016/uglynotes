@@ -45,8 +45,8 @@ ajaxGet('/api/note/'+id, null, that => {
     note.Tags.forEach(tag => {
       const tagElem = $('#tag-tmpl').contents().clone();
       tagElem
-        .text(tag)
-        .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
+        .text(tag.Name)
+        .attr('href', '/html/tag/?id=' + tag.ID);
       tagElem.insertBefore('#tag-tmpl');
     });
     if (note.Tags.length > 1) {

@@ -1,4 +1,5 @@
 const tagName = $('#name');
+const tagNameBlock = $('#tag-name-block');
 const rename = $('#rename');
 const name_input = $('#name-input');
 const rename_block = $('#rename-block');
@@ -6,20 +7,19 @@ const cancel = $('#cancel');
 const ok = $('#ok');
 const check_tags_btn = $('#check-tags-btn');
 
-const tag_name = getUrlParam('name');
-tagName.text(tag_name);
-
-let tag_id;
-ajaxGet(`/api/tag/${tag_name}/id`, null, that => {
-  tag_id = that.response.message;
+const tag_id = getUrlParam('id');
+let tag;
+ajaxGet(`/api/tag/${tag_id}`, null, that => {
+  tag = that.response;
+  tagName.text(tag.Name);
 });
 
-ajaxGet(`/api/tag/${tag_name}/notes`, null, that => {
+ajaxGet(`/api/tag/${tag_id}/notes`, null, that => {
   if (!that.response) {
-    insertErrorAlert('找不到相关笔记');
+    insertInfoAlert('找不到相关笔记');
     return;
   }
-  $('#tag-name').show();
+  tagNameBlock.show();
   $('#count-block').show();
   const notes = that.response;
   if (!notes) {
@@ -67,15 +67,13 @@ ok.click(() => {
 
   ajaxPut(form, '/api/tag/' + tag_id, ok, () => {
     rename_toggle();
-    tagName.val(new_name);
-    $('#tag-name').hide();
+    tagName.text(new_name);
+    tagNameBlock.hide();
     $('.alert').hide();
     $('ul').hide();
-    insertSuccessAlert(`正在重命名: ${tag_name} --> ${new_name}`);
+    insertSuccessAlert(`正在重命名: ${tag.Name} --> ${new_name}`);
     insertInfoAlert('重命名成功时会自动刷新页面');
-    window.setTimeout(function(){
-      window.location = '/html/tag/?name=' + encodeURIComponent(new_name)
-    }, 5000);
+    window.setTimeout(function(){window.location.reload()}, 5000);
   });  
 });
 
@@ -99,12 +97,12 @@ function delete_toggle(event) {
 // 确认删除
 yes_btn.click(event => {
   event.preventDefault();
-  ajaxDelete('/api/tag/'+encodeURIComponent(tag_name), yes_btn, function() {
+  ajaxDelete('/api/tag/'+tag_id, yes_btn, function() {
     $('.alert').hide();
     $('#head-buttons').hide();
     $('p').hide();
     $('ul').hide();
-    insertSuccessAlert(`已删除标签: ${tag_name}`);
+    insertSuccessAlert(`已删除标签: ${tag.Name}`);
   });
 });
 

@@ -143,6 +143,10 @@ function fileSizeToString(fileSize, fixed) {
   return `${sizeMB.toFixed(fixed)} MB`;
 }
 
+function toTagNames(simpleTags) {
+  return simpleTags.map(tag => tag.Name)
+}
+
 function addNoteElem(note) {
   let updatedAt = dayjs(note.UpdatedAt);
   let item = $('#li-tmpl').contents().clone();
@@ -152,7 +156,7 @@ function addNoteElem(note) {
   titleElem
     .attr('href', `/html/note?id=${note.ID}&date=${updatedAt.valueOf()}`)
     .text(note.Title);
-  item.find('.tags').text(addPrefix(note.Tags, '#'));
+  item.find('.tags').text(addPrefix(toTagNames(note.Tags), '#'));
   item.find('.edit').click(() => {window.location = '/html/note/edit?id='+note.ID});
   item.prependTo('ul');
 

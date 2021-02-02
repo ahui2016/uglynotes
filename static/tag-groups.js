@@ -38,7 +38,19 @@ function addTagGroup(group) {
     const tagElem = $('#tag-tmpl').contents().clone();
     tagElem
       .text(tag)
-      .attr('href', '/html/tag/?name=' + encodeURIComponent(tag));
+      .click(() => {
+	ajaxGet('/api/tag/name/'+encodeURIComponent(tag), null, that => {
+	  // onSuccess
+	  window.location = '/html/tag/?id='+that.response.ID;
+	}, null, () => {
+	  // onFail
+	  tagElem
+	    .css('cursor', 'default')
+	    .css('color', '#999')
+	    .css('background-color', '#EEE')
+	    .off();
+	});
+      });
     tagElem.insertBefore(groupElem);
   });
   tagsElem.text(addPrefix(group.Tags, '#'));
@@ -55,7 +67,7 @@ function addTagGroup(group) {
     ajaxPut(form, `/api/tag/group/${group.ID}/protected`, $(event.currentTarget),
       () => {
         toggle_protect();
-      }, null, event => {
+      }, null, () => {
         // onFail
         insertErrorAlert('操作失败', $('#'+item_id));
       }

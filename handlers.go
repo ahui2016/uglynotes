@@ -260,16 +260,24 @@ func headLimit(s string, limit int) (head string) {
 	return head
 }
 
-func getTagID(c *fiber.Ctx) error {
+func getTagByID(c *fiber.Ctx) error {
+	tag, err := db2.GetTagByID(c.Params("id"))
+	if err != nil {
+		return err
+	}
+	return c.JSON(tag)
+}
+
+func getTagByName(c *fiber.Ctx) error {
 	tagName, err := getParams(c, "name")
 	if err != nil {
 		return err
 	}
-	id, err := db2.GetTagID(tagName)
+	tag, err := db2.GetTagByName(tagName)
 	if err != nil {
 		return err
 	}
-	return jsonMessage(c, id)
+	return c.JSON(tag)
 }
 
 func renameTag(c *fiber.Ctx) error {
@@ -282,11 +290,7 @@ func renameTag(c *fiber.Ctx) error {
 }
 
 func getNotesByTag(c *fiber.Ctx) error {
-	tagName, err := getParams(c, "name")
-	if err != nil {
-		return err
-	}
-	notes, err := db2.GetNotesByTagName(tagName)
+	notes, err := db2.GetNotesByTag(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -377,11 +381,7 @@ func deleteNoteForever(c *fiber.Ctx) error {
 }
 
 func deleteTag(c *fiber.Ctx) error {
-	name, err := getParams(c, "name")
-	if err != nil {
-		return err
-	}
-	return db2.DeleteTag(name)
+	return db2.DeleteTag(c.Params("id"))
 }
 
 func importNotes(c *fiber.Ctx) error {
