@@ -7,17 +7,16 @@ type Set struct {
 	Map map[string]bool
 }
 
-// NewSet convert a string slice to a set.
-func NewSet(arr []string) *Set {
-	set := newSet()
+func NewSet() *Set {
+	return &Set{make(map[string]bool)}
+}
+
+func From(arr []string) *Set {
+	set := NewSet()
 	for _, v := range arr {
 		set.Map[v] = true
 	}
 	return set
-}
-
-func newSet() *Set {
-	return &Set{make(map[string]bool)}
 }
 
 // Has .
@@ -37,7 +36,7 @@ func (set *Set) Delete(item string) {
 
 // Intersect .
 func (set *Set) Intersect(other *Set) *Set {
-	result := newSet()
+	result := NewSet()
 	for key := range set.Map {
 		if other.Has(key) {
 			result.Add(key)
@@ -61,7 +60,7 @@ func UniqueSort(arr []string) (result []string) {
 	if len(arr) == 0 {
 		return
 	}
-	result = NewSet(arr).Slice()
+	result = From(arr).Slice()
 	sort.Strings(result)
 	return
 }
@@ -69,7 +68,7 @@ func UniqueSort(arr []string) (result []string) {
 // AddAndDelete 利用 Set 对 arr 进行添加和删除操作，返回排序结果。
 // 适用于类似于重命名的情形。
 func AddAndDelete(arr []string, toDelete, toAdd string) []string {
-	set := NewSet(arr)
+	set := From(arr)
 	set.Delete(toDelete)
 	set.Add(toAdd)
 	result := set.Slice()
@@ -81,7 +80,7 @@ func AddAndDelete(arr []string, toDelete, toAdd string) []string {
 func Intersect(group []*Set) *Set {
 	length := len(group)
 	if length == 0 {
-		return newSet()
+		return NewSet()
 	}
 	result := group[0]
 	for i := 1; i < length; i++ {

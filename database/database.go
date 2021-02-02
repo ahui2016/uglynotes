@@ -762,12 +762,15 @@ func (db *DB2) SetTagGroupProtected(groupID string, protected bool) error {
 	return db.Exec(stmt.SetTagGroupProtected, protected, groupID)
 }
 
-func (db *DB2) GetNotesByTag(tagID string) (notes []*Note, err error) {
-	noteIDs, err := db.getNoteIDs(tagID)
+func (db *DB2) GetNotesByTagID(tagID string) ([]*Note, error) {
+	noteIDs, err := db.getNoteIDs(stmt.GetNotesByTagID, tagID)
 	if err != nil {
-		return nil, fmt.Errorf("tag id[%s] %w", tagID, err)
+		return nil, err
 	}
+	return db.getNotesByIDs(noteIDs)
+}
 
+func (db *DB2) getNotesByIDs(noteIDs []string) (notes []*Note, err error) {
 	// 这里改成批量查询或改用复杂的 sql 可优化性能。
 	for _, id := range noteIDs {
 		note, err := db.getNote(id)
@@ -780,8 +783,8 @@ func (db *DB2) GetNotesByTag(tagID string) (notes []*Note, err error) {
 	return
 }
 
-func (db *DB2) getNoteIDs(tagID string) (noteIDs []string, err error) {
-	rows, err := db.DB.Query(stmt.GetNotesByTag, tagID)
+func (db *DB2) getNoteIDs(stmtGet, arg string) (noteIDs []string, err error) {
+	rows, err := db.DB.Query(stmtGet, arg)
 	if err != nil {
 		return
 	}
@@ -803,41 +806,54 @@ func (db *DB2) RenameTag(id, newName string) error {
 }
 
 // SearchTagGroup 通过标签组搜索笔记。
-// 如果其中一个标签不存在，会返回错误，另外一种处理方式是忽略找不到的标签。
-// 但我选择了返回错误，因为本项目的设计思想之一是 informational(更多信息)。
-func (db *DB) SearchTagGroup(tags []string) ([]Note, error) {
-	var idGroups []*Set
-	for i := range tags {
-		var tag Tag
-		if err := db.DB.One("Name", tags[i], &tag); err != nil {
-			return nil, fmt.Errorf("Tag[%s] %w", tags[i], err)
+func (db *DB2) SearchTagGroup(tagNames []string) ([]*Note, error) {
+	noteIDs, err := db.getNoteIDsByTagNames(tagNames)
+	if err != nil {
+		return nil, err
+	}
+	return db.getNotesByIDs(noteIDs)
+}
+
+func (db *DB2) getNoteIDsByTagNames(tagNames []string) ([]string, error) {
+	noteIDs := stringset.NewSet()
+	for _, tagName := range tagNames {
+		rows, err := db.DB.Query(stmt.GetNotesByTagName, tagName)
+		if err != nil {
+			return nil, err
 		}
-		// idGroups = append(idGroups, stringset.NewSet(tag.NoteIDs))
-		idGroups = append(idGroups, stringset.NewSet([]string{}))
+		defer rows.Close()
+		for rows.Next() {
+			var noteID string
+			if err := rows.Scan(&noteID); err != nil {
+				return nil, err
+			}
+			noteIDs.Add(noteID)
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
 	}
-	noteIDs := stringset.Intersect(idGroups).Slice()
-	return db.getByIDs(noteIDs)
+	return noteIDs.Slice(), nil
 }
 
-func (db *DB) getByIDs(noteIDs []string) ([]Note, error) {
-	var notes []Note
-	err := db.DB.Select(q.In("ID", noteIDs)).
-		OrderBy("UpdatedAt").Find(&notes)
-	if err == storm.ErrNotFound {
-		err = nil
+func (db *DB2) SearchTitle(pattern string) (notes []*Note, err error) {
+	rows, err := db.DB.Query(stmt.SearchNoteTitle, "%"+pattern+"%")
+	if err != nil {
+		return nil, err
 	}
-	return notes, err
-}
-
-// SearchTitle by regular expression.
-func (db *DB) SearchTitle(pattern string) ([]Note, error) {
-	var notes []Note
-	err := db.DB.Select(q.Re("Title", pattern)).
-		OrderBy("UpdatedAt").Find(&notes)
-	if err == storm.ErrNotFound {
-		err = nil
+	defer rows.Close()
+	for rows.Next() {
+		note, err := scanNote(rows)
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, &note)
 	}
-	return notes, err
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	db.fillSimpleTags(notes)
+	return
 }
 
 func (db *DB2) SetNoteDeleted(id string, deleted bool) error {

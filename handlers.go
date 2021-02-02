@@ -129,7 +129,6 @@ func getAllNotes(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// trimContents(notes)
 	return c.JSON(notes)
 }
 
@@ -138,7 +137,6 @@ func getDeletedNotes(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	// trimContents(notes)
 	return c.JSON(notes)
 }
 
@@ -148,12 +146,6 @@ func exportAllNotes(c *fiber.Ctx) error {
 		return err
 	}
 	return ioutil.WriteFile(exportPath, util.MustMarshalIndent(notes), 0600)
-}
-
-func trimContents(notes []Note) {
-	for i := range notes {
-		notes[i].Patches = nil
-	}
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
@@ -290,7 +282,7 @@ func renameTag(c *fiber.Ctx) error {
 }
 
 func getNotesByTag(c *fiber.Ctx) error {
-	notes, err := db2.GetNotesByTag(c.Params("id"))
+	notes, err := db2.GetNotesByTagID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -327,11 +319,10 @@ func searchTagGroup(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	notes, err := db.SearchTagGroup(tags)
+	notes, err := db2.SearchTagGroup(tags)
 	if err != nil {
 		return err
 	}
-	trimContents(notes)
 	return c.JSON(notes)
 }
 
@@ -340,11 +331,10 @@ func searchTitle(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	notes, err := db.SearchTitle(pattern)
+	notes, err := db2.SearchTitle(pattern)
 	if err != nil {
 		return err
 	}
-	trimContents(notes)
 	return c.JSON(notes)
 }
 
