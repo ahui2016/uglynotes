@@ -3,7 +3,7 @@ package database
 import "github.com/gofiber/fiber/v2"
 
 // SessionCheck .
-func (db *DB) SessionCheck(c *fiber.Ctx) bool {
+func (db *DB2) SessionCheck(c *fiber.Ctx) bool {
 	sess, err := db.Sess.Get(c)
 
 	if err != nil || sess.Get(cookieName) == nil {
@@ -13,7 +13,7 @@ func (db *DB) SessionCheck(c *fiber.Ctx) bool {
 }
 
 // SessionSet .
-func (db *DB) SessionSet(c *fiber.Ctx) error {
+func (db *DB2) SessionSet(c *fiber.Ctx) error {
 	sess, err := db.Sess.Get(c)
 	if err != nil {
 		return err

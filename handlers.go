@@ -53,20 +53,12 @@ func noteNewPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
 
-func noteNewPage2(c *fiber.Ctx) error {
-	return c.SendFile("./static/note-edit2.html")
-}
-
 func noteEditPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
 
 func historyPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/history.html")
-}
-
-func historyPage2(c *fiber.Ctx) error {
-	return c.SendFile("./static/history2.html")
 }
 
 func noteHistoryPage(c *fiber.Ctx) error {
@@ -114,7 +106,7 @@ func loginHandler(c *fiber.Ctx) error {
 		return jsonError(c, "Wrong Password", 400)
 	}
 	passwordTry = 0
-	return db.SessionSet(c)
+	return db2.SessionSet(c)
 }
 
 func checkLogin(c *fiber.Ctx) error {
@@ -141,7 +133,7 @@ func getDeletedNotes(c *fiber.Ctx) error {
 }
 
 func exportAllNotes(c *fiber.Ctx) error {
-	notes, err := db.AllNotesWithDeleted()
+	notes, err := db2.ExportAllNotes()
 	if err != nil {
 		return err
 	}

@@ -29,7 +29,6 @@ var (
 )
 
 var (
-	db          = new(database.DB)
 	db2	    = new(database.DB2)
 	passwordTry = 0
 )
@@ -48,12 +47,9 @@ func init() {
 	util.MustMkdir(dataDir)
 
 	// open the db here, close the db in main().
-	err := db.Open(dbPath)
+	err := db2.Open(dbPath)
 	util.Panic(err)
 	log.Print(dbPath)
-
-	dbPath2 = dbPath + "2"
-	util.Panic(db2.Open(dbPath2))
 }
 
 func setPaths() {

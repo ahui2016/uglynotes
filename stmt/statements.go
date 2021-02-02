@@ -98,8 +98,9 @@ const GetTextValue = `SELECT text_value FROM metadata WHERE name=?;`
 const UpdateTextValue = `UPDATE metadata SET text_value=? WHERE name=?;`
 
 const GetNote = `SELECT * FROM note WHERE id=?;`
-const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
 const GetNoteSize = `SELECT size FROM note WHERE id=?;`
+const GetAllNoteIDs = `SELECT id FROM note`
+const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
 const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;`
 const SearchNoteTitle = `SELECT * FROM note WHERE title LIKE ?`
 const GetNotesByTagID = `SELECT note_id FROM note_tag WHERE tag_id=?;`

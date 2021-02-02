@@ -8,7 +8,6 @@ import (
 )
 
 func main() {
-	defer db.Close()
 	defer db2.Close()
 
 	app := fiber.New(fiber.Config{
@@ -43,10 +42,8 @@ func main() {
 	htmlPage.Get("/index", indexPage)
 	htmlPage.Get("/note", notePage)
 	htmlPage.Get("/note/new", noteNewPage)
-	htmlPage.Get("/note/new2", noteNewPage2)
 	htmlPage.Get("/note/edit", noteEditPage)
 	htmlPage.Get("/history", historyPage)
-	htmlPage.Get("/history2", historyPage2)
 	htmlPage.Get("/note/history", noteHistoryPage)
 	htmlPage.Get("/tag", tagPage)
 	htmlPage.Get("/tags", tagsPage)

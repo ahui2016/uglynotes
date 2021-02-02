@@ -36,8 +36,7 @@ type (
 	Stmt       = sql.Stmt
 )
 
-var stmtGetTagByNote, stmtGetNotes, stmtGetDeletedNotes,
-	stmtGetPatchesByNote, stmtSetNoteDeleted, stmtGetNoteSize,
+var stmtGetTagByNote, stmtGetPatchesByNote, stmtSetNoteDeleted, stmtGetNoteSize,
 	stmtChangeNoteType, stmtSetTypeTitle *Stmt
 
 type TX interface {
@@ -65,10 +64,10 @@ func (db *DB2) Open(dbPath string) (err error) {
 		return
 	}
 	db.path = dbPath
-	// db.Sess = session.New(session.Config{
-	// 	Expiration: mustParseDuration(config.MaxAge),
-	// 	CookieName: cookieName,
-	// })
+	db.Sess = session.New(session.Config{
+		Expiration: mustParseDuration(config.MaxAge),
+		CookieName: cookieName,
+	})
 	db.prepareStatements()
 	err1 := initFirstID(db.DB)
 	err2 := initTotalSize(db.DB)
@@ -92,8 +91,6 @@ func mustPrepare(tx TX, query string) *Stmt {
 }
 
 func (db *DB2) prepareStatements() {
-	stmtGetNotes = mustPrepare(db.DB, stmt.GetNotes)
-	stmtGetDeletedNotes = mustPrepare(db.DB, stmt.GetDeletedNotes)
 	stmtGetPatchesByNote = mustPrepare(db.DB, stmt.GetPatchesByNote)
 	stmtSetNoteDeleted = mustPrepare(db.DB, stmt.SetNoteDeleted)
 	stmtGetNoteSize = mustPrepare(db.DB, stmt.GetNoteSize)
@@ -102,8 +99,6 @@ func (db *DB2) prepareStatements() {
 }
 
 func closeStatements() {
-	stmtGetNotes.Close()
-	stmtGetDeletedNotes.Close()
 	stmtGetPatchesByNote.Close()
 	stmtSetNoteDeleted.Close()
 	stmtGetNoteSize.Close()
@@ -530,10 +525,47 @@ func deleteTags(tx TX, tagsToDelete []string, noteID string) error {
 }
 
 func (db *DB2) AllNotes() (notes []*Note, err error) {
+	stmtGetNotes := mustPrepare(db.DB, stmt.GetNotes)
+	defer stmtGetNotes.Close()
 	return db.getNotes(stmtGetNotes)
 }
 
+func (db *DB2) ExportAllNotes() (notes []Note, err error) {
+	noteIDs, err := db.getAllNoteIDs()
+	if err != nil {
+		return nil, err
+	}
+	for i := range noteIDs {
+		note, err := db.GetByID(noteIDs[i])
+		if err != nil {
+			return nil, err
+		}
+		notes = append(notes, note)
+	}
+	return
+}
+
+func (db *DB2) getAllNoteIDs() (noteIDs []string, err error) {
+	rows, err := db.DB.Query(stmt.GetAllNoteIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		noteIDs = append(noteIDs, id)
+	}
+	err = rows.Err()
+	return
+}
+
 func (db *DB2) AllDeletedNotes() (notes []*Note, err error) {
+	stmtGetDeletedNotes := mustPrepare(db.DB, stmt.GetDeletedNotes)
+	defer stmtGetDeletedNotes.Close()
 	return db.getNotes(stmtGetDeletedNotes)
 }
 
