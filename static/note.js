@@ -51,11 +51,12 @@ ajaxGet('/api/note/'+id, null, that => {
     });
     if (note.Tags.length > 1) {
       const tagElem = $('#tag-tmpl').contents().clone();
+      const tagNames = toTagNames(note.Tags);
       tagElem
         .text('group')
         .addClass('group')
         .attr('title', 'search tag group')
-        .attr('href', '/html/search?tags=' + encodeURIComponent(addPrefix(note.Tags)));
+        .attr('href', '/html/search?tags=' + encodeURIComponent(addPrefix(tagNames)));
       tagElem.insertBefore('#tag-tmpl');    
     }
   }

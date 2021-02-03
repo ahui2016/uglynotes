@@ -102,7 +102,7 @@ const GetNoteSize = `SELECT size FROM note WHERE id=?;`
 const GetAllNoteIDs = `SELECT id FROM note`
 const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
 const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;`
-const SearchNoteTitle = `SELECT * FROM note WHERE title LIKE ?`
+const SearchNoteTitle = `SELECT * FROM note WHERE deleted=0 and title LIKE ?`
 const GetNotesByTagID = `SELECT note_id FROM note_tag WHERE tag_id=?;`
 const InsertNote = `INSERT INTO note (
     id, type, title, size, deleted, remind_at, created_at, updated_at)
@@ -146,9 +146,10 @@ const InsertTagGroup = `INSERT INTO taggroup (
 const UpdateTagGroupNow = `UPDATE taggroup SET updated_at=? WHERE id=?;`
 const SetTagGroupProtected = `UPDATE taggroup SET protected=? WHERE id=?;`
 
-const GetNotesByTagName = `SELECT note_tag.note_id FROM tag
+const GetNotesByTagName = `SELECT note.id FROM tag
     INNER JOIN note_tag ON tag.id = note_tag.tag_id
-    WHERE tag.name=?;`
+    INNER JOIN note ON note_tag.note_id = note.id
+    WHERE note.deleted=0 and tag.name=?;`
 
 const AllTagsByName = `SELECT tag.id, tag.name, tag.created_at,
     (SELECT count(*) FROM note_tag WHERE note_tag.tag_id = tag.id)

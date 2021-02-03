@@ -39,9 +39,10 @@ function addTagGroup(group) {
     tagElem
       .text(tag)
       .click(() => {
-	ajaxGet('/api/tag/name/'+encodeURIComponent(tag), null, that => {
+	const encodedTag = encodeURIComponent(tag);
+	ajaxGet('/api/tag/name/'+encodedTag, null, that => {
 	  // onSuccess
-	  window.location = '/html/tag/?id='+that.response.ID;
+	  window.location = '/html/search/?tags='+encodedTag;
 	}, null, () => {
 	  // onFail
 	  tagElem
