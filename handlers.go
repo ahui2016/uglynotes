@@ -106,7 +106,7 @@ func loginHandler(c *fiber.Ctx) error {
 		return jsonError(c, "Wrong Password", 400)
 	}
 	passwordTry = 0
-	return db2.SessionSet(c)
+	return db.SessionSet(c)
 }
 
 func checkLogin(c *fiber.Ctx) error {
@@ -117,7 +117,7 @@ func checkLogin(c *fiber.Ctx) error {
 }
 
 func getAllNotes(c *fiber.Ctx) error {
-	notes, err := db2.AllNotes()
+	notes, err := db.AllNotes()
 	if err != nil {
 		return err
 	}
@@ -125,7 +125,7 @@ func getAllNotes(c *fiber.Ctx) error {
 }
 
 func getDeletedNotes(c *fiber.Ctx) error {
-	notes, err := db2.AllDeletedNotes()
+	notes, err := db.AllDeletedNotes()
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func getDeletedNotes(c *fiber.Ctx) error {
 }
 
 func exportAllNotes(c *fiber.Ctx) error {
-	notes, err := db2.ExportAllNotes()
+	notes, err := db.ExportAllNotes()
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func exportAllNotes(c *fiber.Ctx) error {
 }
 
 func getNoteHandler(c *fiber.Ctx) error {
-	note, err := db2.GetByID(c.Params("id"))
+	note, err := db.GetByID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func newNoteHandler(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	if err := db2.Insert(note); err != nil {
+	if err := db.Insert(note); err != nil {
 		return err
 	}
 	return jsonMessage(c, note.ID)
@@ -167,7 +167,7 @@ func createNote(c *fiber.Ctx) (*Note, error) {
 	if err := util.WrapErrors(err1, err2, err3); err != nil {
 		return nil, err
 	}
-	return db2.NewNote(title, patch, noteType, tags)
+	return db.NewNote(title, patch, noteType, tags)
 }
 
 func changeType(c *fiber.Ctx) error {
@@ -176,7 +176,7 @@ func changeType(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db2.ChangeType(id, noteType)
+	return db.ChangeType(id, noteType)
 }
 
 func updateNoteTags(c *fiber.Ctx) error {
@@ -186,7 +186,7 @@ func updateNoteTags(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db2.UpdateTags(id, tags)
+	return db.UpdateTags(id, tags)
 }
 
 func patchNoteHandler(c *fiber.Ctx) error {
@@ -197,7 +197,7 @@ func patchNoteHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	count, err := db2.AddPatchSetTitle(id, patch, title)
+	count, err := db.AddPatchSetTitle(id, patch, title)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func patchNoteHandler(c *fiber.Ctx) error {
 }
 
 func notesSizeHandler(c *fiber.Ctx) error {
-	size, err := db2.GetTotalSize()
+	size, err := db.GetTotalSize()
 	if err != nil {
 		return err
 	}
@@ -221,7 +221,7 @@ func setTagGroupProtected(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db2.SetTagGroupProtected(groupID, protected)
+	return db.SetTagGroupProtected(groupID, protected)
 }
 
 // headLimit 返回 s 开头限定长度的内容，其中 s 必须事先 TrimSpace 并确保不是空字串。
@@ -245,7 +245,7 @@ func headLimit(s string, limit int) (head string) {
 }
 
 func getTagByID(c *fiber.Ctx) error {
-	tag, err := db2.GetTagByID(c.Params("id"))
+	tag, err := db.GetTagByID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func getTagByName(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	tag, err := db2.GetTagByName(tagName)
+	tag, err := db.GetTagByName(tagName)
 	if err != nil {
 		return err
 	}
@@ -270,11 +270,11 @@ func renameTag(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db2.RenameTag(id, newName)
+	return db.RenameTag(id, newName)
 }
 
 func getNotesByTag(c *fiber.Ctx) error {
-	notes, err := db2.GetNotesByTagID(c.Params("id"))
+	notes, err := db.GetNotesByTagID(c.Params("id"))
 	if err != nil {
 		return err
 	}
@@ -285,9 +285,9 @@ func allTagsSorted(c *fiber.Ctx) (err error) {
 	var tags []Tag
 	switch sortby := c.Params("sortby"); sortby {
 	case "by-name":
-		tags, err = db2.AllTagsByName()
+		tags, err = db.AllTagsByName()
 	case "by-date":
-		tags, err = db2.AllTagsByDate()
+		tags, err = db.AllTagsByDate()
 	default:
 		err = errors.New("path not found: /tag/all/" + sortby)
 	}
@@ -298,7 +298,7 @@ func allTagsSorted(c *fiber.Ctx) (err error) {
 }
 
 func allTagGroups(c *fiber.Ctx) error {
-	groups, err := db2.AllTagGroups()
+	groups, err := db.AllTagGroups()
 	if err != nil {
 		return err
 	}
@@ -311,7 +311,7 @@ func searchTagGroup(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	notes, err := db2.SearchTagGroup(tags)
+	notes, err := db.SearchTagGroup(tags)
 	if err != nil {
 		return err
 	}
@@ -323,7 +323,7 @@ func searchTitle(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	notes, err := db2.SearchTitle(pattern)
+	notes, err := db.SearchTitle(pattern)
 	if err != nil {
 		return err
 	}
@@ -338,14 +338,14 @@ func addTagGroup(c *fiber.Ctx) error {
 
 	sorted := stringset.UniqueSort(tags)
 	group := model.NewTagGroup(sorted)
-	if err := db2.AddTagGroup(group); err != nil {
+	if err := db.AddTagGroup(group); err != nil {
 		return err
 	}
 	return c.JSON(group)
 }
 
 func deleteTagGroup(c *fiber.Ctx) error {
-	return db2.Exec(stmt.DeleteTagGroup, c.Params("id"))
+	return db.Exec(stmt.DeleteTagGroup, c.Params("id"))
 }
 
 func setNoteDeleted(c *fiber.Ctx) error {
@@ -354,16 +354,16 @@ func setNoteDeleted(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db2.SetNoteDeleted(id, deleted)
+	return db.SetNoteDeleted(id, deleted)
 }
 
 func deleteNoteForever(c *fiber.Ctx) error {
 	id := c.Params("id")
-	return db2.DeleteNoteForever(id)
+	return db.DeleteNoteForever(id)
 }
 
 func deleteTag(c *fiber.Ctx) error {
-	return db2.DeleteTag(c.Params("id"))
+	return db.DeleteTag(c.Params("id"))
 }
 
 func importNotes(c *fiber.Ctx) error {
@@ -379,5 +379,5 @@ func importNotes(c *fiber.Ctx) error {
 	for i := range oldNotes {
 		notes = append(notes, model.NoteFrom(oldNotes[i]))
 	}
-	return db2.ImportNotes(notes)
+	return db.ImportNotes(notes)
 }

@@ -83,6 +83,7 @@ blockquote {
 }
 
 .deleted {
+    font-size: smaller;
   color: #EEE;
   background-color: #999;
 }

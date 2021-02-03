@@ -126,6 +126,7 @@ const DeleteTags = `DELETE FROM note_tag WHERE note_id=? and tag_id=?;`
 
 const InsertPatch = `INSERT INTO patch (id, diff) VALUES (?, ?);`
 const InsertNotePatch = `INSERT INTO note_patch (note_id, patch_id) VALUES (?, ?);`
+const CountPatches = `SELECT count(*) FROM note_patch WHERE note_id=?;`
 
 const InsertFile = `INSERT INTO file (
     id, name, size, type, checksum, deleted, created_at, updated_at)

@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	defer db2.Close()
+	defer db.Close()
 
 	app := fiber.New(fiber.Config{
 		BodyLimit:    config.MaxBodySize,

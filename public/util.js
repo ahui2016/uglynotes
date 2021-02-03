@@ -160,16 +160,17 @@ function addNoteElem(note) {
   item.find('.edit').click(() => {window.location = '/html/note/edit?id='+note.ID});
   item.prependTo('ul');
 
-  if (note.Deleted) {
-    item.find('.confirm-msg').text('delete this note permanently?');
-  }
-
   const deleted = item.find('.deleted');
   const buttons = item.find('.buttons');
   const delete_btn = item.find('.delete');
   const confirm_block = item.find('.confirm-block');
   const no_btn = item.find('.no-btn');
   const yes_btn = item.find('.yes-btn');
+
+  if (note.Deleted) {
+    deleted.show();
+    item.find('.confirm-msg').text('delete this note permanently?');
+  }
 
   function delete_toggle() {
     delete_btn.toggle();

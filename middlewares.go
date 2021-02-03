@@ -44,7 +44,7 @@ func checkLoginJSON(c *fiber.Ctx) error {
 }
 
 func isLoggedIn(c *fiber.Ctx) bool {
-	return db2.SessionCheck(c)
+	return db.SessionCheck(c)
 }
 
 func isLoggedOut(c *fiber.Ctx) bool {
@@ -53,7 +53,7 @@ func isLoggedOut(c *fiber.Ctx) bool {
 
 func checkPasswordTry(c *fiber.Ctx) error {
 	if passwordTry >= config.PasswordMaxTry {
-		_ = db2.Close()
+		_ = db.Close()
 		msg := "No more try. Input wrong password too many times."
 		return errors.New(msg)
 	}
