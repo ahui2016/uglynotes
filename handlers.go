@@ -44,6 +44,9 @@ func indexPage(c *fiber.Ctx) error {
 func loginPage(c *fiber.Ctx) error {
 	return c.SendFile("./public/login.html")
 }
+func loginPage2(c *fiber.Ctx) error {
+	return c.SendFile("./public/login2.html")
+}
 
 func notePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note.html")

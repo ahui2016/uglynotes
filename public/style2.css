@@ -1,0 +1,15 @@
+.alert span + span {
+    margin-left: 10px;
+}
+
+.alert-info {
+    color: steelblue;
+}
+
+.alert-success {
+    color: green;
+}
+
+.alert-danger {
+    color: red;
+}
