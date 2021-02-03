@@ -1,6 +1,39 @@
 # Releases 新版说明
 
 
+## 2021-02-03 (change: 数据库改用 sqlite)
+
+**推荐程度**: 原来用的数据库有些小问题，建议将旧数据库导出为 json 后升级。
+
+- 升级前：用 Storm 数据库(底层是 Bolt), 但它的索引经常出错。
+- 升级后：改用 go-sqlite3, 优点是稳定，缺点是依赖 cgo (原本就是因为不想依赖 cgo 才用 Storm 的，无奈 Storm 不争气)。
+
+### 升级方法：（注意备份）
+
+1. 如果你正在使用 2021-01-23 之前的版本，请先升级至 2021-01-23 的版本（因为 2021-01-23 新增了备份导出功能）：
+    ```sh
+    $ cd uglynotes
+    $ git pull
+    $ git checkout 3726d88
+    $ go build
+    $ ./uglynotes -config /path/to/settings.json &
+    ```
+2. 如果你正在使用 2021-01-23 之后的版本，或者经过上面第 1 步的升级后，就有了备份导出功能。请正常登入，在 /home 页面可以看到 `Backup` 链接，点击进入后，下载备份，并导出 json, 下载 json 文件。
+3. 然后再升级到使用了 sqlite 数据库的版本（**注意：在进行以下操作前，一定要先下载 json 文件，用文本编辑器打开 json 文件确认里面有内容。**）:
+    ```sh
+    $ cd uglynotes
+    $ git checkout main
+    $ git pull
+    $ go build
+    $ killall uglynotes
+    $ mv uglynotes_data_folder/uglynotes.db uglynotes_data_folder/uglynotes.db.old
+    $ ./uglynotes -config /path/to/settings.json &
+    ```
+4. 正常登入网站后，在 /home 页面按 F12 进入控制台，输入命令 `importnotes()` 回车，即可导入旧笔记。
+
+至此，升级完成。升级后标签和标签组会被重建（与笔记没有关联的标签和标签组会丢失），笔记内容不会丢失。如有任何问题可与我联系，只要在上面第 2 步导出了 json 文件（并确认文件里有内容），就必然有办法恢复笔记内容。
+
+
 ## 2021-01-25 (fix: 关于 patch 的一个 bug)
 
 **推荐程度**：本次更新修复了一个 bug, 建议尽快更新。
@@ -34,7 +67,7 @@ $ ./uglynotes -config /path/to/settings.json &
 另外，当光标在笔记编辑框时，按 Tab 键可跳到标签编辑框，再按 Shift + Tab 可跳回到笔记编辑框。
 
 
-## 2021-01-23 (增加备份/导出功能)
+## 2021-01-23 (add: 备份/导出功能)
 
 **推荐程度**：本次更新主要新增一个功能，建议需要该功能的用户更新。
 
