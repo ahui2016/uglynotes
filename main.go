@@ -33,10 +33,14 @@ func main() {
 	app.Get("/home", homePage)
 	app.Get("/login", loginPage)
 	app.Post("/login", loginHandler)
+	app.Get("/logout", logoutHandler)
 	app.Get("/check", checkLogin)
 	app.Get("/converter", converterPage)
 
 	app.Get("/import-notes", importNotes)
+
+	lightPage := app.Group("/light", checkLoginHTML)
+	lightPage.Get("/home", homePageLight)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)

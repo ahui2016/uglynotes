@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/ahui2016/uglynotes/model"
+	"github.com/ahui2016/uglynotes/session"
 	"github.com/ahui2016/uglynotes/settings"
 	"github.com/ahui2016/uglynotes/stmt"
 	"github.com/ahui2016/uglynotes/stringset"
 	"github.com/ahui2016/uglynotes/tagset"
 	"github.com/ahui2016/uglynotes/util"
-	"github.com/gofiber/fiber/v2/middleware/session"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -44,7 +44,7 @@ type Row interface {
 type DB struct {
 	path string
 	DB   *sql.DB
-	Sess *session.Store
+	Sess *session.Manager
 	sync.Mutex
 }
 
@@ -56,10 +56,8 @@ func (db *DB) Open(dbPath string) (err error) {
 		return
 	}
 	db.path = dbPath
-	db.Sess = session.New(session.Config{
-		Expiration: mustParseDuration(config.MaxAge),
-		CookieName: cookieName,
-	})
+	maxAge := mustParseDuration(config.MaxAge)
+	db.Sess = session.NewManager(cookieName, int(maxAge))
 	err1 := initFirstID(db.DB)
 	err2 := initTotalSize(db.DB)
 	return util.WrapErrors(err1, err2)

@@ -36,6 +36,9 @@ func errorHandler(c *fiber.Ctx, err error) error {
 func homePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/home.html")
 }
+func homePageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/home-light.html")
+}
 
 func indexPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/index.html")
@@ -96,6 +99,14 @@ func downloadDatabaseJSON(c *fiber.Ctx) error {
 	return c.SendFile(exportPath)
 }
 
+func logoutHandler(c *fiber.Ctx) error {
+	if isLoggedOut(c) {
+		return jsonMessage(c, "already logged out")
+	}
+	db.Sess.Delete(c)
+	return nil
+}
+
 func loginHandler(c *fiber.Ctx) error {
 	if isLoggedIn(c) {
 		return jsonMessage(c, "already logged in")
@@ -109,7 +120,8 @@ func loginHandler(c *fiber.Ctx) error {
 		return jsonError(c, "Wrong Password", 400)
 	}
 	passwordTry = 0
-	return db.SessionSet(c)
+	db.Sess.Add(c, model.RandomID())
+	return nil
 }
 
 func checkLogin(c *fiber.Ctx) error {

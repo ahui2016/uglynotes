@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Login .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/mithril.js"></script>
+    <script src="/public/util2.js?v11"></script>
+  </head>
+  <body>
+<script>
+  const root = document.body;
+
+  const TopBanner = {
+    view: () => m(
+      'p',[
+	m('a', {href: 'https://github.com/ahui2016/uglynotes'}, 'uglynotes'),
+	' .. Login'])
+  };
+
+  const Form = {
+    Disabled: false,
+    Display: 'none',
+    Show: () => { Form.Display = 'block'; },
+    view: () => m(
+      'form', {style: {display:Form.Display}, autocomplete:'off'}, [
+	m('input', {
+	  type:'password', id:'password', placeholder:'password',
+	  style:'display:inline;', required:true}),
+	m('input', {
+	  type:'submit', value:'login', id:'submit', disabled:Form.Disabled,
+	  style:'display:inline;', onclick: Form.Login})
+      ],
+    ),
+    oncreate: vnode => {
+      window.setTimeout(() => { vnode.dom[0].focus(); }, 500)
+    },
+    Login: function(event) {
+      event.preventDefault();
+      const pwd = $('#password');
+      if (pwd.value == '') {
+	Alerts.Insert('info', '请输入密码'); pwd.focus(); return;
+      }
+      Form.Disabled = true;
+      const body = new FormData();
+      body.append('password', pwd.value);
+      m.request({ method: 'POST', url: '/login', body: body })
+	.then(() => { window.location = '/light/home'; })
+	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; });
+    },
+  };
+
+  const Logout = {
+    Disabled: false,
+    Display: 'none',
+    Show: () => { Logout.Display = 'block'; },
+    Hide: () => { Logout.Display = 'none'; },
+    view: () => m(
+      'button', {style: {display: Logout.Display}, onclick: Logout.Do}, 'Logout'
+    ),
+    Do: function(event) {
+      event.preventDefault();
+      Logout.Disabled = true;
+      m.request({method: 'GET', url: '/logout'})
+	.then(() => {
+	  Alerts.Insert('success', '已登出');
+	  Logout.Hide();
+	  Form.Show();
+	})
+      	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; })
+	.finally(() => { Logout.Disabled = false; });
+    }
+  };
+      
+  const App = {
+    oninit: () => {
+      m.request({ method: 'GET', url: '/check' })
+	.then(resp => {
+	  if (resp.message == 'OK') {
+	    Alerts.Insert('success', '已登入'); Logout.Show(); return;
+	  }
+	  // if (resp.message == 'NG')
+	  Form.Show();
+	})
+	.catch(e => { Alerts.Insert('danger', e.message); })
+	.finally(() => { Loading.Hide(); });
+    },
+    view: () => [
+      m(TopBanner),
+      m(Loading),
+      m(Form),
+      m(Alerts),
+      m(Logout),
+    ]
+  };
+
+  m.mount(root, App);
+
+</script>
+  </body>
+</html>

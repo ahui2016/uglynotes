@@ -1,3 +1,15 @@
+.alerts {
+    font-size: small;
+}
+
+.alerts :first-child {
+    font-size: larger;
+}
+
+.alerts :nth-child(n+4) {
+    color: gray;
+}
+
 .alert span + span {
     margin-left: 10px;
 }

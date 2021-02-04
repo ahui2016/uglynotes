@@ -12,15 +12,24 @@ const Loading = {
 };
 
 const Alerts = {
-  Messages: {},
-  Insert: (msgType, msg) => {
-    Alerts.Messages[dayjs().format('HH:mm:ss')] = {Type: msgType, Msg:msg};
+  Messages: [],
+  Max: 5,
+  Insert: function(msgType, msg) {
+    Alerts.Messages.unshift(
+      {Time: dayjs().format('HH:mm:ss'), Type: msgType, Msg:msg});
+    if (Alerts.Messages.length > Alerts.Max) {
+      Alerts.Messages.pop();
+    }
+  },
+  InsertRespErr: function(e) {
+    const err = !e.response ? `${e.code} ${e.message}` : e.response.message;
+    Alerts.Insert('danger', err);
   },
   view: () => m(
-    'div', Object.entries(Alerts.Messages).map(
-      ([dt,msg]) => m('p', {key: dt, class:`alert alert-${msg.Type}`}, [
-	m('span', dt),
-	m('span', msg.Msg),
+    'div', {class: 'alerts'}, Alerts.Messages.map(
+      item => m('p', {key: item.Time, class:`alert alert-${item.Type}`}, [
+	m('span', item.Time),
+	m('span', item.Msg),
       ]))
   )
 };

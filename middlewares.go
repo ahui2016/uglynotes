@@ -44,7 +44,7 @@ func checkLoginJSON(c *fiber.Ctx) error {
 }
 
 func isLoggedIn(c *fiber.Ctx) bool {
-	return db.SessionCheck(c)
+	return db.Sess.Check(c)
 }
 
 func isLoggedOut(c *fiber.Ctx) bool {
