@@ -28,6 +28,7 @@ func responseNoCache(c *fiber.Ctx) error {
 
 func checkLoginHTML(c *fiber.Ctx) error {
 	if isLoggedOut(c) {
+		passwordTry++
 		if err := checkPasswordTry(c); err != nil {
 			return err
 		}
@@ -38,6 +39,10 @@ func checkLoginHTML(c *fiber.Ctx) error {
 
 func checkLoginJSON(c *fiber.Ctx) error {
 	if isLoggedOut(c) {
+		passwordTry++
+		if err := checkPasswordTry(c); err != nil {
+			return err
+		}
 		return jsonError(c, "Require Login", fiber.StatusUnauthorized)
 	}
 	return c.Next()

@@ -32,6 +32,7 @@ func main() {
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)
 	app.Get("/login", loginPage)
+	app.Get("/light/login", loginPageLight)
 	app.Post("/login", loginHandler)
 	app.Get("/logout", logoutHandler)
 	app.Get("/check", checkLogin)
