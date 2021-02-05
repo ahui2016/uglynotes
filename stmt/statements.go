@@ -102,6 +102,7 @@ const GetNoteSize = `SELECT size FROM note WHERE id=?;`
 const GetAllNoteIDs = `SELECT id FROM note`
 const GetNotes = `SELECT * FROM note WHERE deleted=0 ORDER BY updated_at;`
 const GetDeletedNotes = `SELECT * FROM note WHERE deleted>0 ORDER BY updated_at;`
+const GetLastNoteID = `SELECT id FROM note ORDER BY created_at DESC LIMIT 1;`
 const SearchNoteTitle = `SELECT * FROM note WHERE deleted=0 and title LIKE ?`
 const GetNotesByTagID = `SELECT note_id FROM note_tag WHERE tag_id=?;`
 const InsertNote = `INSERT INTO note (

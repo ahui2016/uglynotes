@@ -43,6 +43,9 @@ func homePageLight(c *fiber.Ctx) error {
 func indexPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/index.html")
 }
+func indexPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/index-light.html")
+}
 
 func loginPage(c *fiber.Ctx) error {
 	return c.SendFile("./public/login.html")

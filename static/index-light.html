@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Index .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v1">
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/mithril.js"></script>
+    <script src="/public/util2.js?v11"></script>
+  </head>
+  <body>
+<script>
+  const root = document.body;
+
+  const [infoIcon, infoMsg] = InfoPair(
+    'page', '请在 Groups 页面通过标签组来创建新笔记');
+
+  const TopBanner = {
+    view: () => m(
+      'div', [
+	'uglynotes .. Index',
+	m(infoIcon),
+	m('div', {id: 'head-buttons'}, [
+	  '|',
+	  [m('a', {href: '/light/tags'}, 'Tags'), '|'],
+	  [m('a', {href: '/light/tag/groups'}, 'Groups'), '|'],
+	  [m('a', {href: '/light/search'}, 'Search'), '|'],
+	])
+      ]
+    )
+  };
+
+  const App = {
+    view: () => [
+      m(TopBanner),
+      m(infoMsg),
+      m(Loading),
+      m(Alerts),
+    ]
+  };
+
+  m.mount(root, App);
+  
+</script>
+  </body>
+</html>

@@ -37,6 +37,10 @@ func initFirstID(tx TX) (err error) {
 	}
 	return
 }
+func setCurrentID(tx TX, id string) (err error) {
+	_, err = tx.Exec(stmt.UpdateTextValue, id, currentIdKey)
+	return
+}
 func getTotalSize(tx TX) (size int, err error) {
 	row := tx.QueryRow(stmt.GetIntValue, totalSizeKey)
 	err = row.Scan(&size)

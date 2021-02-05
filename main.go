@@ -42,6 +42,7 @@ func main() {
 
 	lightPage := app.Group("/light", checkLoginHTML)
 	lightPage.Get("/home", homePageLight)
+	lightPage.Get("/index", indexPageLight)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)
@@ -85,6 +86,10 @@ func main() {
 	api.Get("/backup/db", downloadDatabase)
 	api.Get("/backup/export", exportAllNotes)
 	api.Get("/backup/json", downloadDatabaseJSON)
+
+	api.Get("/note/id/reset", func(c *fiber.Ctx) error {
+		return db.ResetCurrentID()
+	})
 
 	log.Fatal(app.Listen(config.Address))
 }

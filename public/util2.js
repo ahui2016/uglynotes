@@ -33,3 +33,48 @@ const Alerts = {
       ]))
   )
 };
+
+function InfoPair(name, msg) {
+  const infoMsg = {
+    Display: 'none',
+    view: () => m(
+      'div',
+      {id: `about-${name}-info`, class: 'InfoMessage', style: {display: infoMsg.Display}},
+      msg
+    )
+  };
+  const infoIcon = {
+    view: () => m(
+      'img',
+      {id: `about-${name}-icon`, src: '/public/info-circle.svg', class: 'IconButton', alt: "info", title: "显示/隐藏说明", onclick: infoIcon.Toggle}
+    ),
+    Toggle: function() {
+      if (infoMsg.Display == 'none') {
+	infoMsg.Display = 'block';
+      } else {
+	infoMsg.Display = 'none';
+      }
+      m.redraw();
+    }
+  };
+  return [infoIcon, infoMsg];
+}
+
+const Notes = {
+  List: [],
+  view: () => m(
+    'ul', List.map(
+      note => m('li', {class: 'LI'}, [
+
+      ]))
+  ),
+  NewNote: function(note) {
+    const updatedAt = dayjs(note.UpdatedAt);
+    const noteComp = {
+    };
+    return m('li', {class: 'LI'}, [
+      m('span', {class:'ID_Date'}, `[id:${note.ID}] ${updatedAt.format('MMM D, HH:mm')}`),
+      
+    ])
+  }
+}

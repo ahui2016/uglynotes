@@ -97,6 +97,7 @@ func (db *DB) ImportNotes(notes []Note) (err error) {
 			return
 		}
 	}
+	if err = resetCurrentID(tx); err != nil { return err }
 	return tx.Commit()
 }
 
@@ -115,6 +116,22 @@ func addNoteTagPatch(tx TX, note *Note) (err error) {
 		return fmt.Errorf("addPatches: %v", err)
 	}
 	return increaseTotalSize(tx, note.Size)
+}
+
+func (db *DB) ResetCurrentID() error {
+	return resetCurrentID(db.DB)
+}
+
+func resetCurrentID(tx TX) error {
+	id, err := getLastNoteID(tx)
+	if err != nil { return err }
+	return setCurrentID(tx, id)
+}
+
+func getLastNoteID(tx TX) (id string, err error) {
+	row := tx.QueryRow(stmt.GetLastNoteID)
+	err = row.Scan(&id)
+	return
 }
 
 func insertNote(tx TX, note *Note) (err error) {
