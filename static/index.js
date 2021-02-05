@@ -20,8 +20,8 @@ ajaxGet(url, null, that => {
 });
 
 ajaxGet("/api/note/all/size", null, that => {
-  const totalSize = that.response.totalSize;
-  const capacity = that.response.capacity;
+  const totalSize = that.response.TotalSize;
+  const capacity = that.response.Capacity;
   const used = fileSizeToString(totalSize, 0);
   const available = fileSizeToString(capacity - totalSize, 0);
   $('#notes-size').text(`已用: ${used}, 剩余可用: ${available}`);

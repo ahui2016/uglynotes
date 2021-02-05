@@ -228,8 +228,8 @@ func notesSizeHandler(c *fiber.Ctx) error {
 		return err
 	}
 	return c.JSON(fiber.Map{
-		"totalSize": size,
-		"capacity":  config.DatabaseCapacity,
+		"TotalSize": size,
+		"Capacity":  config.DatabaseCapacity,
 	})
 }
 

@@ -28,7 +28,9 @@ func main() {
 	app.Use("/static", checkLoginHTML)
 	app.Static("/static", "./static")
 
-	app.Get("/", func(c *fiber.Ctx) error { return c.Redirect("/home") })
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.Redirect("/home")
+	})
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)
 	app.Get("/login", loginPage)
@@ -41,6 +43,9 @@ func main() {
 	app.Get("/import-notes", importNotes)
 
 	lightPage := app.Group("/light", checkLoginHTML)
+	lightPage.Get("/", func(c *fiber.Ctx) error {
+		return c.Redirect("/light/home")
+	})
 	lightPage.Get("/home", homePageLight)
 	lightPage.Get("/index", indexPageLight)
 
@@ -88,7 +93,11 @@ func main() {
 	api.Get("/backup/json", downloadDatabaseJSON)
 
 	api.Get("/note/id/reset", func(c *fiber.Ctx) error {
-		return db.ResetCurrentID()
+		id, err := db.ResetCurrentID()
+		if err != nil {
+			return err
+		}
+		return c.JSON(id)
 	})
 
 	log.Fatal(app.Listen(config.Address))

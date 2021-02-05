@@ -97,7 +97,9 @@ func (db *DB) ImportNotes(notes []Note) (err error) {
 			return
 		}
 	}
-	if err = resetCurrentID(tx); err != nil { return err }
+	if _, err = resetCurrentID(tx); err != nil {
+		return
+	}
 	return tx.Commit()
 }
 
@@ -118,14 +120,21 @@ func addNoteTagPatch(tx TX, note *Note) (err error) {
 	return increaseTotalSize(tx, note.Size)
 }
 
-func (db *DB) ResetCurrentID() error {
+func (db *DB) ResetCurrentID() (newid string, err error) {
 	return resetCurrentID(db.DB)
 }
 
-func resetCurrentID(tx TX) error {
-	id, err := getLastNoteID(tx)
-	if err != nil { return err }
-	return setCurrentID(tx, id)
+func resetCurrentID(tx TX) (newid string, err error) {
+	strID, err := getLastNoteID(tx)
+	if err != nil {
+		return
+	}
+	id, err := model.ParseID(strID)
+	if err != nil {
+		return
+	}
+	newid = id.Increase().String()
+	return newid, setCurrentID(tx, newid)
 }
 
 func getLastNoteID(tx TX) (id string, err error) {

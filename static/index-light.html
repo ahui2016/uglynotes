@@ -4,14 +4,16 @@
     <meta charset="utf-8">
     <title>Index .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
-    <link rel="stylesheet" href="/public/style-light.css?v1">
+    <link rel="stylesheet" href="/public/style-light.css?v1111">
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="/public/mithril.js"></script>
-    <script src="/public/util2.js?v11"></script>
+    <script src="/public/util2.js?v22"></script>
   </head>
   <body>
 <script>
   const root = document.body;
+
+  const Alerts = CreateAlerts();
 
   const [infoIcon, infoMsg] = InfoPair(
     'page', '请在 Groups 页面通过标签组来创建新笔记');
@@ -31,12 +33,70 @@
     )
   };
 
+  const NotesSize = {
+    Size: '',
+    view: () => m('p', {style:'color:grey'}, NotesSize.Size),
+    oninit: function() {
+      m.request({method:'GET', url:'/api/note/all/size'})
+	.then(resp => {
+	  const total_size = resp.TotalSize;
+	  const capacity = resp.Capacity;
+	  const used = fileSizeToString(total_size, 0);
+	  const available = fileSizeToString(capacity - total_size, 0);
+	  NotesSize.Size = `已用: ${used}, 剩余可用: ${available}`;
+	});
+    }
+  };
+
   const App = {
+    Url: '/api/note/all',
+    NotFoundMsg: '数据库中没有笔记',
+    oninit: function() {
+      const urlParams = m.parseQueryString(document.location.search);
+      if (urlParams.filter == 'deleted') {
+	App.Url = '/api/note/deleted';
+	App.NotFoundMsg = '数据库中没有标记为"已删除"的笔记';
+      }
+      m.request({method:'GET', url:App.Url})
+	.then(resp => {
+
+	  if (!resp || resp.length == 0) {
+	    Alerts.Insert('info', App.NotFoundMsg);
+	    return;
+	  }
+	  Notes.List = resp;
+	  Notes.List.forEach(note => {
+	    note.UpdatedAt = dayjs(note.UpdatedAt);
+	    note.href = `/html/note?id=${note.ID}&date=${note.UpdatedAt.valueOf()}`;
+	    note.Alerts = CreateAlerts();
+	    note.Config = {
+	      DeleteUrl: `/api/note/${note.ID}/deleted`,
+	      ReallyDeleteUrl: `/api/note/${note.ID}`,
+	      Deleted: 'none',
+	      Buttons: '',
+	      ConfirmMsg: 'delete this note?',
+	      DeleteBtn: 'inline',
+	      Disabled: false,
+	      ConfirmBlock: 'none',
+	      Title: 'none',
+	      TitleLink: 'inline',
+	    };
+	    if (note.Deleted) {
+	      note.Config.Deleted = 'inline';
+	      note.Config.ConfirmMsg = 'delete this note permanently?';
+	    }
+	  });
+	})
+      	.catch(e => { Alerts.InsertRespErr(e); })
+	.finally(() => { Loading.Hide(); });
+    },
     view: () => [
       m(TopBanner),
       m(infoMsg),
       m(Loading),
       m(Alerts),
+      m(Notes),
+      m(NotesSize),
     ]
   };
 

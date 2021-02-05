@@ -13,10 +13,13 @@
 <script>
   const root = document.body;
 
+  const Alerts = CreateAlerts();
+
   const TopBanner = {
+    Link: 'https://github.com/ahui2016/uglynotes',
     view: () => m(
       'p',[
-	m('a', {href: 'https://github.com/ahui2016/uglynotes'}, 'uglynotes'),
+	m('a', {href: TopBanner.Link}, 'uglynotes'),
 	' .. Login'])
   };
 
@@ -79,12 +82,15 @@
       m.request({ method: 'GET', url: '/check' })
 	.then(resp => {
 	  if (resp.message == 'OK') {
-	    Alerts.Insert('success', '已登入'); Logout.Show(); return;
+	    Alerts.Insert('success', '已登入');
+	    TopBanner.Link = '/light';
+	    Logout.Show();
+	    return;
 	  }
 	  // if (resp.message == 'NG')
 	  Form.Show();
 	})
-	.catch(e => { Alerts.Insert('danger', e.message); })
+	.catch(e => { Alerts.InsertRespErr(e); })
 	.finally(() => { Loading.Hide(); });
     },
     view: () => [

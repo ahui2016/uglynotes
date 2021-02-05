@@ -158,7 +158,7 @@ function addNoteElem(note) {
     .text(note.Title);
   item.find('.tags').text(addPrefix(toTagNames(note.Tags), '#'));
   item.find('.edit').click(() => {window.location = '/html/note/edit?id='+note.ID});
-  item.prependTo('ul');
+  item.appendTo('ul');
 
   const deleted = item.find('.deleted');
   const buttons = item.find('.buttons');

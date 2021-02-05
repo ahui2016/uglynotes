@@ -1,3 +1,7 @@
+body {
+    font-family: "Palatino Linotype", Palatino, Palladio, Baskerville, sans-serif;
+}
+
 #head-buttons {
     display: inline;
     margin-left: 2em;
@@ -43,4 +47,38 @@
     color: white;
     background-color: darkseagreen;
     padding: 0.25em;
+}
+
+.LI {
+    color: #999;
+    margin-top: 1em;
+}
+.LI .Deleted {
+    font-size: smaller;
+    color: white;
+    background-color: #CCC;
+    margin-left: 0.5em;
+    padding: 0 2px 0 2px;
+}
+.LI .ID_Date {
+    font-size: smaller;
+}
+.LI .Tags {
+    font-size: smaller;
+}
+.LI .Buttons {
+    display: none;
+    margin-left: 5px;
+}
+.LI:hover .Buttons {
+    display: inline;
+}
+.LI .Buttons button {
+    margin: 0;
+    margin-left: 5px;
+    padding: 0 5px 0 5px;
+}
+.LI .Buttons .ConfirmMsg {
+    color: red;
+    margin-left: 5px;
 }
