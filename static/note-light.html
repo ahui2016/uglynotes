@@ -30,24 +30,44 @@
 
   const TopBanner = {
     Config: {
+      EditBtnBlock: 'inline',
       DeleteBtn: 'inline',
+      DeleteBtnText: 'Delete',
       ConfirmBlock: 'none',
+      ConfirmMsg: 'delete this note?',
+      UndeleteBlock: 'none',
+      UndeleteBtn: 'inline',
+      UndeleteConfirmBlock: 'none',
     },
     view: () => m('div', {id:'top-banner'}, [
       `Note [id:${Note.ID}]`,
       m('div', {id: 'head-buttons'}, [
 	'|',
 	[m('a', {id:'copy'}, 'Copy'), '|'],
-	[m('a', 'History'), '|'],
-	m('a', {onclick:TopBanner.ShowDelete, style:{display:TopBanner.Config.DeleteBtn}}, 'Delete'),
-	m('span', {style:{display:TopBanner.Config.ConfirmBlock}}, [
-	  m('span', {class:'ConfirmDelete'}, 'delete this note?'),
-	  m('button', {class:'SlimButton', onclick:TopBanner.DeDelete}, 'yes'),
-	  m('button', {class:'SlimButton', onclick:TopBanner.CancelDelete}, 'no'),
+	m('span', {style:{display:TopBanner.Config.EditBtnBlock}}, [
+	  m('a', {href:'/html/note/edit?id=' + Note.ID}, 'Edit'), '|'
 	]),
-	'|',
-      ]),
-    ]),
+	[m('a', 'History'), '|'],
+	[
+	  m('a', {onclick:TopBanner.ShowDelete, style:{display:TopBanner.Config.DeleteBtn}}, TopBanner.Config.DeleteBtnText),
+	  m('span', {style:{display:TopBanner.Config.ConfirmBlock}}, [
+	    m('span', {class:'ConfirmDelete'}, TopBanner.Config.ConfirmMsg),
+	    m('button', {class:'SlimButton', onclick:TopBanner.DoDelete}, 'yes'),
+	    m('button', {class:'SlimButton', onclick:TopBanner.CancelDelete}, 'no'),
+	  ]),
+	  '|',
+	],
+	m('span', {style:{display:TopBanner.Config.UndeleteBlock}}, [
+	  m('a', {onclick:TopBanner.ShowUndelete, style:{display:TopBanner.Config.UndeleteBtn}}, 'Undelete'),
+	  m('span', {style:{display:TopBanner.Config.UndeleteConfirmBlock}}, [
+	    m('span', {style:'margin-left:5px;'}, 'undelete this note?'),
+	    m('button', {class:'SlimButton', onclick:TopBanner.DoUndelete}, 'yes'),
+	    m('button', {class:'SlimButton', onclick:TopBanner.CancelUndelete}, 'no'),
+	  ]),
+	  '|',
+	]), // end of undelete block
+      ]), // end of head buttons
+    ]), // end of top banner
     ShowDelete: function() {
       TopBanner.Config.DeleteBtn = 'none';
       TopBanner.Config.ConfirmBlock = 'inline';
@@ -55,6 +75,14 @@
     CancelDelete: function() {
       TopBanner.Config.DeleteBtn = 'inline';
       TopBanner.Config.ConfirmBlock = 'none';
+    },
+    ShowUndelete: function() {
+      TopBanner.Config.UndeleteBtn = 'none';
+      TopBanner.Config.UndeleteConfirmBlock = 'inline';
+    },
+    CancelUndelete: function() {
+      TopBanner.Config.UndeleteBtn = 'inline';
+      TopBanner.Config.UndeleteConfirmBlock = 'none';
     },
   };
 
@@ -96,15 +124,22 @@
 	  Note.UpdatedAt = dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss');
 	  Note.Size = fileSizeToString(Note.Size);
 	  Note.TagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
+	  if (Note.Deleted) {
+	    TopBanner.Config.EditBtnBlock = 'none';
+	    TopBanner.Config.ConfirmMsg = 'delete this note permanently?';
+	    TopBanner.Config.UndeleteBlock = 'inline';
+	    Alerts.Insert('info', '该笔记被标记为 “已删除”');
+	  }
 	})
       	.catch(e => { Alerts.InsertRespErr(e); })
 	.finally(() => { Loading.Hide(); });
     },
     view: () => [
       m(TopBanner),
-      m(Loading),
+      Spacer,
       m(Alerts),
       m(InfoBlock),
+      m(Loading),
       m(Contents),
       BottomLine,
     ]

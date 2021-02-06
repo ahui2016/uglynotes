@@ -59,6 +59,7 @@ const Loading = {
     'Loading...')
 };
 
+const Spacer =  m('div', {style:'margin-bottom:2em;'});
 const BottomLine = m('div', {style:'margin-top:200px;'});
 
 function CreateAlerts(max) {

@@ -8,10 +8,6 @@ body {
     padding: 0 5px 0 5px;
 }
 
-#top-banner {
-    margin-bottom: 2em;
-}
-
 #head-buttons {
     display: inline;
     margin-left: 2em;
@@ -58,6 +54,7 @@ body {
     color: white;
     background-color: darkseagreen;
     padding: 0.25em;
+    border-radius: 6px;
 }
 
 .LI {
