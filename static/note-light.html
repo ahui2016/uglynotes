@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Note .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v11">
+    <script src="/public/mithril.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+    <script src="/public/util2.js?v1"></script>
+  </head>
+  <style>
+    #info-block {
+	color: #999;
+	font-size: smaller;
+    }
+  </style>
+  <body>
+<script>
+
+  let Note = {ID:'',Size:'',Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',};
+  
+  const root = document.body;
+
+  const Alerts = CreateAlerts();
+
+  const TopBanner = {
+    Config: {
+      DeleteBtn: 'inline',
+      ConfirmBlock: 'none',
+    },
+    view: () => m('div', {id:'top-banner'}, [
+      `Note [id:${Note.ID}]`,
+      m('div', {id: 'head-buttons'}, [
+	'|',
+	[m('a', {id:'copy'}, 'Copy'), '|'],
+	[m('a', 'History'), '|'],
+	m('a', {onclick:TopBanner.ShowDelete, style:{display:TopBanner.Config.DeleteBtn}}, 'Delete'),
+	m('span', {style:{display:TopBanner.Config.ConfirmBlock}}, [
+	  m('span', {class:'ConfirmDelete'}, 'delete this note?'),
+	  m('button', {class:'SlimButton', onclick:TopBanner.DeDelete}, 'yes'),
+	  m('button', {class:'SlimButton', onclick:TopBanner.CancelDelete}, 'no'),
+	]),
+	'|',
+      ]),
+    ]),
+    ShowDelete: function() {
+      TopBanner.Config.DeleteBtn = 'none';
+      TopBanner.Config.ConfirmBlock = 'inline';
+    },
+    CancelDelete: function() {
+      TopBanner.Config.DeleteBtn = 'inline';
+      TopBanner.Config.ConfirmBlock = 'none';
+    },
+  };
+
+  const InfoBlock = {
+    view: () => m('div', {id:'title-block'}, [
+      m('p', {id:'info-block'}, [
+	`Created at: ${Note.CreatedAt}`, m('br'),
+	`Updated at: ${Note.UpdatedAt}`, m('br'),
+	`Type: ${Note.Type} (size: ${Note.Size})`, 
+      ]),
+      m('p', [
+	'Tags:',
+	Note.Tags.map(tag => m('a', {class:'Tag', href:'/html/search?tags='+encodeURIComponent(tag.Name)}, tag.Name)),
+	m('a', {class:'Tag TagButton', title:'search tag group', href:'/html/search?tags='+Note.TagGroup}, 'group'),
+      ]),
+    ]),
+  };
+
+  const Contents = {
+    view: function() {
+      if (Note.Type == 'Markdown') {
+	const dirty = marked(Note.Contents);
+	const clean = DOMPurify.sanitize(dirty);
+	return m('div', {class:'NoteContents'}, m.trust(clean));
+      } else {
+	return m('pre', {class:'NoteContents'}, Note.Contents);
+      }
+    }
+  };
+
+  const App = {
+    oninit: function() {
+      m.request({method:'GET', url:'/api/note/' + getUrlParam('id')})
+	.then(resp => {
+	  Note = resp;
+	  Note.Contents = Note.Patches.reduce(
+	    (patched, patch) => Diff.applyPatch(patched, patch), "");
+	  Note.CreatedAt = dayjs(Note.CreatedAt).format('YYYY-MM-DD HH:mm:ss');
+	  Note.UpdatedAt = dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss');
+	  Note.Size = fileSizeToString(Note.Size);
+	  Note.TagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
+	})
+      	.catch(e => { Alerts.InsertRespErr(e); })
+	.finally(() => { Loading.Hide(); });
+    },
+    view: () => [
+      m(TopBanner),
+      m(Loading),
+      m(Alerts),
+      m(InfoBlock),
+      m(Contents),
+      BottomLine,
+    ]
+  };
+
+  m.mount(root, App);
+  
+</script>
+</body>
+</html>

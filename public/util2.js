@@ -21,6 +21,12 @@ function $show_block(selectors, dom) {
   $(selectors, dom).style.display = 'block';
 }
 
+// 获取地址栏的参数。
+function getUrlParam(param) {
+  let loc = new URL(document.location);
+  return loc.searchParams.get(param);
+}
+
 // 把文件大小换算为 KB 或 MB
 function fileSizeToString(fileSize, fixed) {
   if (fixed == null) {
@@ -52,6 +58,8 @@ const Loading = {
     {id:"loading", class:"alert-info", style: {display:Loading.Display}},
     'Loading...')
 };
+
+const BottomLine = m('div', {style:'margin-top:200px;'});
 
 function CreateAlerts(max) {
   if (!max) max = 5;
@@ -115,16 +123,16 @@ const Notes = {
   ),
   NewNote: function(note) {
     const noteComp = {
-      view: (vnode) => 	m('li', {class:'LI', key: note.ID}, [
+      view: () => m('li', {class:'LI', key: note.ID}, [
 	m('span', {class:'ID_Date'}, `[id:${note.ID}] ${note.UpdatedAt.format('MMM D, HH:mm')}`),
 	m('span', {class:'Deleted', style:{display:note.Config.Deleted}}, 'DELETED'),
 	m('span', {class:'Buttons', style:{display:note.Config.Buttons}}, [
-	  m('button', {class:'EditBtn'}, 'edit'),
-	  m('button', {class:'DeleteBtn', style:{display:note.Config.DeleteBtn}, onclick: noteComp.ShowDelete}, 'delete'),
+	  m('button', {class:'SlimButton'}, 'edit'),
+	  m('button', {class:'SlimButton', style:{display:note.Config.DeleteBtn}, onclick: noteComp.ShowDelete}, 'delete'),
 	  m('span', {class:'ConfirmBlock', style:{display:note.Config.ConfirmBlock}}, [
-	    m('span', {class:'ConfirmMsg'}, note.Config.ConfirmMsg),
-	    m('button', {class:'YesBtn', onclick: noteComp.DoDelete, disabled: note.Config.Disabled}, 'yes'),
-	    m('button', {class:'NoBtn', onclick: noteComp.CancelDelete}, 'no'),
+	    m('span', {class:'ConfirmDelete'}, note.Config.ConfirmMsg),
+	    m('button', {class:'SlimButton', onclick: noteComp.DoDelete, disabled: note.Config.Disabled}, 'yes'),
+	    m('button', {class:'SlimButton', onclick: noteComp.CancelDelete}, 'no'),
 	  ]),
 	]),
 	m('br'),

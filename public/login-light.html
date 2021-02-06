@@ -15,18 +15,24 @@
 
   const Alerts = CreateAlerts();
 
+  function loginSuccess() {
+    Alerts.Insert('success', '已登入');
+    TopBanner.Link = '/light';
+    Logout.Display = 'block';
+    Form.Display = 'none';
+  }
+  
   const TopBanner = {
     Link: 'https://github.com/ahui2016/uglynotes',
     view: () => m(
-      'p',[
+      'p', {id:'top-banner'}, [
 	m('a', {href: TopBanner.Link}, 'uglynotes'),
 	' .. Login'])
   };
 
   const Form = {
     Disabled: false,
-    Display: 'none',
-    Show: () => { Form.Display = 'block'; },
+    Display: 'block',
     view: () => m(
       'form', {style: {display:Form.Display}, autocomplete:'off'}, [
 	m('input', {
@@ -50,16 +56,18 @@
       const body = new FormData();
       body.append('password', pwd.value);
       m.request({ method: 'POST', url: '/login', body: body })
-	.then(() => { window.location = '/light/home'; })
-	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; });
+	.then(() => {
+	  loginSuccess();
+	  window.setTimeout(() => { window.location = '/light/home'; }, 1000);
+	})
+	.catch(e => { Alerts.InsertRespErr(e); })
+	.finally(() => { Form.Disabled = false; });
     },
   };
 
   const Logout = {
     Disabled: false,
     Display: 'none',
-    Show: () => { Logout.Display = 'block'; },
-    Hide: () => { Logout.Display = 'none'; },
     view: () => m(
       'button', {style: {display: Logout.Display}, onclick: Logout.Do}, 'Logout'
     ),
@@ -69,8 +77,8 @@
       m.request({method: 'GET', url: '/logout'})
 	.then(() => {
 	  Alerts.Insert('success', '已登出');
-	  Logout.Hide();
-	  Form.Show();
+	  Logout.Display = 'none';
+	  Form.Display = 'block';
 	})
       	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; })
 	.finally(() => { Logout.Disabled = false; });
@@ -82,13 +90,8 @@
       m.request({ method: 'GET', url: '/check' })
 	.then(resp => {
 	  if (resp.message == 'OK') {
-	    Alerts.Insert('success', '已登入');
-	    TopBanner.Link = '/light';
-	    Logout.Show();
-	    return;
+	    loginSuccess();
 	  }
-	  // if (resp.message == 'NG')
-	  Form.Show();
 	})
 	.catch(e => { Alerts.InsertRespErr(e); })
 	.finally(() => { Loading.Hide(); });

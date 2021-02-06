@@ -4,10 +4,10 @@
     <meta charset="utf-8">
     <title>Index .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
-    <link rel="stylesheet" href="/public/style-light.css?v1111">
+    <link rel="stylesheet" href="/public/style-light.css?v111111">
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="/public/mithril.js"></script>
-    <script src="/public/util2.js?v22"></script>
+    <script src="/public/util2.js?v222"></script>
   </head>
   <body>
 <script>
@@ -20,7 +20,7 @@
 
   const TopBanner = {
     view: () => m(
-      'div', [
+      'div', {id:'top-banner'}, [
 	'uglynotes .. Index',
 	m(infoIcon),
 	m('div', {id: 'head-buttons'}, [
@@ -52,8 +52,7 @@
     Url: '/api/note/all',
     NotFoundMsg: '数据库中没有笔记',
     oninit: function() {
-      const urlParams = m.parseQueryString(document.location.search);
-      if (urlParams.filter == 'deleted') {
+      if (getUrlParam('filter') == 'deleted') {
 	App.Url = '/api/note/deleted';
 	App.NotFoundMsg = '数据库中没有标记为"已删除"的笔记';
       }
@@ -67,7 +66,7 @@
 	  Notes.List = resp;
 	  Notes.List.forEach(note => {
 	    note.UpdatedAt = dayjs(note.UpdatedAt);
-	    note.href = `/html/note?id=${note.ID}&date=${note.UpdatedAt.valueOf()}`;
+	    note.href = `/light/note?id=${note.ID}`;
 	    note.Alerts = CreateAlerts();
 	    note.Config = {
 	      DeleteUrl: `/api/note/${note.ID}/deleted`,

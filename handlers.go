@@ -57,6 +57,9 @@ func loginPageLight(c *fiber.Ctx) error {
 func notePage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note.html")
 }
+func notePageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-light.html")
+}
 
 func noteNewPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")

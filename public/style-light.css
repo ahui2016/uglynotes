@@ -2,12 +2,23 @@ body {
     font-family: "Palatino Linotype", Palatino, Palladio, Baskerville, sans-serif;
 }
 
+.SlimButton {
+    margin: 0;
+    margin-left: 5px;
+    padding: 0 5px 0 5px;
+}
+
+#top-banner {
+    margin-bottom: 2em;
+}
+
 #head-buttons {
     display: inline;
     margin-left: 2em;
 }
 
 #head-buttons a {
+    cursor: pointer;
     margin: 0 0.5em 0 0.5em;
 }
 
@@ -73,12 +84,47 @@ body {
 .LI:hover .Buttons {
     display: inline;
 }
-.LI .Buttons button {
-    margin: 0;
-    margin-left: 5px;
-    padding: 0 5px 0 5px;
-}
-.LI .Buttons .ConfirmMsg {
+
+.ConfirmDelete {
     color: red;
     margin-left: 5px;
+}
+
+.Tag {
+    margin-left: 0.5em;
+
+    background: var(--background);
+    color: var(--code);
+    padding: 2.5px 5px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
+.Tag:hover {
+    cursor: pointer;
+    color: white;
+    background-color: #999;
+    text-decoration: none;
+}
+
+.TagButton {
+    background-color: lightblue;
+}
+.TagButton:hover {
+    background-color: steelblue;
+}
+
+.NoteContents {
+    background-color: #FCFCFC;
+}
+
+.NoteContents code {
+    padding: 0;
+    background-color: linen;
+}
+
+.NoteContents pre>code {
+    background: #EEE;
+    margin-left: 0.5em;
+    margin-right: 1em;
 }
