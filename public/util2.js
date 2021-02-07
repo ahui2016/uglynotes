@@ -21,6 +21,20 @@ function $show_block(selectors, dom) {
   $(selectors, dom).style.display = 'block';
 }
 
+function mRequest(options, alerts, config, btnDisabled, onSuccess, onFail, onAlways) {
+  if (config && btnDisabled) config[btnDisabled] = true;
+  m.request(options)
+    .then(onSuccess)
+    .catch(e => {
+      alerts.InsertRespErr(e);
+      if (onFail) onFail();
+    })
+    .finally(() => {
+      if (config && btnDisabled) config[btnDisabled] = false;
+      if (onAlways) onAlways();
+    });
+}
+
 // 获取地址栏的参数。
 function getUrlParam(param) {
   let loc = new URL(document.location);
@@ -124,25 +138,29 @@ const Notes = {
   ),
   NewNote: function(note) {
     const noteComp = {
-      view: () => m('li', {class:'LI', key: note.ID}, [
-	m('span', {class:'ID_Date'}, `[id:${note.ID}] ${note.UpdatedAt.format('MMM D, HH:mm')}`),
-	m('span', {class:'Deleted', style:{display:note.Config.Deleted}}, 'DELETED'),
-	m('span', {class:'Buttons', style:{display:note.Config.Buttons}}, [
-	  m('button', {class:'SlimButton'}, 'edit'),
-	  m('button', {class:'SlimButton', style:{display:note.Config.DeleteBtn}, onclick: noteComp.ShowDelete}, 'delete'),
-	  m('span', {class:'ConfirmBlock', style:{display:note.Config.ConfirmBlock}}, [
-	    m('span', {class:'ConfirmDelete'}, note.Config.ConfirmMsg),
-	    m('button', {class:'SlimButton', onclick: noteComp.DoDelete, disabled: note.Config.Disabled}, 'yes'),
-	    m('button', {class:'SlimButton', onclick: noteComp.CancelDelete}, 'no'),
+      view: function() {
+	const self = noteComp;
+	const cfg = note.Config;
+	return m('li', {class:'LI', key: note.ID}, [
+	  m('span', {class:'ID_Date'}, `[id:${note.ID}] ${note.UpdatedAt.format('MMM D, HH:mm')}`),
+	  note.Deleted ? m('span', {class:'Deleted'}, 'DELETED') : '',
+	  !note.Exists ? '' : m('span', {class:'Buttons'}, [
+	    note.Deleted ? '' : m('button', {class:'SlimButton', onclick:()=>{window.location = cfg.EditUrl}}, 'edit'),
+	    m('button', {class:'SlimButton', style:{display:cfg.DeleteBtn}, onclick: self.ShowDelete}, 'delete'),
+	    m('span', {class:'ConfirmBlock', style:{display:cfg.ConfirmBlock}}, [
+	      m('span', {class:'ConfirmDelete'}, cfg.ConfirmMsg),
+	      m('button', {class:'SlimButton', onclick: self.DoDelete, disabled: cfg.Disabled}, 'yes'),
+	      m('button', {class:'SlimButton', onclick: self.CancelDelete}, 'no'),
+	    ]),
 	  ]),
-	]),
-	m('br'),
-	m('a', {class:'TitleLink', style:{display:note.Config.TitleLink}, href: note.href}, note.Title),
-	m('span', {class:'Title', style:{display:note.Config.Title}}, note.Title),
-	m('br'),
-	m('span', {class:'Tags'}, addPrefix(toTagNames(note.Tags), '#')),
-	m(note.Alerts),
-      ]),
+	  m('br'),
+	  note.Exists ? m('a', {class:'TitleLink', href: note.href}, note.Title) : '',
+	  note.Exists ? '' : m('span', {class:'Title'}, note.Title),
+	  m('br'),
+	  m('span', {class:'Tags'}, addPrefix(toTagNames(note.Tags), '#')),
+	  m(note.Alerts),
+	]);
+      },
       ShowDelete: function() {
 	note.Config.DeleteBtn = 'none';
 	note.Config.ConfirmBlock = 'inline';
@@ -153,12 +171,10 @@ const Notes = {
 	note.Alerts.Clear();
       },
       DoDelete: function() {
-	note.Config.Disabled = true;
-	const options = note.Deleted ? noteComp.ReallyDeleteOptions() : noteComp.DeleteOptions();
-	m.request(options)
-	  .then(noteComp.DeleteSuccess)
-	  .catch(noteComp.DeleteFail)
-	  .finally(noteComp.DeleteFinally);
+	const self = noteComp;
+	const options = note.Deleted ? self.ReallyDeleteOptions() : self.DeleteOptions();
+	mRequest(
+	  options, note.Alerts, note.Config, 'Disabled', self.DeleteSuccess);
       },
       DeleteOptions: function() {
 	const body = new FormData();
@@ -169,15 +185,10 @@ const Notes = {
 	return {method:'DELETE', url:note.Config.ReallyDeleteUrl}
       },
       DeleteSuccess: function(resp) {
-	console.log(resp);
-	note.Config.Title = 'inline';
-	note.Config.TitleLink = 'none';
-	note.Config.Buttons = 'none';
-	note.Config.Deleted = 'inline';
+	note.Deleted = true;
+	note.Exists = false;
 	note.Alerts.Clear();
       },
-      DeleteFail: function(e) { note.Alerts.InsertRespErr(e); },
-      DeleteFinally: function() { note.Config.Disabled = false; },
     };
     return m(noteComp);
   }

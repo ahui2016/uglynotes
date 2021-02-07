@@ -22,7 +22,12 @@
   <body>
 <script>
 
-  let Note = {ID:'',Size:'',Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',};
+  let Exists = false;
+  let NoteID = '';
+  let Note = {Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',DelOptions:{method:'',url:''}};
+
+  const bodyForDel = new FormData();
+  bodyForDel.append('deleted', true);
   
   const root = document.body;
 
@@ -30,59 +35,87 @@
 
   const TopBanner = {
     Config: {
-      EditBtnBlock: 'inline',
-      DeleteBtn: 'inline',
-      DeleteBtnText: 'Delete',
+      DelBtn: 'inline',
+      DelDisabled: false,
+      DelBtnText: 'Delete',
       ConfirmBlock: 'none',
       ConfirmMsg: 'delete this note?',
-      UndeleteBlock: 'none',
-      UndeleteBtn: 'inline',
-      UndeleteConfirmBlock: 'none',
+      DelResult: `该笔记已删除`,
+      UndelBlock: 'none',
+      UndelBtn: 'inline',
+      UndelDisabled: false,
+      UndelConfirmBlock: 'none',
     },
-    view: () => m('div', {id:'top-banner'}, [
-      `Note [id:${Note.ID}]`,
-      m('div', {id: 'head-buttons'}, [
-	'|',
-	[m('a', {id:'copy'}, 'Copy'), '|'],
-	m('span', {style:{display:TopBanner.Config.EditBtnBlock}}, [
-	  m('a', {href:'/html/note/edit?id=' + Note.ID}, 'Edit'), '|'
-	]),
-	[m('a', 'History'), '|'],
-	[
-	  m('a', {onclick:TopBanner.ShowDelete, style:{display:TopBanner.Config.DeleteBtn}}, TopBanner.Config.DeleteBtnText),
-	  m('span', {style:{display:TopBanner.Config.ConfirmBlock}}, [
-	    m('span', {class:'ConfirmDelete'}, TopBanner.Config.ConfirmMsg),
-	    m('button', {class:'SlimButton', onclick:TopBanner.DoDelete}, 'yes'),
-	    m('button', {class:'SlimButton', onclick:TopBanner.CancelDelete}, 'no'),
-	  ]),
+    view: function() {
+      const self = TopBanner;
+      const cfg = TopBanner.Config;
+      return m('div', {id:'top-banner'}, [
+	`Note [id:${NoteID}]`,
+	!Exists ? '' : m('div', {id: 'head-buttons'}, [
 	  '|',
-	],
-	m('span', {style:{display:TopBanner.Config.UndeleteBlock}}, [
-	  m('a', {onclick:TopBanner.ShowUndelete, style:{display:TopBanner.Config.UndeleteBtn}}, 'Undelete'),
-	  m('span', {style:{display:TopBanner.Config.UndeleteConfirmBlock}}, [
-	    m('span', {style:'margin-left:5px;'}, 'undelete this note?'),
-	    m('button', {class:'SlimButton', onclick:TopBanner.DoUndelete}, 'yes'),
-	    m('button', {class:'SlimButton', onclick:TopBanner.CancelUndelete}, 'no'),
+	  [m('a', {id:'copy'}, 'Copy'), '|'],
+	  Note.Deleted ? '' : m('span', [
+	    m('a', {href:'/html/note/edit?id=' + NoteID}, 'Edit'), '|'
 	  ]),
-	  '|',
-	]), // end of undelete block
-      ]), // end of head buttons
-    ]), // end of top banner
+	  [m('a', {href:'/html/history?id=' + NoteID}, 'History'), '|'],
+	  [
+	    m('a', {onclick:self.ShowDelete, style:{display:cfg.DelBtn}}, cfg.DelBtnText),
+	    m('span', {style:{display:cfg.ConfirmBlock}}, [
+	      m('span', {class:'ConfirmDelete'}, cfg.ConfirmMsg),
+	      m('button', {class:'SlimButton', onclick:self.DoDelete}, 'yes'),
+	      m('button', {class:'SlimButton', onclick:self.CancelDelete}, 'no'),
+	    ]),
+	    '|',
+	  ],
+	  m('span', {style:{display:cfg.UndelBlock}}, [
+	    m('a', {onclick:self.ShowUndelete, style:{display:cfg.UndelBtn}}, 'Undelete'),
+	    m('span', {style:{display:cfg.UndelConfirmBlock}}, [
+	      m('span', {style:'margin-left:5px;'}, 'undelete this note?'),
+	      m('button', {class:'SlimButton', onclick:self.DoUndelete}, 'yes'),
+	      m('button', {class:'SlimButton', onclick:self.CancelUndelete}, 'no'),
+	    ]),
+	    '|',
+	  ]), // end of undelete block
+	]), // end of head buttons
+      ]); // end of top banner
+    }, // end of view
     ShowDelete: function() {
-      TopBanner.Config.DeleteBtn = 'none';
+      TopBanner.Config.DelBtn = 'none';
       TopBanner.Config.ConfirmBlock = 'inline';
     },
     CancelDelete: function() {
-      TopBanner.Config.DeleteBtn = 'inline';
+      TopBanner.Config.DelBtn = 'inline';
       TopBanner.Config.ConfirmBlock = 'none';
     },
+    DoDelete: function() {
+      const cfg = TopBanner.Config;
+      mRequest(Note.DelOptions, Alerts, cfg, 'DelDisabled', () => {
+	  Exists = false;
+	  Alerts.Insert('success', cfg.DelResult);
+      });
+    },
     ShowUndelete: function() {
-      TopBanner.Config.UndeleteBtn = 'none';
-      TopBanner.Config.UndeleteConfirmBlock = 'inline';
+      TopBanner.Config.UndelBtn = 'none';
+      TopBanner.Config.UndelConfirmBlock = 'inline';
     },
     CancelUndelete: function() {
-      TopBanner.Config.UndeleteBtn = 'inline';
-      TopBanner.Config.UndeleteConfirmBlock = 'none';
+      TopBanner.Config.UndelBtn = 'inline';
+      TopBanner.Config.UndelConfirmBlock = 'none';
+    },
+    DoUndelete: function() {
+      const cfg = TopBanner.Config;
+      const body = new FormData();
+      body.append('deleted', false);
+      mRequest(
+	{method:'PUT', url:`/api/note/${NoteID}/deleted`, body:body},
+	Alerts, cfg, 'UndelDisabled', () => {
+	  Note.DelOptions = {method:'PUT',url:`/api/note/${NoteID}/deleted`,body:bodyForDel};
+	  cfg.DelResult = `该笔记已删除`;
+	  cfg.EditBtnBlock = 'inline';
+	  cfg.ConfirmMsg = 'delete this note?';
+	  cfg.UndelBlock = 'none';
+	  Alerts.Insert('success', '该笔记已复原，可正常编辑');
+	});
     },
   };
 
@@ -115,8 +148,11 @@
 
   const App = {
     oninit: function() {
-      m.request({method:'GET', url:'/api/note/' + getUrlParam('id')})
+      const cfg = TopBanner.Config;
+      NoteID = getUrlParam('id');
+      m.request({method:'GET', url:'/api/note/' + NoteID})
 	.then(resp => {
+	  Exists = true;
 	  Note = resp;
 	  Note.Contents = Note.Patches.reduce(
 	    (patched, patch) => Diff.applyPatch(patched, patch), "");
@@ -124,10 +160,13 @@
 	  Note.UpdatedAt = dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss');
 	  Note.Size = fileSizeToString(Note.Size);
 	  Note.TagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
+	  Note.DelOptions = {method:'PUT',url:`/api/note/${NoteID}/deleted`,body:bodyForDel};
 	  if (Note.Deleted) {
-	    TopBanner.Config.EditBtnBlock = 'none';
-	    TopBanner.Config.ConfirmMsg = 'delete this note permanently?';
-	    TopBanner.Config.UndeleteBlock = 'inline';
+	    Note.DelOptions = {method:'DELETE', url:`/api/note/${NoteID}`};
+	    cfg.EditBtnBlock = 'none';
+	    cfg.ConfirmMsg = 'delete this note permanently?';
+	    cfg.DelResult = `该笔记已彻底删除`;
+	    cfg.UndelBlock = 'inline';
 	    Alerts.Insert('info', '该笔记被标记为 “已删除”');
 	  }
 	})
@@ -138,15 +177,29 @@
       m(TopBanner),
       Spacer,
       m(Alerts),
-      m(InfoBlock),
+      Exists ? m(InfoBlock) : '',
       m(Loading),
-      m(Contents),
+      Exists ? m(Contents) : '',
       BottomLine,
     ]
   };
 
   m.mount(root, App);
-  
+
+  const clipboard = new ClipboardJS('#copy', {
+    text: () => { return Note.Contents; }
+  });
+  clipboard.on('success', () => {
+    Alerts.Insert('success', '笔记内容已复制到剪贴板');
+    m.redraw();
+  });
+  clipboard.on('error', e => {
+    console.error('Action:', e.action);
+    console.error('Trigger:', e.trigger);
+    Alerts.Insert('danger', '复制失败，详细信息见控制台');
+    m.redraw();
+  });
+
 </script>
 </body>
 </html>

@@ -58,30 +58,26 @@
       }
       m.request({method:'GET', url:App.Url})
 	.then(resp => {
-
 	  if (!resp || resp.length == 0) {
 	    Alerts.Insert('info', App.NotFoundMsg);
 	    return;
 	  }
 	  Notes.List = resp;
 	  Notes.List.forEach(note => {
+	    note.Exists = true;
 	    note.UpdatedAt = dayjs(note.UpdatedAt);
 	    note.href = `/light/note?id=${note.ID}`;
 	    note.Alerts = CreateAlerts();
 	    note.Config = {
+	      EditUrl: `/html/note/edit?id=${note.ID}`,
 	      DeleteUrl: `/api/note/${note.ID}/deleted`,
 	      ReallyDeleteUrl: `/api/note/${note.ID}`,
-	      Deleted: 'none',
-	      Buttons: '',
 	      ConfirmMsg: 'delete this note?',
 	      DeleteBtn: 'inline',
 	      Disabled: false,
 	      ConfirmBlock: 'none',
-	      Title: 'none',
-	      TitleLink: 'inline',
 	    };
 	    if (note.Deleted) {
-	      note.Config.Deleted = 'inline';
 	      note.Config.ConfirmMsg = 'delete this note permanently?';
 	    }
 	  });
