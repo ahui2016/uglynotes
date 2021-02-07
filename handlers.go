@@ -64,9 +64,15 @@ func notePageLight(c *fiber.Ctx) error {
 func noteNewPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
 }
+func noteNewPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-edit-light.html")
+}
 
 func noteEditPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-edit.html")
+}
+func noteEditPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/note-edit-light.html")
 }
 
 func historyPage(c *fiber.Ctx) error {

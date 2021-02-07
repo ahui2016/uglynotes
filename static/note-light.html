@@ -55,14 +55,14 @@
 	  '|',
 	  [m('a', {id:'copy'}, 'Copy'), '|'],
 	  Note.Deleted ? '' : m('span', [
-	    m('a', {href:'/html/note/edit?id=' + NoteID}, 'Edit'), '|'
+	    m('a', {href:'/light/note/edit?id=' + NoteID}, 'Edit'), '|'
 	  ]),
 	  [m('a', {href:'/html/history?id=' + NoteID}, 'History'), '|'],
 	  [
 	    m('a', {onclick:self.ShowDelete, style:{display:cfg.DelBtn}}, cfg.DelBtnText),
 	    m('span', {style:{display:cfg.ConfirmBlock}}, [
 	      m('span', {class:'ConfirmDelete'}, cfg.ConfirmMsg),
-	      m('button', {class:'SlimButton', onclick:self.DoDelete}, 'yes'),
+	      m('button', {class:'SlimButton', onclick:self.DoDelete, disabled:cfg.DelDisabled}, 'yes'),
 	      m('button', {class:'SlimButton', onclick:self.CancelDelete}, 'no'),
 	    ]),
 	    '|',
@@ -71,7 +71,7 @@
 	    m('a', {onclick:self.ShowUndelete, style:{display:cfg.UndelBtn}}, 'Undelete'),
 	    m('span', {style:{display:cfg.UndelConfirmBlock}}, [
 	      m('span', {style:'margin-left:5px;'}, 'undelete this note?'),
-	      m('button', {class:'SlimButton', onclick:self.DoUndelete}, 'yes'),
+	      m('button', {class:'SlimButton', onclick:self.DoUndelete, disabled:cfg.UndelDisabled}, 'yes'),
 	      m('button', {class:'SlimButton', onclick:self.CancelUndelete}, 'no'),
 	    ]),
 	    '|',

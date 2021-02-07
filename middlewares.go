@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -38,6 +39,7 @@ func checkLoginHTML(c *fiber.Ctx) error {
 }
 
 func checkLoginJSON(c *fiber.Ctx) error {
+	time.Sleep(time.Second)
 	if isLoggedOut(c) {
 		passwordTry++
 		if err := checkPasswordTry(c); err != nil {

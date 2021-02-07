@@ -49,6 +49,8 @@ func main() {
 	lightPage.Get("/home", homePageLight)
 	lightPage.Get("/index", indexPageLight)
 	lightPage.Get("/note", notePageLight)
+	lightPage.Get("/note/new", noteNewPageLight)
+	lightPage.Get("/note/edit", noteEditPageLight)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)

@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>New Note .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v11">
+    <script src="/public/mithril.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+    <script src="/public/util2.js?v1"></script>
+  </head>
+  <style>
+    #info-block {
+	color: #999;
+	font-size: smaller;
+    }
+  </style>
+  <body>
+<script>
+
+  let Exists = false;
+  let NoteID = '';
+  let Note = {Type:'plaintext',Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',DelOptions:{method:'',url:''}};
+  
+  const root = document.body;
+
+  const Alerts = CreateAlerts();
+
+  const [infoIcon, infoMsg] = InfoPair(
+    'page', '注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前)，请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当自动保存次数达到上限时（默认 100 次）就不会自动保存了，遇到这种情况可手动点击一次 update 按钮后，再手动刷新页面即可重新计数。');
+  
+  const TopBanner = {
+    view: () =>  m('div', {id:'top-banner'}, [
+      Exists ? 'Edit Note' : 'New Note',
+      m(infoIcon),
+      ' .. ',
+      m('a', {href:'/converter', title:'image converter', target:'_blank'}, 'Converter'),
+      !Exists ? '' : m('div', {id: 'head-buttons'}, [
+	'|',
+	m('a', {href:`/light/note?id=${NoteID}`, target:'_blank'}, 'readonly-mode'), '|',
+	m('a', {href:'/html/history?id=' + NoteID}, 'History'),
+	'|',
+      ]),
+    ])
+  };
+
+  const TypeSelector = {
+    view: function() {
+      const self = TypeSelector;
+      return m('p', [
+	m('input', {type:'radio', id:'plaintext', name:'note-type', value:'plaintext',
+		    checked: Note.Type == 'Plaintext' ? true : false}),
+	m('label', {for:'plaintext'}, 'plaintext'),
+	[' (',m('a', {id:'copy',"data-clipboard-target":'#contents',style:'cursor:pointer'}, 'copy'),')'],
+	m('input', {type:'radio', id:'markdown', name:'note-type', value:'markdown',
+		    checked: Note.Type == 'Markdown' ? true : false}),
+	m('label', {for:'markdown'}, 'markdown'),
+	
+      ]);
+    }
+  };
+  
+  const EditForm = {
+    view: function() {
+      return m('form', {autocomplete:false}, [
+	m(TypeSelector),
+      ]);
+    }
+  };
+  
+  const App = {
+    oninit: function() {
+      NoteID = getUrlParam('id');
+      if (document.location.pathname == '/light/note/edit' && NoteID) {
+	mRequest(
+	  {method:'GET', url:`/api/note/${NoteID}`}, Alerts, null, null, resp => {
+	    Note = resp;
+	    if (!Note.Deleted) Exists = true;
+	    Note.Contents = Note.Patches.reduce(
+	      (patched, patch) => Diff.applyPatch(patched, patch), "");
+	  },
+	  null,
+	  () => { Loading.Hide(); });
+      }
+    },
+    view: () => [
+      m(TopBanner),
+      m(infoMsg),
+      Spacer,
+      m(Alerts),
+      m(Loading),
+      Note.Size ? m('p', {style:'color: #999'}, fileSizeToString(Note.Size)) : '',
+      m(EditForm),
+      BottomLine,
+    ]
+  };
+
+  m.mount(root, App);
+  
+</script>
+  </body>
+  </html>

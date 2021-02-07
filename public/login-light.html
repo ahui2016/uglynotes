@@ -79,6 +79,7 @@
 	  Alerts.Insert('success', '已登出');
 	  Logout.Display = 'none';
 	  Form.Display = 'block';
+	  window.setTimeout(() => { $('#password').focus(); }, 500);
 	})
       	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; })
 	.finally(() => { Logout.Disabled = false; });
