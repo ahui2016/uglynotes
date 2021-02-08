@@ -1,3 +1,16 @@
+// 创建历史版本的间隔时间
+const DelayOfAutoUpdate = 1000 * 60 * 5 // 5分钟
+
+// 自动保存（自动更新）次数的上限
+const AutoUpdateLimit = 100
+
+// NoteTitleLimit 限制标题的长度。
+// 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
+const NoteTitleLimit = 200
+
+// NoteSizeLimit 限制每篇笔记的体积。
+// 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
+const NoteSizeLimit = 1 << 19 // 512 KB
 
 function $(selectors, dom) {
   if (!dom) dom = document;
@@ -64,6 +77,17 @@ function addPrefix(setOrArr, prefix) {
   return arr.map(x => prefix + x).join(' ');
 }
 
+function tag_replace(tags) {
+  return tags.replace(/[#;,，'"/\+\n]/g, ' ').trim();
+}
+
+function tagsStringToSet(tags) {
+  const trimmed = tag_replace(tags);
+  if (trimmed.length == 0) return new Set();
+  const arr = trimmed.split(/ +/);
+  return new Set(arr);
+}
+
 const Loading = {
   Display: 'block',
   Hide: () => { Loading.Display = 'none'; },
@@ -80,11 +104,10 @@ function CreateAlerts(max) {
   if (!max) max = 5;
   const alerts = {
     Messages: [],
-    Max: max,
     Insert: function(msgType, msg) {
       alerts.Messages.unshift(
 	{Time: dayjs().format('HH:mm:ss'), Type: msgType, Msg:msg});
-      if (alerts.Messages.length > alerts.Max) {
+      if (alerts.Messages.length > max) {
 	alerts.Messages.pop();
       }
     },

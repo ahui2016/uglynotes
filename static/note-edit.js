@@ -190,7 +190,7 @@ function submit(event) {
 
   if (!event) autoUpdateCount++;
   ajaxPost(form, '/api/note', submit_btn, function(that) {
-    id = that.response.message;
+    id = that.response.ID;
     oldNoteType = note_type;
     oldContents = contents;
     oldTags = tags;

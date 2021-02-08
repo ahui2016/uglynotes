@@ -183,7 +183,7 @@ func newNoteHandler(c *fiber.Ctx) error {
 	if err := db.Insert(note); err != nil {
 		return err
 	}
-	return jsonMessage(c, note.ID)
+	return c.JSON(note)
 }
 
 func createNote(c *fiber.Ctx) (*Note, error) {

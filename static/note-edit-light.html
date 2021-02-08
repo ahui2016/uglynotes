@@ -14,24 +14,25 @@
     <script src="/public/util2.js?v1"></script>
   </head>
   <style>
-    #info-block {
-	color: #999;
-	font-size: smaller;
+    .NoteContents {
+	background-color: #FFFBFB;
     }
   </style>
   <body>
 <script>
 
   let Exists = false;
-  let NoteID = '';
-  let Note = {Type:'plaintext',Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',DelOptions:{method:'',url:''}};
+  let Note = {ID:'',Type:'Plaintext',Size:'',Deleted:false,Patches:[],OldContents:'',Tags:[],OldTags:[],CreatedAt:'',UpdatedAt:''};
+  let AutoUpdateCount = 1;
   
   const root = document.body;
 
-  const Alerts = CreateAlerts();
+  const Alerts = CreateAlerts(9);
 
   const [infoIcon, infoMsg] = InfoPair(
-    'page', '注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前)，请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当自动保存次数达到上限时（默认 100 次）就不会自动保存了，遇到这种情况可手动点击一次 update 按钮后，再手动刷新页面即可重新计数。');
+    'page', `注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前),
+请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当自动保存次数达到上限时
+(默认 100 次) 就不会自动保存了，遇到这种情况可手动点击一次 update 按钮后，再手动刷新页面即可重新计数。`);
   
   const TopBanner = {
     view: () =>  m('div', {id:'top-banner'}, [
@@ -41,62 +42,208 @@
       m('a', {href:'/converter', title:'image converter', target:'_blank'}, 'Converter'),
       !Exists ? '' : m('div', {id: 'head-buttons'}, [
 	'|',
-	m('a', {href:`/light/note?id=${NoteID}`, target:'_blank'}, 'readonly-mode'), '|',
-	m('a', {href:'/html/history?id=' + NoteID}, 'History'),
+	m('a', {href:`/light/note?id=${Note.ID}`, target:'_blank'}, 'readonly-mode'), '|',
+	m('a', {href:`/html/history?id=${Note.ID}&version=${Note.Patches.length}`, target:'_blank'}, 'History'),
 	'|',
       ]),
     ])
   };
 
   const TypeSelector = {
+    InPreview: false,
     view: function() {
       const self = TypeSelector;
       return m('p', [
-	m('input', {type:'radio', id:'plaintext', name:'note-type', value:'plaintext',
-		    checked: Note.Type == 'Plaintext' ? true : false}),
-	m('label', {for:'plaintext'}, 'plaintext'),
-	[' (',m('a', {id:'copy',"data-clipboard-target":'#contents',style:'cursor:pointer'}, 'copy'),')'],
+	self.InPreview ? '' : [
+	  m('input', {type:'radio', id:'plaintext', name:'note-type', value:'plaintext',
+		      checked: Note.Type == 'Plaintext' ? true : false}),
+	  m('label', {for:'plaintext'}, 'plaintext'),
+	  [' (',m('a', {id:'copy',class:'Pointer',"data-clipboard-target":'#contents'}, 'copy'),')'],
+	],
 	m('input', {type:'radio', id:'markdown', name:'note-type', value:'markdown',
 		    checked: Note.Type == 'Markdown' ? true : false}),
 	m('label', {for:'markdown'}, 'markdown'),
-	
+	['(',
+	 self.InPreview ? '' : m('a', {accesskey:'p', onclick:self.Preview,class:'Pointer'}, 'preview'),
+	 self.InPreview ? m('a', {accesskey:'e', onclick:self.Edit,class:'Pointer'}, 'edit') : '',
+	 ,')'],
       ]);
+    },
+    Preview: function() {
+      TypeSelector.InPreview = true;
+      const contents = $('#contents').value.trim();
+      const dirty = marked(contents);
+      const clean = DOMPurify.sanitize(dirty);
+      Preview.Html = clean;
+    },
+    Edit: function() {
+      TypeSelector.InPreview = false;
+    },
+  };
+
+  const Textarea = {
+    Rows: '10',
+    Contents: '',
+    view: function() {
+      const self = Textarea;
+      return [
+	m('textarea', {id:'contents', accesskey:'c', onblur:self.UpdateContents, rows:self.Rows}, self.Contents),
+	m('p',{class:'Pointer',title:'higher',style:'text-align:right;',onclick:self.Higher},m.trust(
+	  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
+	     <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
+	   </svg>`
+	)),
+      ];
+    },
+    Higher: function() {
+      Textarea.Rows = parseInt(Textarea.Rows) + 5;
+      $('#contents').focus();
+    },
+    CurrentContents: function() { return $('#contents').value; },
+    UpdateContents: function() {
+      Textarea.Contents = Textarea.CurrentContents();
+    },
+  };
+
+  const Preview = {
+    Html: '',
+    view: function() {
+      return m('div', {id:'preview', class:'NoteContents'}, m.trust(Preview.Html));
     }
+  };
+
+  const Tags = {
+    Tags: [],
+    view: () => m('p', [
+      m('label', {for:'tags'}, 'Tags:'),
+      m('textarea', {id:'tags', accesskey:'t', onblur:Tags.Onblur, rows:2}, addPrefix(Tags.Tags, '#')),
+    ]),
+    Onblur: function(event) {
+      Tags.Tags = tagsStringToSet(event.currentTarget.value);
+    },
+  };
+
+  const [aboutShortcutIcon, aboutShortcutMsg] = InfoPair(
+    'shortcut', `本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
+      预览、编辑、文本框。(详情请看 Releases.md)`);
+
+  const Submit = {
+    Display: false,
+    Value: 'submit',
+    view: function() {
+      const self = Submit;
+      return m('p', [
+	self.Value == 'submit' ? m('button', {onclick:self.Submit, disabled:self.Disabled}, self.Value) : '',
+	self.Value == 'update' ? m('button', {onclick:self.Update, disabled:self.Disabled}, self.Value) : '',
+	m(aboutShortcutIcon),
+	m(aboutShortcutMsg),
+      ]);
+    },
+    Submit: function(event) {
+      event.preventDefault();
+      const contents = Textarea.CurrentContents().trim();
+      if (contents == '') {
+        // 有 event 表示点击了按钮，这种情况要给用户提示。
+        // 如果没有 event 则是后台自动运行，不需要提示。
+        if (event) Alerts.Insert('info', '笔记内容不可空白');
+        return;
+      }
+      if (contents.length > NoteSizeLimit) {
+	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
+	return;
+      }
+      if (Tags.Tags.size < 2) {
+	Alerts.Insert('至少需要 2 个标签才能创建笔记');
+	return;
+      }
+
+      const patch = Diff.createPatch(" ", "", contents);
+      const body = new FormData();
+      const note_type = $('input[name="note-type"]:checked').value;
+      body.append('note-type', note_type);
+      body.append('title', contents.substring(0, NoteTitleLimit));
+      body.append('patch', patch);
+      body.append('tags', JSON.stringify(Array.from(Tags.Tags)));
+
+      if (!event) AutoUpdateCount++;
+      mRequest({method:'POST', url:'/api/note', body:body},
+	       Alerts, Submit, 'Disabled', resp => {
+		 Note = resp;
+		 Note.OldTags = Tags.Tags;
+		 Note.OldContents = contents;
+		 App.EnterEditMode();
+		 Alerts.Insert('success', '新笔记创建成功 id:' + Note.ID);
+	       });
+    },
+    Update: event => {
+      event.preventDefault();
+      console.log('update')
+    },
   };
   
   const EditForm = {
+    Display: 'none',
     view: function() {
-      return m('form', {autocomplete:false}, [
+      return m('form', {autocomplete:false, style:{display:EditForm.Display}}, [
 	m(TypeSelector),
+	TypeSelector.InPreview ? '' : m(Textarea),
+	TypeSelector.InPreview ? m(Preview) : '',
+	m(Tags),
+	m(Submit),
       ]);
     }
   };
   
   const App = {
     oninit: function() {
-      NoteID = getUrlParam('id');
-      if (document.location.pathname == '/light/note/edit' && NoteID) {
+      if (document.location.pathname == '/light/note/edit') {
+	const param_id = getUrlParam('id');
 	mRequest(
-	  {method:'GET', url:`/api/note/${NoteID}`}, Alerts, null, null, resp => {
+	  {method:'GET', url:`/api/note/${param_id}`}, Alerts, null, null, resp => {
 	    Note = resp;
-	    if (!Note.Deleted) Exists = true;
-	    Note.Contents = Note.Patches.reduce(
+	    if (Note.Deleted) {
+	      Alerts.Insert('danger', `the note(id:${param_id}) is deleted`);
+	      return;
+	    }
+	    App.EnterEditMode();
+	    Textarea.Contents = Note.Patches.reduce(
 	      (patched, patch) => Diff.applyPatch(patched, patch), "");
+	    Note.OldContents = Textarea.Contents;
+	    const tagNames = toTagNames(Note.Tags);
+	    Note.OldTags = new Set(tagNames);
+	    Tags.Tags = Note.OldTags;
+	    Alerts.Insert('success', '已获取笔记 id: ' + Note.ID);
+	    Alerts.Insert('success', '已进入编辑模式');
+	    window.setTimeout(() => {$('#contents').focus()}, 500);
 	  },
 	  null,
 	  () => { Loading.Hide(); });
+      }
+      if (document.location.pathname == '/light/note/new') {
+	const param_tags = getUrlParam('tags');
+	if (param_tags) {
+	  Tags.Tags = tagsStringToSet(param_tags);
+	}
+	Loading.Hide();
+	EditForm.Display = 'block';
+	window.setTimeout(() => {$('#contents').focus()}, 500);
       }
     },
     view: () => [
       m(TopBanner),
       m(infoMsg),
       Spacer,
-      m(Alerts),
       m(Loading),
-      Note.Size ? m('p', {style:'color: #999'}, fileSizeToString(Note.Size)) : '',
       m(EditForm),
+      m(Alerts),
       BottomLine,
-    ]
+    ],
+    EnterEditMode: function() {
+      Exists = true;
+      EditForm.Display = 'block';
+      Submit.Value = 'update';
+      $('title').text = 'Edit Note .. uglynotes';
+    }
   };
 
   m.mount(root, App);
