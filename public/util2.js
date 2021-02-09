@@ -88,6 +88,12 @@ function tagsStringToSet(tags) {
   return new Set(arr);
 }
 
+function setsAreEqual(a, b) {
+  if (a.size !== b.size) return false;
+  for (const item of a) if (!b.has(item)) return false;
+  return true;
+}
+
 const Loading = {
   Display: 'block',
   Hide: () => { Loading.Display = 'none'; },

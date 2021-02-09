@@ -22,18 +22,21 @@
 <script>
 
   let Exists = false;
-  let Note = {ID:'',Type:'Plaintext',Size:'',Deleted:false,Patches:[],OldContents:'',Tags:[],OldTags:[],CreatedAt:'',UpdatedAt:''};
-  let AutoUpdateCount = 1;
+  let Note = {ID:'', Deleted:false, Patches:[], Tags:[], CreatedAt:'', UpdatedAt:''};
+  let AutoSubmitID;
+  let Stopped = true;
   
   const root = document.body;
 
   const Alerts = CreateAlerts(9);
 
+  const AlertsForCopy = CreateAlerts();
+
   const [infoIcon, infoMsg] = InfoPair(
     'page', `注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前),
-请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当自动保存次数达到上限时
-(默认 100 次) 就不会自动保存了，遇到这种情况可手动点击一次 update 按钮后，再手动刷新页面即可重新计数。`);
-  
+请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当错误提示“已停止自动保存”时
+请按 F12 进入控制台执行 restartAutoSubmit() 即可重新启用自动保存功能。`);
+ 
   const TopBanner = {
     view: () =>  m('div', {id:'top-banner'}, [
       Exists ? 'Edit Note' : 'New Note',
@@ -50,24 +53,30 @@
   };
 
   const TypeSelector = {
+    CurrentType: 'plaintext',
+    OldType: 'plaintext',
     InPreview: false,
     view: function() {
       const self = TypeSelector;
-      return m('p', [
+      return m('p', {onchange:self.UpdateType}, [
 	self.InPreview ? '' : [
 	  m('input', {type:'radio', id:'plaintext', name:'note-type', value:'plaintext',
-		      checked: Note.Type == 'Plaintext' ? true : false}),
+		      checked: self.CurrentType.toLowerCase() == 'plaintext' ? true : false}),
 	  m('label', {for:'plaintext'}, 'plaintext'),
 	  [' (',m('a', {id:'copy',class:'Pointer',"data-clipboard-target":'#contents'}, 'copy'),')'],
 	],
 	m('input', {type:'radio', id:'markdown', name:'note-type', value:'markdown',
-		    checked: Note.Type == 'Markdown' ? true : false}),
+		    checked: self.CurrentType.toLowerCase() == 'markdown' ? true : false}),
 	m('label', {for:'markdown'}, 'markdown'),
 	['(',
 	 self.InPreview ? '' : m('a', {accesskey:'p', onclick:self.Preview,class:'Pointer'}, 'preview'),
 	 self.InPreview ? m('a', {accesskey:'e', onclick:self.Edit,class:'Pointer'}, 'edit') : '',
 	 ,')'],
+	m(AlertsForCopy),
       ]);
+    },
+    UpdateType: function() {
+      TypeSelector.CurrentType = $('input[name="note-type"]:checked').value;
     },
     Preview: function() {
       TypeSelector.InPreview = true;
@@ -84,6 +93,7 @@
   const Textarea = {
     Rows: '10',
     Contents: '',
+    OldContents: '',
     view: function() {
       const self = Textarea;
       return [
@@ -114,6 +124,7 @@
 
   const Tags = {
     Tags: [],
+    OldTags: [],
     view: () => m('p', [
       m('label', {for:'tags'}, 'Tags:'),
       m('textarea', {id:'tags', accesskey:'t', onblur:Tags.Onblur, rows:2}, addPrefix(Tags.Tags, '#')),
@@ -139,19 +150,27 @@
 	m(aboutShortcutMsg),
       ]);
     },
-    Submit: function(event) {
-      event.preventDefault();
-      const contents = Textarea.CurrentContents().trim();
+    CheckContents: function(contents) {
       if (contents == '') {
         // 有 event 表示点击了按钮，这种情况要给用户提示。
         // 如果没有 event 则是后台自动运行，不需要提示。
         if (event) Alerts.Insert('info', '笔记内容不可空白');
-        return;
+        return 'NG';
       }
       if (contents.length > NoteSizeLimit) {
 	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
-	return;
+	return 'NG';
       }
+      if (contents == Textarea.OldContents) {
+	if (event) Alerts.Insert('info', '笔记内容没有变化');
+	return 'NG';
+      }
+      return 'OK';
+    },
+    Submit: function(event) {
+      event.preventDefault();
+      const contents = Textarea.CurrentContents().trim();
+      if (Submit.CheckContents(contents) == 'NG') return;
       if (Tags.Tags.size < 2) {
 	Alerts.Insert('至少需要 2 个标签才能创建笔记');
 	return;
@@ -159,25 +178,77 @@
 
       const patch = Diff.createPatch(" ", "", contents);
       const body = new FormData();
-      const note_type = $('input[name="note-type"]:checked').value;
+      const note_type = TypeSelector.CurrentType;
       body.append('note-type', note_type);
       body.append('title', contents.substring(0, NoteTitleLimit));
       body.append('patch', patch);
       body.append('tags', JSON.stringify(Array.from(Tags.Tags)));
 
-      if (!event) AutoUpdateCount++;
       mRequest({method:'POST', url:'/api/note', body:body},
 	       Alerts, Submit, 'Disabled', resp => {
 		 Note = resp;
-		 Note.OldTags = Tags.Tags;
-		 Note.OldContents = contents;
+		 TypeSelector.OldType = note_type;
+		 Tags.OldTags = Tags.Tags;
+		 Textarea.OldContents = Textarea.Contents;
 		 App.EnterEditMode();
 		 Alerts.Insert('success', '新笔记创建成功 id:' + Note.ID);
+	       }, () => {
+		 stopAutoSubmit();
 	       });
     },
-    Update: event => {
+    Update: function(event) {
       event.preventDefault();
-      console.log('update')
+
+      // 更新笔记类型
+      const note_type = TypeSelector.CurrentType;
+      if (note_type != TypeSelector.OldType) {
+	const body = new FormData();
+	body.append('note-type', note_type);
+	mRequest({method:'PUT-', url:`/api/note/${Note.ID}/type`, body:body},
+		 Alerts, Submit, 'Disabled', () => {
+		   TypeSelector.OldType = note_type;
+		   Alerts.Insert('success', '笔记类型更新成功: ' + note_type);
+		 }, () => {
+		   stopAutoSubmit();
+		 });
+      }
+
+      // 更新标签
+      if (!setsAreEqual(Tags.Tags, Tags.OldTags)) {
+	if (Tags.Tags.size < 2) {
+	  Alerts.Insert('danger', '至少需要 2 个标签');
+	  return;
+	}
+	const body = new FormData();
+	body.append('tags', JSON.stringify(Array.from(Tags.Tags)));
+
+	mRequest({method:'PUT', url:`/api/note/${Note.ID}/tags`, body:body},
+		 Alerts, Submit, 'Disabled', () => {
+		   Tags.OldTags = Tags.Tags;
+		   Alerts.Insert('success', '标签更新成功: ' + addPrefix(Tags.Tags, '#'));
+		 }, () => {
+		   stopAutoSubmit();
+		 });
+      }
+
+      // 更新笔记内容
+      let contents = Textarea.CurrentContents().trim();
+      if (Submit.CheckContents(contents) == 'NG') {
+	return;
+      }
+      const patch = Diff.createPatch(" ", Textarea.OldContents, contents);
+      const body = new FormData();
+      body.append('title', contents.substring(0, NoteTitleLimit));
+      body.append('patch', patch);
+
+      mRequest({method:'PATCH', url:`/api/note/${Note.ID}`, body:body},
+	Alerts, Submit, 'Disabled', () => {
+	  Textarea.OldContents = Textarea.Contents;
+	  Note.Patches.push(patch);
+	  Alerts.Insert('success', `笔记内容更新，产生第 ${Note.Patches.length} 个历史版本`);
+	}, () => {
+	  stopAutoSubmit();
+	});
     },
   };
   
@@ -206,17 +277,19 @@
 	      return;
 	    }
 	    App.EnterEditMode();
+	    TypeSelector.CurrentType = Note.Type;
+	    TypeSelector.OldType = Note.Type;
 	    Textarea.Contents = Note.Patches.reduce(
 	      (patched, patch) => Diff.applyPatch(patched, patch), "");
-	    Note.OldContents = Textarea.Contents;
+	    Textarea.OldContents = Textarea.Contents;
 	    const tagNames = toTagNames(Note.Tags);
-	    Note.OldTags = new Set(tagNames);
-	    Tags.Tags = Note.OldTags;
+	    Tags.Tags = new Set(tagNames);
+	    Tags.OldTags = Tags.Tags;
 	    Alerts.Insert('success', '已获取笔记 id: ' + Note.ID);
 	    Alerts.Insert('success', '已进入编辑模式');
 	    window.setTimeout(() => {$('#contents').focus()}, 500);
 	  },
-	  null,
+	  () => { stopAutoSubmit(); },
 	  () => { Loading.Hide(); });
       }
       if (document.location.pathname == '/light/note/new') {
@@ -247,6 +320,46 @@
   };
 
   m.mount(root, App);
+
+  const clipboard = new ClipboardJS('#copy', {
+    text: () => { return Textarea.Contents; }
+  });
+  clipboard.on('success', () => {
+    AlertsForCopy.Insert('success', '笔记内容已复制到剪贴板');
+    m.redraw();
+  });
+  clipboard.on('error', e => {
+    console.error('Action:', e.action);
+    console.error('Trigger:', e.trigger);
+    AlertsForCopy.Insert('danger', '复制失败，详细信息见控制台');
+    m.redraw();
+  });
+
+  function submit_or_update() {
+    if (Exists) { Submit.Submit(); } else { Submit.Update(); }
+  }
+
+  function restartAutoSubmit() {
+    if (!Stopped) stopAutoSubmit();
+    AutoSubmitID = window.setInterval(submit_or_update, DelayOfAutoUpdate);
+    Stopped = false;
+    const msg = '启用自动保存功能: OK';
+    console.log(msg);
+    Alerts.Insert('success', msg);
+    AlertsForCopy.Clear();
+    infoMsg.Display = 'none';
+    m.redraw();
+  }
+  restartAutoSubmit();
+
+  function stopAutoSubmit() {
+    window.clearInterval(AutoSubmitID);
+    Stopped = true;
+    const msg = '已停止自动保存，请手动执行 restartAutoSubmit()';
+    Alerts.Insert('danger', msg);
+    AlertsForCopy.Insert('danger', msg);
+    infoMsg.Display = 'block';
+  }
   
 </script>
   </body>
