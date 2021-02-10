@@ -30,10 +30,67 @@ function CreateAlerts(max) {
       $(alerts.ID).html('');
     },
     view: () => {
-      const vnode = m('div').addClass('alerts');
-      alerts.ID = random_id(vnode);
+      const [vnode, id] = m_id('div');
+      vnode.addClass('alerts');
+      alerts.ID = id;
       return vnode;
     }
   };
   return alerts;
 }
+
+const Notes = {
+  id: '#notes',
+  view: () => m('ul').attr('id', 'notes'),
+  newNote: (note) => {
+    const noteComp = {
+      id: '',
+      alerts: CreateAlerts(),
+      deleteURL: `/api/note/${note.ID}/deleted`,
+      reallyDeleteURL: `/api/note/${note.ID}`,
+      view: () => {
+	const self = noteComp;
+	const [vnode, id] = m_id('li');
+	self.id = id;
+	vnode.addClass('LI').append([
+	  m('span').addClass('ID_Date').text(`[id:${note.ID}] ${dayjs(note.UpdatedAt).format('MMM D, HH:mm')}`),
+	  m('span').addClass('Deleted').text('DELETED').css('display', note.Deleted ? 'inline' : 'none'),
+	  m('span').addClass('Buttons').append([
+	    m('button').text('edit').addClass('SlimButton').click(()=>{window.location = `/light/note/edit?id=${note.ID}`}),
+	    m('button').text('delete').addClass('SlimButton DeleteBtn').click(self.showDelete),
+	    m('span').addClass('ConfirmBlock').css('display', 'none').append([
+	      m('span').addClass('ConfirmDelete').text( note.Deleted ? 'delete this note permanently?' : 'delete this note?'),
+	      m('button').text('yes').addClass('SlimButton DeleteYes').click(self.executeDelete),
+	      m('button').text('no').addClass('SlimButton').click(self.cancelDelete),
+	    ]),
+	  ]),
+	  m('br'),
+	  m('a').text(note.Title).addClass('TitleLink').attr('href', `/light/note?id=${note.ID}`),
+	  m('span').text(note.Title).addClass('Title').css('display', 'none'),
+	  m('br'),
+	  m('span').addClass('Tags').text(addPrefix(toTagNames(note.Tags), '#')),
+	  self.Alerts,
+	]);
+	return vnode;
+      },
+      showDelete: () => {
+	$(`${noteComp.id} .ConfirmBlock`).show();
+	$(`${noteComp.id} .DeleteBtn`).hide();
+      },
+      cancelDelete: () => {
+	$(`${noteComp.id} .ConfirmBlock`).hide();
+	$(`${noteComp.id} .DeleteBtn`).show();
+	noteComp.alerts.Clear();
+      },
+    }; // end of noteComp
+    return noteComp;
+  }, // end of newNote
+  append: (note) => {
+    const elem = Notes.newNote(note);
+    $(Notes.id).append(m(elem));
+  },
+  prepend: (note) => {
+    const elem = Notes.newNote(note);
+    $(Notes.id).prepend(elem);
+  },
+};

@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="/public/style-light.css">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    <script src="/public/util2.js?v111"></script>
+    <script src="/public/util2.js?v11"></script>
     <script src="/public/components.js"></script>
   </head>
   <body>
@@ -38,17 +38,14 @@
     id: '#the-form',
     passwordID: '#password',
     submitID: '#submit',
-    view: () => {
-      return m('form').attr('id', 'the-form').prop('autocomplete', false)
-	.append(
-	  $('<input type="password" id="password" placeholder="password" required>')
-	    .css('display', 'inline')
-	).append(
-	  $('<input type="submit" value="login" id="submit">')
-	    .css('display', 'inline')
-	    .click(Form.submit)
-	);
-    },
+    view: () => m('form').attr('id', 'the-form').prop('autocomplete', false)
+      .append([
+	$('<input type="password" id="password" placeholder="password" required>')
+	  .css('display', 'inline'),
+	$('<input type="submit" value="login" id="submit">')
+	  .css('display', 'inline')
+	  .click(Form.submit),
+      ]),
     focus: () => {
       window.setTimeout(() => { $(Form.passwordID).focus(); }, 500)
     },
@@ -83,14 +80,15 @@
     },
   };
 
-  root
-  .append(m(TopBanner))
-  .append(m(Spacer))
-  .append(m(Loading))
-  .append(m(Form))
-  .append(m(Alerts))
-  .append(m(Logout))
-  .append(m(BottomLine));
+  root.append([
+    m(TopBanner),
+    m(Spacer),
+    m(Loading),
+    m(Form),
+    m(Alerts),
+    m(Logout),
+    m(BottomLine),
+  ]);
 
   init();
 

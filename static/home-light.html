@@ -8,7 +8,7 @@
     <title>Home .. uglynotes</title>
  
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
-    <script src="/public/mithril.js"></script>
+    <script src="/public/util2.js"></script>
     <style>
 #repository {
   color: #666;
@@ -45,9 +45,7 @@
 
     <script>
       function importnotes() {
-	m.request({method:'GET', url:'/import-notes'})
-	  .then(()=>{console.log('OK')})
-	  .catch(e => {console.log(e.code, e.message, e.response)});
+	ajax({method:'GET', url:'/import-notes'}, () => {console.log('OK')});
       }
     </script>
   </body>

@@ -5,98 +5,76 @@
     <title>Index .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
     <link rel="stylesheet" href="/public/style-light.css?v111111">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    <script src="/public/mithril.js"></script>
     <script src="/public/util2.js?v222"></script>
+    <script src="/public/components.js?v1"></script>
   </head>
   <body>
+    <div id="root"></div>
 <script>
-  const root = document.body;
-
+  const root = $('#root');
+  
   const Alerts = CreateAlerts();
 
-  const [infoIcon, infoMsg] = InfoPair(
+  const [infoIcon, infoMsg] = CreateInfoPair(
     'page', '请在 Groups 页面通过标签组来创建新笔记');
 
   const TopBanner = {
-    view: () => m(
-      'div', {id:'top-banner'}, [
-	'uglynotes .. Index',
-	m(infoIcon),
-	m('div', {id: 'head-buttons'}, [
-	  '|',
-	  [m('a', {href: '/light/tags'}, 'Tags'), '|'],
-	  [m('a', {href: '/light/tag/groups'}, 'Groups'), '|'],
-	  [m('a', {href: '/light/search'}, 'Search'), '|'],
-	])
-      ]
-    )
+    view: () => m('div').append([
+      'uglynotes .. Index',
+      m(infoIcon),
+      m('div').attr('id', 'head-buttons').append([
+	'|',
+	m('a').text('Tags').attr('href', '/light/tags'), '|',
+	m('a').text('Groups').attr('href', '/light/tag/groups'), '|',
+	m('a').text('Search').attr('href', '/light/search'),
+	'|',
+      ]),
+    ]),
   };
 
   const NotesSize = {
-    Size: '',
-    view: () => m('p', {style:'color:grey'}, NotesSize.Size),
-    oninit: function() {
-      m.request({method:'GET', url:'/api/note/all/size'})
-	.then(resp => {
-	  const total_size = resp.TotalSize;
-	  const capacity = resp.Capacity;
-	  const used = fileSizeToString(total_size, 0);
-	  const available = fileSizeToString(capacity - total_size, 0);
-	  NotesSize.Size = `已用: ${used}, 剩余可用: ${available}`;
-	});
+    id: '#notes-size',
+    view: () => m('p').attr('id', 'notes-size').css('color', 'grey'),
+    init: () => {
+      ajax({method:'GET', url:'/api/note/all/size', alerts:Alerts},
+	   (resp) => {
+	     const total_size = resp.TotalSize;
+	     const capacity = resp.Capacity;
+	     const used = fileSizeToString(total_size, 0);
+	     const available = fileSizeToString(capacity - total_size, 0);
+	     $(NotesSize.id).text(`已用: ${used}, 剩余可用: ${available}`);
+	   });
     }
   };
 
-  const App = {
-    Url: '/api/note/all',
-    NotFoundMsg: '数据库中没有笔记',
-    oninit: function() {
-      if (getUrlParam('filter') == 'deleted') {
-	App.Url = '/api/note/deleted';
-	App.NotFoundMsg = '数据库中没有标记为"已删除"的笔记';
-      }
-      m.request({method:'GET', url:App.Url})
-	.then(resp => {
-	  if (!resp || resp.length == 0) {
-	    Alerts.Insert('info', App.NotFoundMsg);
-	    return;
-	  }
-	  Notes.List = resp;
-	  Notes.List.forEach(note => {
-	    note.Exists = true;
-	    note.UpdatedAt = dayjs(note.UpdatedAt);
-	    note.href = `/light/note?id=${note.ID}`;
-	    note.Alerts = CreateAlerts();
-	    note.Config = {
-	      EditUrl: `/light/note/edit?id=${note.ID}`,
-	      DeleteUrl: `/api/note/${note.ID}/deleted`,
-	      ReallyDeleteUrl: `/api/note/${note.ID}`,
-	      ConfirmMsg: 'delete this note?',
-	      DeleteBtn: 'inline',
-	      Disabled: false,
-	      ConfirmBlock: 'none',
-	    };
-	    if (note.Deleted) {
-	      note.Config.ConfirmMsg = 'delete this note permanently?';
-	    }
-	  });
-	})
-      	.catch(e => { Alerts.InsertRespErr(e); })
-	.finally(() => { Loading.Hide(); });
-    },
-    view: () => [
-      m(TopBanner),
-      m(infoMsg),
-      Spacer,
-      m(Loading),
-      m(Alerts),
-      m(Notes),
-      m(NotesSize),
-    ]
-  };
+  root.append([
+    m(TopBanner),
+    m(infoMsg),
+    m(Spacer),
+    m(Loading),
+    m(Alerts),
+    m(Notes),
+    m(NotesSize),
+  ]);
 
-  m.mount(root, App);
+  init();
+
+  function init() {
+    const filter = getUrlParam('filter');
+    const url = filter == 'deleted' ? '/api/note/deleted' : '/api/note/all';
+    const notFoundMsg = filter == 'deleted' ? '数据库中没有标记为"已删除"的笔记' : '数据库中没有笔记';
+    ajax({method:'GET',url:url,alerts:Alerts}, onSuccess, null, onAlways);
+  }
+  function onSuccess(notes) {
+    if (!notes || notes.length == 0) {
+      Alerts.Insert('info', App.NotFoundMsg);
+      return;
+    }
+    notes.forEach(note => Notes.append(note));
+  }
+  function onAlways() { Loading.hide(); }
   
 </script>
   </body>

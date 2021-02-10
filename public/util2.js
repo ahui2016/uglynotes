@@ -116,90 +116,14 @@ function setsAreEqual(a, b) {
   return true;
 }
 
-function InfoPair(name, msg) {
+function CreateInfoPair(name, msg) {
   const infoMsg = {
-    Display: 'none',
-    view: () => m(
-      'div',
-      {id: `about-${name}-info`, class: 'InfoMessage', style: {display: infoMsg.Display}},
-      msg
-    )
+    view: () => $(`<div id="about-${name}-msg" class="InfoMessage" style="display:none">${msg}</div>`),
+    toggle: () => { $(`#about-${name}-msg`).toggle(); },
   };
   const infoIcon = {
-    view: () => m(
-      'img',
-      {id: `about-${name}-icon`, src: '/public/info-circle.svg', class: 'IconButton', alt: "info", title: "显示/隐藏说明", onclick: infoIcon.Toggle}
-    ),
-    Toggle: function() {
-      if (infoMsg.Display == 'none') {
-	infoMsg.Display = 'block';
-      } else {
-	infoMsg.Display = 'none';
-      }
-    }
+    view: () => $(`<img src="/public/info-circle.svg" class="IconButton" alt="info" title="显示/隐藏说明">`)
+      .click(infoMsg.toggle),
   };
   return [infoIcon, infoMsg];
-}
-
-const Notes = {
-  List: [],
-  view: () => m(
-    'ul', Notes.List.map(Notes.NewNote)
-  ),
-  NewNote: function(note) {
-    const noteComp = {
-      view: function() {
-	const self = noteComp;
-	const cfg = note.Config;
-	return m('li', {class:'LI', key: note.ID}, [
-	  m('span', {class:'ID_Date'}, `[id:${note.ID}] ${note.UpdatedAt.format('MMM D, HH:mm')}`),
-	  note.Deleted ? m('span', {class:'Deleted'}, 'DELETED') : '',
-	  !note.Exists ? '' : m('span', {class:'Buttons'}, [
-	    note.Deleted ? '' : m('button', {class:'SlimButton', onclick:()=>{window.location = cfg.EditUrl}}, 'edit'),
-	    m('button', {class:'SlimButton', style:{display:cfg.DeleteBtn}, onclick: self.ShowDelete}, 'delete'),
-	    m('span', {class:'ConfirmBlock', style:{display:cfg.ConfirmBlock}}, [
-	      m('span', {class:'ConfirmDelete'}, cfg.ConfirmMsg),
-	      m('button', {class:'SlimButton', onclick: self.DoDelete, disabled: cfg.Disabled}, 'yes'),
-	      m('button', {class:'SlimButton', onclick: self.CancelDelete}, 'no'),
-	    ]),
-	  ]),
-	  m('br'),
-	  note.Exists ? m('a', {class:'TitleLink', href: note.href}, note.Title) : '',
-	  note.Exists ? '' : m('span', {class:'Title'}, note.Title),
-	  m('br'),
-	  m('span', {class:'Tags'}, addPrefix(toTagNames(note.Tags), '#')),
-	  m(note.Alerts),
-	]);
-      },
-      ShowDelete: function() {
-	note.Config.DeleteBtn = 'none';
-	note.Config.ConfirmBlock = 'inline';
-      },
-      CancelDelete: function() {
-	note.Config.DeleteBtn = 'inline';
-	note.Config.ConfirmBlock = 'none';
-	note.Alerts.Clear();
-      },
-      DoDelete: function() {
-	const self = noteComp;
-	const options = note.Deleted ? self.ReallyDeleteOptions() : self.DeleteOptions();
-	mRequest(
-	  options, note.Alerts, note.Config, 'Disabled', self.DeleteSuccess);
-      },
-      DeleteOptions: function() {
-	const body = new FormData();
-	body.append('deleted', true);
-	return {method:'PUT', url:note.Config.DeleteUrl, body:body}
-      },
-      ReallyDeleteOptions: function() {
-	return {method:'DELETE', url:note.Config.ReallyDeleteUrl}
-      },
-      DeleteSuccess: function(resp) {
-	note.Deleted = true;
-	note.Exists = false;
-	note.Alerts.Clear();
-      },
-    };
-    return m(noteComp);
-  }
 }
