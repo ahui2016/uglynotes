@@ -5,109 +5,111 @@
     <title>Login .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
     <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
-    <script src="/public/mithril.js"></script>
-    <script src="/public/util2.js?v11"></script>
+    <script src="/public/util2.js?v111"></script>
+    <script src="/public/components.js"></script>
   </head>
   <body>
+    <div id="root"></div>
 <script>
-  const root = document.body;
+  const root = $('#root');
 
   const Alerts = CreateAlerts();
 
-  function loginSuccess() {
-    Alerts.Insert('success', '已登入');
-    TopBanner.Link = '/light';
-    Logout.Display = 'block';
-    Form.Display = 'none';
-  }
-  
   const TopBanner = {
-    Link: 'https://github.com/ahui2016/uglynotes',
-    view: () => m(
-      'p', {id:'top-banner'}, [
-	m('a', {href: TopBanner.Link}, 'uglynotes'),
-	' .. Login'])
+    LinkID: '',
+    view: () => {
+      const [a, id] = m_id('a');
+      TopBanner.LinkID = id;
+      return m('p')
+	.append(
+	  a.text('uglynotes').attr('href', 'https://github.com/ahui2016/uglynotes')
+	).append(
+	  ' .. Login'
+	);
+    },
+    setLink: (link) => {
+      $(TopBanner.LinkID).attr('href', link);
+    },
   };
 
   const Form = {
-    Disabled: false,
-    Display: 'block',
-    view: () => m(
-      'form', {style: {display:Form.Display}, autocomplete:'off'}, [
-	m('input', {
-	  type:'password', id:'password', placeholder:'password',
-	  style:'display:inline;', required:true}),
-	m('input', {
-	  type:'submit', value:'login', id:'submit', disabled:Form.Disabled,
-	  style:'display:inline;', onclick: Form.Login})
-      ],
-    ),
-    oncreate: vnode => {
-      window.setTimeout(() => { vnode.dom[0].focus(); }, 500)
+    id: '#the-form',
+    passwordID: '#password',
+    submitID: '#submit',
+    view: () => {
+      return m('form').attr('id', 'the-form').prop('autocomplete', false)
+	.append(
+	  $('<input type="password" id="password" placeholder="password" required>')
+	    .css('display', 'inline')
+	).append(
+	  $('<input type="submit" value="login" id="submit">')
+	    .css('display', 'inline')
+	    .click(Form.submit)
+	);
     },
-    Login: function(event) {
+    focus: () => {
+      window.setTimeout(() => { $(Form.passwordID).focus(); }, 500)
+    },
+    submit: (event) => {
       event.preventDefault();
-      const pwd = $('#password');
-      if (pwd.value == '') {
-	Alerts.Insert('info', '请输入密码'); pwd.focus(); return;
+      const pwd = $(Form.passwordID).val();
+      if (pwd == '') {
+	Alerts.Insert('info', '请输入密码'); Form.focus(); return;
       }
-      Form.Disabled = true;
       const body = new FormData();
-      body.append('password', pwd.value);
-      m.request({ method: 'POST', url: '/login', body: body })
-	.then(() => {
-	  loginSuccess();
-	  window.setTimeout(() => { window.location = '/light/home'; }, 1000);
-	})
-	.catch(e => { Alerts.InsertRespErr(e); })
-	.finally(() => { Form.Disabled = false; });
+      body.append('password', pwd);
+      ajax({method:'POST', url:'/login', body:body, alerts:Alerts, buttonID:Form.submitID},
+	   () => {
+	     loginSuccess();
+	     window.setTimeout(() => { window.location = '/light/home'; }, 1000);
+	   });
     },
   };
 
   const Logout = {
-    Disabled: false,
-    Display: 'none',
-    view: () => m(
-      'button', {style: {display: Logout.Display}, onclick: Logout.Do}, 'Logout'
-    ),
-    Do: function(event) {
+    id: '#logout',
+    view: () => $('<button id="logout">Logout</button>').click(Logout.exec).hide(),
+    exec: (event) => {
       event.preventDefault();
-      Logout.Disabled = true;
-      m.request({method: 'GET', url: '/logout'})
-	.then(() => {
-	  Alerts.Insert('success', '已登出');
-	  Logout.Display = 'none';
-	  Form.Display = 'block';
-	  window.setTimeout(() => { $('#password').focus(); }, 500);
-	})
-      	.catch(e => { Alerts.InsertRespErr(e); Form.Disabled = false; })
-	.finally(() => { Logout.Disabled = false; });
-    }
-  };
-      
-  const App = {
-    oninit: () => {
-      m.request({ method: 'GET', url: '/check' })
-	.then(resp => {
-	  if (resp.message == 'OK') {
-	    loginSuccess();
-	  }
-	})
-	.catch(e => { Alerts.InsertRespErr(e); })
-	.finally(() => { Loading.Hide(); });
+      ajax({method:'GET', url:'/logout', alerts:Alerts, buttonID: Logout.id},
+	   () => {
+	     Alerts.Insert('success', '已登出');
+	     $(Logout.id).hide();
+	     $(Form.id).show();
+	     window.setTimeout(() => { $(Form.passwordID).focus(); }, 500);
+	   });
     },
-    view: () => [
-      m(TopBanner),
-      Spacer,
-      m(Loading),
-      m(Form),
-      m(Alerts),
-      m(Logout),
-    ]
   };
 
-  m.mount(root, App);
+  root
+  .append(m(TopBanner))
+  .append(m(Spacer))
+  .append(m(Loading))
+  .append(m(Form))
+  .append(m(Alerts))
+  .append(m(Logout))
+  .append(m(BottomLine));
+
+  init();
+
+  function loginSuccess() {
+    Alerts.Insert('success', '已登入');
+    TopBanner.setLink('/light');
+    $(Form.id).hide();
+    $(Logout.id).show();
+  }
+
+  function init() {
+    ajax({method:'GET', url:'/check', alerts: Alerts},
+	 onSuccess, null, onAlways);
+  }
+  function onSuccess(resp) { if (resp.message == 'OK') loginSuccess(); }
+  function onAlways() {
+    Loading.hide();
+    Form.focus();
+  }
 
 </script>
   </body>

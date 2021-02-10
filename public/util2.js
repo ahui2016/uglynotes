@@ -1,3 +1,5 @@
+"use strict";
+
 // 创建历史版本的间隔时间
 const DelayOfAutoUpdate = 1000 * 60 * 5 // 5分钟
 
@@ -12,40 +14,60 @@ const NoteTitleLimit = 200
 // 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
 const NoteSizeLimit = 1 << 19 // 512 KB
 
-function $(selectors, dom) {
-  if (!dom) dom = document;
-  return dom.querySelector(selectors);
+// make a new vnode by name, or return its view.
+function m(name) {
+  if (jQuery.type(name) == 'string') {
+    return $(document.createElement(name));
+  }
+  return name.view();
 }
 
-function $S(selectors, dom) {
-  if (!dom) dom = document;
-  return dom.querySelectorAll(selectors);
+// set a random id to vnode and return the id.
+function random_id(vnode) {
+  vnode.attr('id', Math.round(Math.random() * 100000000));
+  return '#' + vnode.attr('id');
 }
 
-function $hide(selectors, dom) {
-  $(selectors, dom).style.display = 'none';
+// return a new vnode and its id.
+function m_id(name) {
+  const vnode = m(name);
+  const id = random_id(vnode);
+  return [vnode, id];
 }
 
-function $show_inline(selectors, dom) {
-  $(selectors, dom).style.display = 'inline';
-}
+function disable(id) { $(id).prop('disabled', true); }
 
-function $show_block(selectors, dom) {
-  $(selectors, dom).style.display = 'block';
-}
+function enable(id) { $(id).prop('disabled', false); }
 
-function mRequest(options, alerts, config, btnDisabled, onSuccess, onFail, onAlways) {
-  if (config && btnDisabled) config[btnDisabled] = true;
-  m.request(options)
-    .then(onSuccess)
-    .catch(e => {
-      alerts.InsertRespErr(e);
-      if (onFail) onFail();
-    })
-    .finally(() => {
-      if (config && btnDisabled) config[btnDisabled] = false;
-      if (onAlways) onAlways();
-    });
+// options: method, url, body, alerts, buttonID
+function ajax(options, onSuccess, onFail, onAlways) {
+  if (options.buttonID) disable(options.buttonID);
+  const xhr = new XMLHttpRequest();
+  xhr.open(options.method, options.url);
+  xhr.onerror = () => {
+    window.alert('An error occurred during the transaction');
+  };
+  xhr.addEventListener('load', function() {
+    if (this.status == 200) {
+      if (onSuccess) {
+	const resp = this.responseText ? JSON.parse(this.responseText) : null;
+	onSuccess(resp);
+      }
+    } else {
+      const msg = `${this.status} ${this.responseText}`;
+      if (options.alerts) {
+	options.alerts.Insert('danger', msg);
+      } else {
+	console.log(msg);
+      }
+      if (onFail) onFail(this);
+    }
+  });
+  xhr.addEventListener('loadend', function() {
+    if (options.buttonID) enable(options.buttonID);
+    if (onAlways) onAlways(this);
+  });
+  xhr.send(options.body);
 }
 
 // 获取地址栏的参数。
@@ -92,47 +114,6 @@ function setsAreEqual(a, b) {
   if (a.size !== b.size) return false;
   for (const item of a) if (!b.has(item)) return false;
   return true;
-}
-
-const Loading = {
-  Display: 'block',
-  Hide: () => { Loading.Display = 'none'; },
-  view: () => m(
-    'p',
-    {id:"loading", class:"alert-info", style: {display:Loading.Display}},
-    'Loading...')
-};
-
-const Spacer =  m('div', {style:'margin-bottom:2em;'});
-const BottomLine = m('div', {style:'margin-top:200px;'});
-
-function CreateAlerts(max) {
-  if (!max) max = 5;
-  const alerts = {
-    Messages: [],
-    Insert: function(msgType, msg) {
-      alerts.Messages.unshift(
-	{Time: dayjs().format('HH:mm:ss'), Type: msgType, Msg:msg});
-      if (alerts.Messages.length > max) {
-	alerts.Messages.pop();
-      }
-    },
-    InsertRespErr: function(e) {
-      const err = !e.response ? `${e.code} ${e.message}` : e.response.message;
-      alerts.Insert('danger', err);
-    },
-    Clear: function() {
-      alerts.Messages = [];
-    },
-    view: () => m(
-      'div', {class: 'alerts'}, alerts.Messages.map(
-	item => m('p', {key: item.Time, class:`alert alert-${item.Type}`}, [
-	  m('span', item.Time),
-	  m('span', item.Msg),
-	]))
-    )
-  };
-  return alerts;
 }
 
 function InfoPair(name, msg) {
