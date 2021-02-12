@@ -5,199 +5,208 @@
     <title>Note .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
     <link rel="stylesheet" href="/public/style-light.css?v11">
-    <script src="/public/mithril.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
-    <script src="/public/util2.js?v1"></script>
+    <script src="/public/util2.js?v11"></script>
+    <script src="/public/components.js?v11"></script>
   </head>
   <style>
-    #info-block {
+    #note-info {
 	color: #999;
 	font-size: smaller;
     }
   </style>
   <body>
+    <div id="root"></div>
 <script>
 
   let Exists = false;
-  let NoteID = '';
-  let Note = {Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:'',DelOptions:{method:'',url:''}};
+  let Note = {Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:''};
 
+  let DelResultMsg = '该笔记已删除';
   const bodyForDel = new FormData();
   bodyForDel.append('deleted', true);
+  let DelOptions; 
   
-  const root = document.body;
-
+  const root = $('#root');
+  
   const Alerts = CreateAlerts();
 
+  const NoteID = sc('span');
+  const HeadButtons = sc('span', 'head-buttons');
+  const EditBtnBlock = sc('span');
+  const EditBtn = sc('a');
+  const HistoryBtn = sc('a');
+  const UndelBlock = sc('span');
+  const DelConfirmMsg = sc('span');
+  const DeleteYes = sc('button');
+  const UndelYes = sc('button');
   const TopBanner = {
-    Config: {
-      DelBtn: 'inline',
-      DelDisabled: false,
-      DelBtnText: 'Delete',
-      ConfirmBlock: 'none',
-      ConfirmMsg: 'delete this note?',
-      DelResult: `该笔记已删除`,
-      UndelBlock: 'none',
-      UndelBtn: 'inline',
-      UndelDisabled: false,
-      UndelConfirmBlock: 'none',
-    },
-    view: function() {
+    view: () => {
       const self = TopBanner;
-      const cfg = TopBanner.Config;
-      return m('div', {id:'top-banner'}, [
-	`Note [id:${NoteID}]`,
-	!Exists ? '' : m('div', {id: 'head-buttons'}, [
+      return m('div').append([
+	m(NoteID),
+	m(HeadButtons).css('display', 'none').append([
 	  '|',
-	  [m('a', {id:'copy'}, 'Copy'), '|'],
-	  Note.Deleted ? '' : m('span', [
-	    m('a', {href:'/light/note/edit?id=' + NoteID}, 'Edit'), '|'
+	  m('a').attr('id', 'copy').text('Copy'), '|',
+	  m(EditBtnBlock).append([m(EditBtn).text('Edit'), '|']),
+	  m(HistoryBtn).text('History'), '|',
+	  m('a').attr('id', 'show-delete').text('Delete').click(self.ShowDelete),
+	  m('span').attr('id', 'delete-confirm').css('display', 'none').append([
+	    m(DelConfirmMsg).addClass('ConfirmDelete').text('delete this note?'),
+	    m(DeleteYes).addClass('SlimButton').text('yes').click(self.DoDelete),
+	    m('button').attr('id', 'delete-no').addClass('SlimButton').text('no').click(self.CancelDelete),
 	  ]),
-	  [m('a', {href:'/html/history?id=' + NoteID}, 'History'), '|'],
-	  [
-	    m('a', {onclick:self.ShowDelete, style:{display:cfg.DelBtn}}, cfg.DelBtnText),
-	    m('span', {style:{display:cfg.ConfirmBlock}}, [
-	      m('span', {class:'ConfirmDelete'}, cfg.ConfirmMsg),
-	      m('button', {class:'SlimButton', onclick:self.DoDelete, disabled:cfg.DelDisabled}, 'yes'),
-	      m('button', {class:'SlimButton', onclick:self.CancelDelete}, 'no'),
+	  '|',
+	  m(UndelBlock).css('display', 'none').append([
+	    m('a').attr('id', 'show-undelete').click(self.ShowUndelete).text('Undelete'),
+	    m('span').attr('id', 'undel-confirm').css('display', 'none').append([
+	      m('span').text('undelete this note?').css('margin-left', '5px'),
+	      m(UndelYes).addClass('SlimButton').text('yes').click(self.DoUndelete),
+	      m('button').attr('id', 'undel-no').addClass('SlimButton').text('no').click(self.CancelUndelete),
 	    ]),
 	    '|',
-	  ],
-	  m('span', {style:{display:cfg.UndelBlock}}, [
-	    m('a', {onclick:self.ShowUndelete, style:{display:cfg.UndelBtn}}, 'Undelete'),
-	    m('span', {style:{display:cfg.UndelConfirmBlock}}, [
-	      m('span', {style:'margin-left:5px;'}, 'undelete this note?'),
-	      m('button', {class:'SlimButton', onclick:self.DoUndelete, disabled:cfg.UndelDisabled}, 'yes'),
-	      m('button', {class:'SlimButton', onclick:self.CancelUndelete}, 'no'),
-	    ]),
-	    '|',
-	  ]), // end of undelete block
-	]), // end of head buttons
-      ]); // end of top banner
+	  ]),
+	]), // end of head-buttons
+      ]); // end of div
     }, // end of view
-    ShowDelete: function() {
-      TopBanner.Config.DelBtn = 'none';
-      TopBanner.Config.ConfirmBlock = 'inline';
+    ShowDelete: () => {
+      $('#show-delete').hide();
+      $('#delete-confirm').show();
     },
-    CancelDelete: function() {
-      TopBanner.Config.DelBtn = 'inline';
-      TopBanner.Config.ConfirmBlock = 'none';
+    CancelDelete: () => {
+      $('#show-delete').show();
+      $('#delete-confirm').hide();
     },
-    DoDelete: function() {
-      const cfg = TopBanner.Config;
-      mRequest(Note.DelOptions, Alerts, cfg, 'DelDisabled', () => {
-	  Exists = false;
-	  Alerts.Insert('success', cfg.DelResult);
+    DoDelete: () => {
+      ajax(DelOptions, () => {
+	$(HeadButtons.id).hide();
+	$(InfoBlock.id).hide();
+	Alerts.Insert('success', DelResultMsg);
       });
     },
-    ShowUndelete: function() {
-      TopBanner.Config.UndelBtn = 'none';
-      TopBanner.Config.UndelConfirmBlock = 'inline';
+    ShowUndelete: () => {
+      $('#show-undelete').hide();
+      $('#undel-confirm').show();
     },
-    CancelUndelete: function() {
-      TopBanner.Config.UndelBtn = 'inline';
-      TopBanner.Config.UndelConfirmBlock = 'none';
+    CancelUndelete: () => {
+      $('#show-undelete').show();
+      $('#undel-confirm').hide();
     },
-    DoUndelete: function() {
-      const cfg = TopBanner.Config;
+    DoUndelete: () => {
       const body = new FormData();
       body.append('deleted', false);
-      mRequest(
-	{method:'PUT', url:`/api/note/${NoteID}/deleted`, body:body},
-	Alerts, cfg, 'UndelDisabled', () => {
-	  Note.DelOptions = {method:'PUT',url:`/api/note/${NoteID}/deleted`,body:bodyForDel};
-	  cfg.DelResult = `该笔记已删除`;
-	  cfg.EditBtnBlock = 'inline';
-	  cfg.ConfirmMsg = 'delete this note?';
-	  cfg.UndelBlock = 'none';
-	  Alerts.Insert('success', '该笔记已复原，可正常编辑');
-	});
+      ajax({method:'PUT',url:`/api/note/${Note.ID}/deleted`,body:body,alerts:Alerts,buttonID:UndelYes.id}, () => {
+	DelOptions = {method:'PUT',url:`/api/note/${Note.ID}/deleted`,body:bodyForDel,alerts:Alerts,buttonID:DeleteYes.id};
+	DelResultMsg = '该笔记已删除';
+	$(DelConfirmMsg.id).text('delete this note?');
+	$(UndelBlock.id).hide();
+	$(EditBtnBlock.id).show();
+	Alerts.Insert('success', '该笔记已复原，可正常编辑');
+      });
     },
   };
 
+  const CreatedAt = sc('span');
+  const UpdatedAt = sc('span');
+  const TypeAndSize = sc('span');
+  const Tags = sc('span');
+  const TagGroup = sc('a');
+  
   const InfoBlock = {
-    view: () => m('div', {id:'title-block'}, [
-      m('p', {id:'info-block'}, [
-	`Created at: ${Note.CreatedAt}`, m('br'),
-	`Updated at: ${Note.UpdatedAt}`, m('br'),
-	`Type: ${Note.Type} (size: ${Note.Size})`, 
+    id: '#info-block',
+    view: () => m('div').attr('id', 'info-block').css('display', 'none').append([
+      m('p').attr('id', 'note-info').append([
+	m(CreatedAt), m('br'),
+	m(UpdatedAt), m('br'),
+	m(TypeAndSize),
       ]),
-      m('p', [
+      m('p').append([
 	'Tags:',
-	Note.Tags.map(tag => m('a', {class:'Tag', href:'/html/search?tags='+encodeURIComponent(tag.Name)}, tag.Name)),
-	m('a', {class:'Tag TagButton', title:'search tag group', href:'/html/search?tags='+Note.TagGroup}, 'group'),
+	m(Tags),
+	m(TagGroup).text('group').addClass('Tag TagButton').attr('title', 'search tag group'),
       ]),
     ]),
   };
 
-  const Contents = {
-    view: function() {
-      if (Note.Type == 'Markdown') {
-	const dirty = marked(Note.Contents);
-	const clean = DOMPurify.sanitize(dirty);
-	return m('div', {class:'NoteContents'}, m.trust(clean));
-      } else {
-	return m('pre', {class:'NoteContents'}, Note.Contents);
-      }
-    }
-  };
+  const Markdown = sc('div');
+  const Plaintext = sc('pre');
+  
+  root.append([
+    m(TopBanner),
+    m(Spacer),
+    m(Loading),
+    m(Alerts),
+    m(InfoBlock),
+    m(Markdown).addClass('NoteContents').css('display', 'none'),
+    m(Plaintext).addClass('NoteContents').css('display', 'none'),
+    m(BottomLine),
+  ]);
 
-  const App = {
-    oninit: function() {
-      const cfg = TopBanner.Config;
-      NoteID = getUrlParam('id');
-      m.request({method:'GET', url:'/api/note/' + NoteID})
-	.then(resp => {
-	  Exists = true;
-	  Note = resp;
-	  Note.Contents = Note.Patches.reduce(
-	    (patched, patch) => Diff.applyPatch(patched, patch), "");
-	  Note.CreatedAt = dayjs(Note.CreatedAt).format('YYYY-MM-DD HH:mm:ss');
-	  Note.UpdatedAt = dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss');
-	  Note.Size = fileSizeToString(Note.Size);
-	  Note.TagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
-	  Note.DelOptions = {method:'PUT',url:`/api/note/${NoteID}/deleted`,body:bodyForDel};
-	  if (Note.Deleted) {
-	    Note.DelOptions = {method:'DELETE', url:`/api/note/${NoteID}`};
-	    cfg.EditBtnBlock = 'none';
-	    cfg.ConfirmMsg = 'delete this note permanently?';
-	    cfg.DelResult = `该笔记已彻底删除`;
-	    cfg.UndelBlock = 'inline';
-	    Alerts.Insert('info', '该笔记被标记为 “已删除”');
-	  }
-	})
-      	.catch(e => { Alerts.InsertRespErr(e); })
-	.finally(() => { Loading.Hide(); });
-    },
-    view: () => [
-      m(TopBanner),
-      Spacer,
-      m(Alerts),
-      Exists ? m(InfoBlock) : '',
-      m(Loading),
-      Exists ? m(Contents) : '',
-      BottomLine,
-    ]
-  };
+  init();
 
-  m.mount(root, App);
+  function init() {
+    const id = getUrlParam('id');
 
+    $(NoteID.id).text(`Note [id:${id}]`);
+    ajax(
+      {method:'GET', url:'/api/note/'+id, alerts:Alerts},
+      (resp) => {
+	Note = resp;
+	Note.Contents = Note.Patches.reduce(
+	  (patched, patch) => Diff.applyPatch(patched, patch), "");
+	DelOptions = {
+	  method:'PUT',url:`/api/note/${id}/deleted`,body:bodyForDel,alerts:Alerts,buttonID:DeleteYes.id};
+	$(HeadButtons.id).show();
+	$(InfoBlock.id).show();
+	$(CreatedAt.id).text(dayjs(Note.CreatedAt).format('YYYY-MM-DD HH:mm:ss'));
+	$(UpdatedAt.id).text(dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss'));
+	const size = fileSizeToString(Note.Size);
+	$(TypeAndSize.id).text(`Type: ${Note.Type} (size: ${size})`);
+	const tagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
+	$(TagGroup.id).attr('href', '/html/search?tags='+tagGroup);
+	$(EditBtn.id).attr('href', '/light/note/edit?id=' + Note.ID);
+	$(HistoryBtn.id).attr('href', '/html/history?id=' + Note.ID);
+
+	Note.Tags.forEach(tag => { $(Tags.id).append(CreateTag(tag.Name)); });
+
+	if (Note.Type == 'Markdown') {
+	  const dirty = marked(Note.Contents);
+	  const clean = DOMPurify.sanitize(dirty);
+	  $(Markdown.id).show().html(clean);
+	} else {
+	  $(Plaintext.id).show().text(Note.Contents);
+	}
+	
+	if (Note.Deleted) {
+	  DelResultMsg = '该笔记已彻底删除';
+	  DelOptions = {
+	    method:'DELETE',url:`/api/note/${id}`,alerts:Alerts,buttonID:DeleteYes.id};
+	  $(EditBtnBlock.id).hide();
+	  $(UndelBlock.id).show();
+	  $(DelConfirmMsg.id).text('delete this note permanently?');
+	  Alerts.Insert('info', '该笔记被标记为 “已删除”');
+	}
+      },
+      null,
+      () => { Loading.hide(); },
+    );
+  }
+  
   const clipboard = new ClipboardJS('#copy', {
     text: () => { return Note.Contents; }
   });
   clipboard.on('success', () => {
     Alerts.Insert('success', '笔记内容已复制到剪贴板');
-    m.redraw();
   });
   clipboard.on('error', e => {
     console.error('Action:', e.action);
     console.error('Trigger:', e.trigger);
     Alerts.Insert('danger', '复制失败，详细信息见控制台');
-    m.redraw();
   });
 
 </script>

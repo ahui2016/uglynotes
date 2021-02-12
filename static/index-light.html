@@ -56,7 +56,9 @@
     m(Loading),
     m(Alerts),
     m(Notes),
+    m(Spacer),
     m(NotesSize),
+    m(BottomLine),
   ]);
 
   init();
@@ -66,6 +68,7 @@
     const url = filter == 'deleted' ? '/api/note/deleted' : '/api/note/all';
     const notFoundMsg = filter == 'deleted' ? '数据库中没有标记为"已删除"的笔记' : '数据库中没有笔记';
     ajax({method:'GET',url:url,alerts:Alerts}, onSuccess, null, onAlways);
+    NotesSize.init();
   }
   function onSuccess(notes) {
     if (!notes || notes.length == 0) {

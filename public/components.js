@@ -94,3 +94,10 @@ const Notes = {
     $(Notes.id).prepend(elem);
   },
 };
+
+function CreateTag(name) {
+  return m('a')
+    .addClass('Tag')
+    .text(name)
+    .attr('href', '/html/search?tags=' + encodeURIComponent(name));
+}

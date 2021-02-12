@@ -35,6 +35,12 @@ function m_id(name) {
   return [vnode, id];
 }
 
+// sc creates a simple component with an id.
+function sc(name, id) {
+  if (!id) id = '' + Math.round(Math.random() * 100000000);
+  return {id: '#'+id, view:() => m(name).attr('id', id)};
+}
+
 function disable(id) { $(id).prop('disabled', true); }
 
 function enable(id) { $(id).prop('disabled', false); }
