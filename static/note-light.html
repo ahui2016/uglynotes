@@ -24,9 +24,6 @@
     <div id="root"></div>
 <script>
 
-  let Exists = false;
-  let Note = {Size:'',Deleted:false,Contents:'',Tags:[],CreatedAt:'',UpdatedAt:''};
-
   let DelResultMsg = '该笔记已删除';
   const bodyForDel = new FormData();
   bodyForDel.append('deleted', true);
@@ -36,15 +33,15 @@
   
   const Alerts = CreateAlerts();
 
-  const NoteID = sc('span');
-  const HeadButtons = sc('span', 'head-buttons');
-  const EditBtnBlock = sc('span');
-  const EditBtn = sc('a');
-  const HistoryBtn = sc('a');
-  const UndelBlock = sc('span');
-  const DelConfirmMsg = sc('span');
-  const DeleteYes = sc('button');
-  const UndelYes = sc('button');
+  const NoteID = cc('span');
+  const HeadButtons = cc('span', 'head-buttons');
+  const EditBtnBlock = cc('span');
+  const EditBtn = cc('a');
+  const HistoryBtn = cc('a');
+  const UndelBlock = cc('span');
+  const DelConfirmMsg = cc('span');
+  const DeleteYes = cc('button');
+  const UndelYes = cc('button');
   const TopBanner = {
     view: () => {
       const self = TopBanner;
@@ -111,11 +108,11 @@
     },
   };
 
-  const CreatedAt = sc('span');
-  const UpdatedAt = sc('span');
-  const TypeAndSize = sc('span');
-  const Tags = sc('span');
-  const TagGroup = sc('a');
+  const CreatedAt = cc('span');
+  const UpdatedAt = cc('span');
+  const TypeAndSize = cc('span');
+  const Tags = cc('span');
+  const TagGroup = cc('a');
   
   const InfoBlock = {
     id: '#info-block',
@@ -133,8 +130,8 @@
     ]),
   };
 
-  const Markdown = sc('div');
-  const Plaintext = sc('pre');
+  const Markdown = cc('div');
+  const Plaintext = cc('pre');
   
   root.append([
     m(TopBanner),

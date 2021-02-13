@@ -5,13 +5,14 @@
     <title>New Note .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
     <link rel="stylesheet" href="/public/style-light.css?v11">
-    <script src="/public/mithril.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
     <script src="/public/util2.js?v1"></script>
+    <script src="/public/components.js?v11"></script>
   </head>
   <style>
     .NoteContents {
@@ -19,10 +20,9 @@
     }
   </style>
   <body>
+    <div id="root"></div>
 <script>
 
-  let Exists = false;
-  let Note = {ID:'', Deleted:false, Patches:[], Tags:[], CreatedAt:'', UpdatedAt:''};
   let AutoSubmitID;
   let Stopped = true;
   
@@ -36,101 +36,131 @@
     'page', `注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前),
 请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当错误提示“已停止自动保存”时
 请按 F12 进入控制台执行 restartAutoSubmit() 即可重新启用自动保存功能。`);
- 
+
+  const PageTitle = cc('span');
+  const HeadButtons = cc('span', 'head-buttons');
+  const ReadonlyMode = cc('a');
+  const History = cc('a');
   const TopBanner = {
-    view: () =>  m('div', {id:'top-banner'}, [
-      Exists ? 'Edit Note' : 'New Note',
+    view: () =>  m('div').append([
+      m(PageTitle).text('New Note'),
       m(infoIcon),
       ' .. ',
-      m('a', {href:'/converter', title:'image converter', target:'_blank'}, 'Converter'),
-      !Exists ? '' : m('div', {id: 'head-buttons'}, [
+      $('<a href="/converter" title="image converter" target="_blank">Converter</a>');
+      m(HeadButtons).css('display', 'none').append([
 	'|',
-	m('a', {href:`/light/note?id=${Note.ID}`, target:'_blank'}, 'readonly-mode'), '|',
-	m('a', {href:`/html/history?id=${Note.ID}&version=${Note.Patches.length}`, target:'_blank'}, 'History'),
+	m(ReadonlyMode).text('readonly-mode').attr('target', '_blank'), '|',
+	m(History).text('History').attr('target', '_blank'),
 	'|',
       ]),
-    ])
+    ]),
   };
 
+  const PlaintextBtnArea = cc('span');
+  const MarkdownBtn = cc('input');
+  const PreviewBtn = cc('a');
+  const EditBtn = cc('a');
   const TypeSelector = {
-    CurrentType: 'plaintext',
-    OldType: 'plaintext',
-    InPreview: false,
-    view: function() {
+    oldType: 'plaintext',
+    currentType: () => $('input[name="note-type"]:checked').value,
+    view: () => {
       const self = TypeSelector;
-      return m('p', {onchange:self.UpdateType}, [
-	self.InPreview ? '' : [
-	  m('input', {type:'radio', id:'plaintext', name:'note-type', value:'plaintext',
-		      checked: self.CurrentType.toLowerCase() == 'plaintext' ? true : false}),
-	  m('label', {for:'plaintext'}, 'plaintext'),
-	  [' (',m('a', {id:'copy',class:'Pointer',"data-clipboard-target":'#contents'}, 'copy'),')'],
+      return m('p').append([
+	m(PlaintextBtnArea).append([
+	  $('<input type="radio" id="plaintext" name="note-type" value="plaintext" checked>'),
+	  m('label').text('plaintext').attr('for', 'plaintext'),
+	  ' (',
+	  $('<a id="copy" class="Pointer" data-clipboard-target="#contents">copy</a>'),
+	  ')'],
 	],
-	m('input', {type:'radio', id:'markdown', name:'note-type', value:'markdown',
-		    checked: self.CurrentType.toLowerCase() == 'markdown' ? true : false}),
-	m('label', {for:'markdown'}, 'markdown'),
-	['(',
-	 self.InPreview ? '' : m('a', {accesskey:'p', onclick:self.Preview,class:'Pointer'}, 'preview'),
-	 self.InPreview ? m('a', {accesskey:'e', onclick:self.Edit,class:'Pointer'}, 'edit') : '',
-	 ,')'],
+	$(MarkdownBtn).attr({type:'radio',name:'note-type',value:'markdown'}),
+	m('label').text('markdown').attr('for', 'markdown'),
+	'(',
+	m(PreviewBtn).attr({text:'preview',accesskey:'p',class:'Pointer'}).click(self.Preview),
+	m(EditBtn).attr({text:'edit',accesskey:'e',class:'Pointer',style:'display:none'}).click(self.Edit),
+	')',
 	m(AlertsForCopy),
       ]);
     },
-    UpdateType: function() {
-      TypeSelector.CurrentType = $('input[name="note-type"]:checked').value;
-    },
-    Preview: function() {
-      TypeSelector.InPreview = true;
+    Preview: function(event) {
       const contents = $('#contents').value.trim();
       const dirty = marked(contents);
       const clean = DOMPurify.sanitize(dirty);
-      Preview.Html = clean;
+      $(Preview.id).show().html(clean);
+      $(Textarea.id).hide();
+      $(PreviewBtn.id).hide();
+      $(EditBtn.id).show();
+      $(PlaintextBtnArea.id).hide();
     },
     Edit: function() {
-      TypeSelector.InPreview = false;
+      $(Preview.id).hide();
+      $(Textarea.id).show();
+      $(PreviewBtn.id).show();
+      $(EditBtn.id).hide();
+      $(PlaintextBtnArea.id).show();
     },
   };
 
+  const Contents = cc('textarea', 'contents');
+  const Higher = cc('p');
   const Textarea = {
-    Rows: '10',
-    Contents: '',
-    OldContents: '',
+    id: '#textarea',
+    currentContents: '',
+    oldContents: '',
     view: function() {
       const self = Textarea;
-      return [
-	m('textarea', {id:'contents', accesskey:'c', onblur:self.UpdateContents, rows:self.Rows}, self.Contents),
-	m('p',{class:'Pointer',title:'higher',style:'text-align:right;',onclick:self.Higher},m.trust(
+      return m('div').attr('id', 'textarea').append([
+	m(Contents).attr({accesskey:'c',rows:'10'}).blur(self.updateContents),
+	m(Higher).attr({class:'Pointer',title:'higher',style:'text-align:right;'}).click(self.higher).html(
 	  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
 	     <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
 	   </svg>`
-	)),
-      ];
+	),
+      ]);
     },
-    Higher: function() {
-      Textarea.Rows = parseInt(Textarea.Rows) + 5;
-      $('#contents').focus();
+    updateContents: (event) => {
+      Textarea.currentContents = event.currentTarget.value;
     },
-    CurrentContents: function() { return $('#contents').value; },
-    UpdateContents: function() {
-      Textarea.Contents = Textarea.CurrentContents();
+    checkContents: () => {
+      const self = Textarea;
+      if (self.currentContents == '') {
+        // 有 event 表示点击了按钮，这种情况要给用户提示。
+        // 如果没有 event 则是后台自动运行，不需要提示。
+        if (event) Alerts.Insert('info', '笔记内容不可空白');
+        return 'NG';
+      }
+      if (self.currentContents.length > NoteSizeLimit) {
+	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
+	return 'NG';
+      }
+      if (self.currentContents == self.oldContents) {
+	if (event) Alerts.Insert('info', '笔记内容没有变化');
+	return 'NG';
+      }
+      return 'OK';
+    },
+    higher: function() {
+      const rows = parseInt($(Textarea.id).attr('rows'));
+      $(Textarea.id).attr('rows', rows + 5);
+      $(Contents.id).focus();
     },
   };
 
   const Preview = {
-    Html: '',
-    view: function() {
-      return m('div', {id:'preview', class:'NoteContents'}, m.trust(Preview.Html));
-    }
+    id: '#preview',
+    view: () => m('div').attr({id:'preview',class:'NoteContents'}),
   };
 
   const Tags = {
-    Tags: [],
-    OldTags: [],
-    view: () => m('p', [
-      m('label', {for:'tags'}, 'Tags:'),
-      m('textarea', {id:'tags', accesskey:'t', onblur:Tags.Onblur, rows:2}, addPrefix(Tags.Tags, '#')),
+    currentTags: [],
+    oldTags: [],
+    view: () => m('p').append([
+      m('label').attr({for:'tags',text:'Tags:'}),
+      m('textarea').attr({accesskey:'t',rows:'2'}).blur(Tags.onblur),
     ]),
-    Onblur: function(event) {
-      Tags.Tags = tagsStringToSet(event.currentTarget.value);
+    onblur: function(event) {
+      Tags.currentTags = tagsStringToSet(event.currentTarget.value);
+      event.currentTarget.value = Tags.currentTags;
     },
   };
 
@@ -138,51 +168,34 @@
     'shortcut', `本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
       预览、编辑、文本框。(详情请看 Releases.md)`);
 
+  const SubmitBtn = cc('button');
+  const UpdateBtn = cc('button');
   const Submit = {
-    Display: false,
-    Value: 'submit',
     view: function() {
       const self = Submit;
-      return m('p', [
-	self.Value == 'submit' ? m('button', {onclick:self.Submit, disabled:self.Disabled}, self.Value) : '',
-	self.Value == 'update' ? m('button', {onclick:self.Update, disabled:self.Disabled}, self.Value) : '',
+      return m('p').append([
+	m(SubmitBtn).val('submit').click(self.submit),
+	m(UpdateBtn).val('update').click(self.update),
 	m(aboutShortcutIcon),
 	m(aboutShortcutMsg),
       ]);
     },
-    CheckContents: function(contents) {
-      if (contents == '') {
-        // 有 event 表示点击了按钮，这种情况要给用户提示。
-        // 如果没有 event 则是后台自动运行，不需要提示。
-        if (event) Alerts.Insert('info', '笔记内容不可空白');
-        return 'NG';
-      }
-      if (contents.length > NoteSizeLimit) {
-	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
-	return 'NG';
-      }
-      if (contents == Textarea.OldContents) {
-	if (event) Alerts.Insert('info', '笔记内容没有变化');
-	return 'NG';
-      }
-      return 'OK';
-    },
     Submit: function(event) {
       event.preventDefault();
-      const contents = Textarea.CurrentContents().trim();
-      if (Submit.CheckContents(contents) == 'NG') return;
-      if (Tags.Tags.size < 2) {
+      if (Textarea.checkContents(contents) == 'NG') return;
+      if (Tags.currentTags.size < 2) {
 	Alerts.Insert('至少需要 2 个标签才能创建笔记');
 	return;
       }
 
+      const contents = Textarea.currentContents.trim();
       const patch = Diff.createPatch(" ", "", contents);
+      const note_type = TypeSelector.currentType();
       const body = new FormData();
-      const note_type = TypeSelector.CurrentType;
       body.append('note-type', note_type);
       body.append('title', contents.substring(0, NoteTitleLimit));
       body.append('patch', patch);
-      body.append('tags', JSON.stringify(Array.from(Tags.Tags)));
+      body.append('tags', JSON.stringify(Array.from(Tags.currentTags)));
 
       mRequest({method:'POST', url:'/api/note', body:body},
 	       Alerts, Submit, 'Disabled', resp => {

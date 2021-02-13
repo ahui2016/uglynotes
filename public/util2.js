@@ -35,8 +35,8 @@ function m_id(name) {
   return [vnode, id];
 }
 
-// sc creates a simple component with an id.
-function sc(name, id) {
+// cc creates a component with an id.
+function cc(name, id) {
   if (!id) id = '' + Math.round(Math.random() * 100000000);
   return {id: '#'+id, view:() => m(name).attr('id', id)};
 }
