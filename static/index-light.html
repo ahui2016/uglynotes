@@ -13,16 +13,17 @@
   <body>
     <div id="root"></div>
 <script>
-  const root = $('#root');
   
   const Alerts = CreateAlerts();
 
   const [infoIcon, infoMsg] = CreateInfoPair(
     'page', '请在 Groups 页面通过标签组来创建新笔记');
 
+  const PageTitle = cc('span');
   const TopBanner = {
     view: () => m('div').append([
-      'uglynotes .. Index',
+      'uglynotes .. ',
+      m(PageTitle).text('Index'),
       m(infoIcon),
       m('div').attr('id', 'head-buttons').append([
 	'|',
@@ -49,7 +50,7 @@
     }
   };
 
-  root.append([
+  $('#root').append([
     m(TopBanner),
     m(infoMsg),
     m(Spacer),
@@ -65,8 +66,14 @@
 
   function init() {
     const filter = getUrlParam('filter');
-    const url = filter == 'deleted' ? '/api/note/deleted' : '/api/note/all';
-    const notFoundMsg = filter == 'deleted' ? '数据库中没有标记为"已删除"的笔记' : '数据库中没有笔记';
+    let url = '/api/note/all';
+    let notFoundMsg = '数据库中没有笔记';
+    if (filter == 'deleted') {
+      url = '/api/note/deleted';
+      notFoundMsg = '数据库中没有标记为"已删除"的笔记';
+      $(PageTitle.id).text('Recycle Bin');
+      $('title').text('Recycle Bin .. uglynotes');
+    }
     ajax({method:'GET',url:url,alerts:Alerts}, onSuccess, null, onAlways);
     NotesSize.init();
   }

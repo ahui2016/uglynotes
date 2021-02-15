@@ -122,14 +122,14 @@ function setsAreEqual(a, b) {
   return true;
 }
 
-function CreateInfoPair(name, msg) {
-  const infoMsg = {
-    view: () => $(`<div id="about-${name}-msg" class="InfoMessage" style="display:none">${msg}</div>`),
-    toggle: () => { $(`#about-${name}-msg`).toggle(); },
-  };
-  const infoIcon = {
-    view: () => $(`<img src="/public/info-circle.svg" class="IconButton" alt="info" title="显示/隐藏说明">`)
-      .click(infoMsg.toggle),
-  };
-  return [infoIcon, infoMsg];
+function CreateClipboard(alerts, textFunc) {
+  const clipboard = new ClipboardJS('#copy', {text: textFunc});
+  clipboard.on('success', () => {
+    alerts.Insert('success', '笔记内容已复制到剪贴板');
+  });
+  clipboard.on('error', e => {
+    console.error('Action:', e.action);
+    console.error('Trigger:', e.trigger);
+    alerts.Insert('danger', '复制失败，详细信息见控制台');
+  });
 }
