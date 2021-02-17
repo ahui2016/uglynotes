@@ -41,6 +41,7 @@ function CreateAlerts(max) {
     },
     Clear: () => {
       $(alerts.ID).html('');
+      alerts.Count = 0;
     },
     view: () => {
       const [vnode, id] = m_id('div');

@@ -62,19 +62,19 @@
   const EditBtn = cc('a');
   const TypeSelector = {
     oldType: 'plaintext',
-    currentType: () => $('input[name="note-type"]:checked').value,
+    currentType: () => $('input[name="note-type"]:checked').val(),
     view: () => {
       const self = TypeSelector;
       return m('p').append([
 	m(PlaintextBtnArea).append([
-	  $('<input type="radio" id="plaintext" name="note-type" value="plaintext" checked>'),
+	  $('<input type="radio" id="plaintext" name="note-type" value="Plaintext" checked>'),
 	  m('label').text('plaintext').attr('for', 'plaintext'),
 	  '(',
 	  $('<a id="copy" class="Pointer" data-clipboard-target="#contents">copy</a>'),
 	  ')',
 	]),
-	m(MarkdownBtn).attr({type:'radio',name:'note-type',value:'markdown'}),
-	m('label').text('markdown').attr('for', 'markdown'),
+	m(MarkdownBtn).attr({type:'radio',name:'note-type',value:'Markdown'}),
+	m('label').text('markdown').attr('for', MarkdownBtn.id.slice(1)),
 	'(',
 	m(PreviewBtn).text('preview').attr({accesskey:'p',class:'Pointer'}).click(self.Preview),
 	m(EditBtn).text('edit').attr({accesskey:'e',class:'Pointer',style:'display:none'}).click(self.Edit),
@@ -231,12 +231,13 @@
       if (event) event.preventDefault();
 
       // 更新笔记类型
-      if (TypeSelector.currentType != TypeSelector.oldType) {
+      const note_type = TypeSelector.currentType();
+      if (note_type != TypeSelector.oldType) {
 	const body = new FormData();
-	body.append('note-type', TypeSelector.currentType);
+	body.append('note-type', note_type);
 	ajax({method:'PUT', url:`/api/note/${Note.ID}/type`, body:body, alerts:Alerts, buttonID:UpdateBtn.id},
 	     () => {
-	       TypeSelector.oldType = TypeSelector.currentType;
+	       TypeSelector.oldType = note_type;
 	       Alerts.Insert('success', '笔记类型更新成功: ' + note_type);
 	     },
 	     () => { stopAutoSubmit(); },
@@ -316,7 +317,6 @@
 	  restartAutoSubmit();
 
 	  // init note type
-	  TypeSelector.currentType = Note.Type;
 	  TypeSelector.oldType = Note.Type;
 	  if (Note.Type == 'Markdown') {
 	    $(MarkdownBtn.id).prop('checked', true);
@@ -354,7 +354,7 @@
   }
 
   function enterEditMode() {
-    $('title').text = 'Edit Note .. uglynotes';
+    $('title').text('Edit Note .. uglynotes');
     $(PageTitle.id).text('Edit Note');
     $(ReadonlyMode.id).attr('href', `/light/note?id=${Note.ID}`);
     $(History.id).attr('href', `/html/history?id=${Note.ID}&version=${Note.Patches.length}`);
@@ -370,9 +370,14 @@
     if (!Note.ID) { Submit.submit(); } else { Submit.update(); }
   }
 
-  function restartAutoSubmit() {
+  function restartAutoSubmit(delay) {
+    if (!delay) {
+      delay = DelayOfAutoUpdate;
+    } else {
+      delay *= 1000;
+    }
     if (!Stopped) stopAutoSubmit();
-    AutoSubmitID = window.setInterval(submit_or_update, DelayOfAutoUpdate);
+    AutoSubmitID = window.setInterval(submit_or_update, delay);
     Stopped = false;
     const msg = '启用自动保存功能: OK';
     console.log(msg);
@@ -387,7 +392,7 @@
     const msg = '已停止自动保存，请手动执行 restartAutoSubmit()';
     Alerts.Insert('danger', msg);
     AlertsForCopy.Insert('danger', msg);
-    infoMsg.show()
+    $(infoMsg.id).show()
   }
   
 </script>
