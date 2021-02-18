@@ -7,6 +7,7 @@ const BottomLine = { view: () => $('<div style="margin-top: 200px;"></div>') };
 const Loading = {
   view: () => $('<p id="loading" class="alert-info">Loading...</p>'),
   hide: () => { $('#loading').hide(); },
+  reset: (text) => { $('#loading').show().text(text); },
 };
 
 function CreateInfoPair(name, msg) {
@@ -118,11 +119,18 @@ const Notes = {
     const elem = Notes.newNote(note);
     $(Notes.id).append(m(elem));
   },
+  clear: (notes) => {
+    $(Notes.id).html('');
+  },
+  refill: (notes) => {
+    Notes.clear();
+    notes.forEach(Notes.append);
+  },
 };
 
 function CreateTag(name) {
   return m('a')
     .addClass('Tag')
     .text(name)
-    .attr('href', '/html/search?tags=' + encodeURIComponent(name));
+    .attr('href', '/light/search?tags=' + encodeURIComponent(name));
 }

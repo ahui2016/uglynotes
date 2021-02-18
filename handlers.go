@@ -103,6 +103,10 @@ func searchPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/search.html")
 }
 
+func searchPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/search-light.html")
+}
+
 func downloadDatabase(c *fiber.Ctx) error {
 	return c.SendFile(dbPath)
 }

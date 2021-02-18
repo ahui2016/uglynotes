@@ -165,7 +165,7 @@
 	const size = fileSizeToString(Note.Size);
 	$(TypeAndSize.id).text(`Type: ${Note.Type} (size: ${size})`);
 	const tagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
-	$(TagGroup.id).attr('href', '/html/search?tags='+tagGroup);
+	$(TagGroup.id).attr('href', '/light/search?tags='+tagGroup);
 	$(EditBtn.id).attr('href', '/light/note/edit?id=' + Note.ID);
 	$(HistoryBtn.id).attr('href', '/html/history?id=' + Note.ID);
 

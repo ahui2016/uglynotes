@@ -113,7 +113,7 @@
 
   const Textarea = {
     id: '#textarea',
-    currentContents: '',
+    currentContents: () => $(Contents.id).val().trim(),
     oldContents: '',
     view: function() {
       const self = Textarea;
@@ -127,22 +127,20 @@
 	),
       ]);
     },
-    updateContents: (event) => {
-      Textarea.currentContents = event.currentTarget.value;
-    },
     checkContents: () => {
       const self = Textarea;
-      if (self.currentContents == '') {
+      const currentContents = self.currentContents();
+      if (currentContents == '') {
         // 有 event 表示点击了按钮，这种情况要给用户提示。
         // 如果没有 event 则是后台自动运行，不需要提示。
         if (event) Alerts.Insert('info', '笔记内容不可空白');
         return 'NG';
       }
-      if (self.currentContents.length > NoteSizeLimit) {
+      if (currentContents.length > NoteSizeLimit) {
 	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
 	return 'NG';
       }
-      if (self.currentContents == self.oldContents) {
+      if (currentContents == self.oldContents) {
 	if (event) Alerts.Insert('info', '笔记内容没有变化');
 	return 'NG';
       }
@@ -204,7 +202,7 @@
 	return;
       }
 
-      const contents = Textarea.currentContents.trim();
+      const contents = Textarea.currentContents();
       const patch = Diff.createPatch(" ", "", contents);
       const note_type = TypeSelector.currentType();
       const body = new FormData();
@@ -220,7 +218,7 @@
 	  Note = resp;
 	  TypeSelector.oldType = note_type;
 	  TagsArea.oldTags = TagsArea.currentTags;
-	  Textarea.oldContents = Textarea.currentContents;
+	  Textarea.oldContents = contents;
 	  enterEditMode();
 	  Alerts.Insert('success', '新笔记创建成功 id:' + Note.ID);
 	},
@@ -263,7 +261,7 @@
 
       // 更新笔记内容
       if (Textarea.checkContents() == 'NG') return;
-      let contents = Textarea.currentContents.trim();
+      let contents = Textarea.currentContents();
       const patch = Diff.createPatch(" ", Textarea.oldContents, contents);
       const body = new FormData();
       body.append('title', contents.substring(0, NoteTitleLimit));
@@ -271,7 +269,7 @@
 
       ajax({method:'PATCH', url:`/api/note/${Note.ID}`, body:body, alerts:Alerts, buttonID:UpdateBtn.id},
 	   () => {
-	     Textarea.oldContents = Textarea.currentContents;
+	     Textarea.oldContents = contents;
 	     Note.Patches.push(patch);
 	     Alerts.Insert('success', `笔记内容更新，产生第 ${Note.Patches.length} 个历史版本`);
 	   },
@@ -323,10 +321,10 @@
 	  }
 
 	  // init note contents
-	  Textarea.currentContents = Note.Patches.reduce(
+	  contents = Note.Patches.reduce(
 	    (patched, patch) => Diff.applyPatch(patched, patch), "");
-	  Textarea.oldContents = Textarea.currentContents;
-	  $(Contents.id).val(Textarea.currentContents);
+	  Textarea.oldContents = contents;
+	  $(Contents.id).val(contents);
 
 	  // init tags
 	  TagsArea.currentTags = new Set(toTagNames(Note.Tags));
@@ -335,7 +333,7 @@
 
 	  Alerts.Insert('success', '已获取笔记 id: ' + Note.ID);
 	  Alerts.Insert('success', '已进入编辑模式');
-	  window.setTimeout(() => {$('#contents').focus()}, 500);
+	  window.setTimeout(() => {$(Contents.id).focus()}, 500);
 	},
 	() => { stopAutoSubmit(); },
 	() => { Loading.hide(); });
@@ -364,7 +362,7 @@
     $(UpdateBtn.id).show();
   }
 
-  const clipboard = CreateClipboard(AlertsForCopy, () => Textarea.currentContents);
+  const clipboard = CreateClipboard(AlertsForCopy, () => $(Contents.id).val());
 
   function submit_or_update() {
     if (!Note.ID) { Submit.submit(); } else { Submit.update(); }

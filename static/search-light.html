@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Search .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v111111">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js?v222"></script>
+    <script src="/public/components.js?v1"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+  
+  const Alerts = CreateAlerts(9);
+
+  const TopBanner = {
+    view: () => m('div').append([
+      m('a').text('uglynotes').attr('href', '/light'), ' .. Search',
+    ]),
+  };
+
+  const ByTags = cc('input');
+  const ByTitle = cc('input');
+  const SearchInput = cc('textarea');
+  const SubmitBtn = cc('button');
+  const SearchForm = {
+    view: () => m('form').append([
+      'Search by',
+      m(ByTags).attr({type:'radio',name:'search-by',value:'tags'}).prop('checked', true),
+      m('label').text('tags').attr({for:ByTags.id.slice(1)}),
+      m(ByTitle).attr({type:'radio',name:'search-by',value:'title'}),
+      m('label').text('title').attr({for:ByTitle.id.slice(1)}),
+      m(SearchInput).attr({rows:2}).prop({autofocus:true,required:true}),
+      m('p').css({textAlign:'right',marginTop:0}).append(
+	m(SubmitBtn).text('search').click(SearchForm.onsubmit)),
+    ]),
+    onsubmit: (event) => {
+      event.preventDefault();
+      const pattern = $(SearchInput.id).val().trim();
+      if (!pattern) {
+	Alerts.Insert('info', '请输入搜索内容');
+	$(SearchInput.id).focus();
+	return;
+      }
+      const searchBy = $('input[name="search-by"]:checked').val();
+      if (searchBy == 'tags') SearchForm.searchTags();
+      if (searchBy == 'title') SearchForm.searchTitle();
+    },
+    searchTags: () => {
+      const tagSet = tagsStringToSet($(SearchInput.id).val());
+      const tags = addPrefix(tagSet);
+      const url = '/api/search/tags/' + encodeURIComponent(tags);
+      Alerts.Insert('info', 'searching tags: ' + addPrefix(tagSet, '#'));
+      SearchForm.search(url);
+    },
+    searchTitle: () => {
+      const title = $(SearchInput.id).val().trim();
+      const url = '/api/search/title/' + encodeURIComponent(title);
+      Alerts.Insert('info', 'searching title: ' + title);
+      SearchForm.search(url);
+    },
+    search: (url) => {
+      ajax({method:'GET',url:url,alerts:Alerts,buttonID:SubmitBtn.id},
+	   SearchForm.onSuccess, SearchForm.onFail);
+    },
+    onSuccess: (resp) => {
+      if (!resp || !resp.length) {
+	Alerts.Insert('danger', '找不到相关笔记');
+	Notes.clear();
+	return;
+      }
+      Alerts.Insert('success', `找到 ${resp.length} 篇笔记`);
+      Notes.refill(resp);
+    },
+    onFail: () => {
+      Notes.clear();
+    },
+  };
+
+  $('#root').append([
+    m(TopBanner),
+    m(Spacer),
+    m(SearchForm),
+    m(Alerts).css({marginTop:'-4em'}),
+    m(Spacer),
+    m(Notes),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+    const tagGroup = getUrlParam('tags');
+    if (tagGroup) {
+      $(SearchInput.id).val(tagGroup);
+      $(SubmitBtn.id).click();
+    }
+  }
+  
+</script>
+  </body>
+</html>

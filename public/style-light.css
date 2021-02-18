@@ -27,7 +27,7 @@ body {
     font-size: larger;
 }
 
-.alerts p:nth-of-type(n+5) {
+.alerts p:nth-of-type(n+4) {
     color: gray;
 }
 
