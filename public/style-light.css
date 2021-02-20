@@ -89,14 +89,6 @@ body {
     font-size: smaller;
 }
 
-.LI .Buttons {
-    display: none;
-    margin-left: 5px;
-}
-.LI:hover .Buttons {
-    display: inline;
-}
-
 .ConfirmDelete {
     color: red;
     margin-left: 5px;
@@ -123,6 +115,23 @@ body {
     background-color: lightblue;
 }
 .Tag.Btn:hover {
+    background-color: steelblue;
+}
+
+.Buttons {
+    margin-left: 5px;
+}
+
+.Buttons .Tag.Btn {
+    color: #CCC;
+    background-color: aliceblue;
+} 
+.LI:hover .Buttons .Tag.Btn {
+    color: black;
+    background-color: lightblue;
+}
+.LI:hover .Buttons .Tag.Btn:hover {
+    color: white;
     background-color: steelblue;
 }
 

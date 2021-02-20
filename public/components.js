@@ -71,8 +71,8 @@ const Notes = {
 	  m('span').addClass('ID_Date').text(`[id:${note.ID}] ${dayjs(note.UpdatedAt).format('MMM D, HH:mm')}`),
 	  m('span').addClass('Deleted').text('DELETED').css('display', note.Deleted ? 'inline' : 'none'),
 	  m('span').addClass('Buttons').append([
-	    m('a').text('edit').addClass('Tag').attr('href', `/light/note/edit?id=${note.ID}`),
-	    m('span').text('delete').addClass('Tag DeleteBtn').click(self.showDelete),
+	    m('a').text('edit').addClass('Tag Btn').attr('href', `/light/note/edit?id=${note.ID}`),
+	    m('span').text('delete').addClass('Tag Btn DeleteBtn').click(self.showDelete),
 	    m('span').addClass('ConfirmBlock').hide().append([
 	      m('span').addClass('ConfirmDelete').text( note.Deleted ? 'delete this note permanently?' : 'delete this note?'),
 	      m('button').text('yes').addClass('SlimButton DeleteYes').click(self.executeDelete),

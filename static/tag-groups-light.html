@@ -14,7 +14,7 @@
     <div id="root"></div>
 <script>
   
-  const Alerts = CreateAlerts(9);
+  const Alerts = CreateAlerts();
 
   const [infoIcon, infoMsg] = CreateInfoPair(
     'page', '点击 create 按钮创建新笔记，如果没有合适的标签组，可先新增标签组再创建新笔记。');
@@ -31,21 +31,53 @@
   const SubmitBtn = cc('button');
   const Form = {
     view: () => m('form').attr({autocomplete:'off'}).append([
-      m(TagsInput).attr({rows:2,placeholder:'new tag group'}),
+      m(TagsInput).attr({rows:2,placeholder:'new tag group'}).focus(() => {
+	$(SubmitBtn.id).hide();
+	$(CheckBtn.id).show();
+      }),
       m('p').css({textAlign:'right',marginTop:0}).append([
-	m(CheckBtn).text('check'),
-	m(SubmitBtn).text('add').hide(),
+	m(CheckBtn).text('check').click(Form.check),
+	m(SubmitBtn).text('add').hide().click(Form.submit),
       ]),
     ]),
+    check: (event) => {
+      event.preventDefault();
+      const tags = tagsStringToSet($(TagsInput.id).val());
+      if (tags.size == 0) {
+	$(TagsInput.id).focus();
+	return;
+      }
+      if (tags.size == 1) {
+	Alerts.Insert('info', '标签组至少需要 2 个标签');
+	return;
+      }
+      $(TagsInput.id).val(addPrefix(tags, '#'));
+      $(CheckBtn.id).hide();
+      $(SubmitBtn.id).show();
+      TagsInput.currentTagsSet = tags;
+    },
+    submit: (event) => {
+      event.preventDefault();
+      const body = new FormData();
+      body.append('tags', JSON.stringify(Array.from(TagsInput.currentTagsSet)));
+      ajax({method:'POST',url:'/api/tag/group',body:body,
+	    alerts:Alerts,buttonID:SubmitBtn.id,},
+	   (group) => {
+	     TagGroups.prepend(group);
+	     Alerts.Insert('success', '添加了新标签组: ' + addPrefix(group.Tags, '#'));
+	   });
+    },
   };
 
   const TagGroups = cc('ul');
 
+  TagGroups.prepend = (group) => {
+    const groupComp = CreateGroup(group);
+    $(TagGroups.id).prepend(m(groupComp));
+  };
+
   TagGroups.refill = (groups) => {
-    groups.forEach(group => {
-      const groupComp = CreateGroup(group);
-      $(TagGroups.id).prepend(m(groupComp));
-    });
+    groups.forEach(TagGroups.prepend);
   };
 
   function CreateGroup(group) {
@@ -127,7 +159,8 @@
     m(Spacer),
     m(Form),
     m(Loading),
-    m(Alerts),
+    m(Alerts).css({marginTop:'-4em'}),
+    m(Spacer),
     m(TagGroups),
     m(Spacer),
     m(GroupsCount).addClass('GroupsCount'),
@@ -138,9 +171,9 @@
 
   function init() {
     ajax({method:'GET',url:'/api/tag/group/all',alerts:Alerts},
-	 (resp) => {
-	   $(GroupsCount.id).text(`共 ${resp.length} 个标签组`);
-	   TagGroups.refill(resp);
+	 (groups) => {
+	   $(GroupsCount.id).text(`共 ${groups.length} 个标签组`);
+	   TagGroups.refill(groups);
 	 },
 	 null,
 	 () => { Loading.hide(); },
