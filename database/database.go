@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -668,7 +669,12 @@ func (db *DB) getNoteIDs(stmtGet, arg string) (noteIDs []string, err error) {
 		}
 		noteIDs = append(noteIDs, id)
 	}
-	err = rows.Err()
+	if err = rows.Err(); err != nil {
+		return
+	}
+	if len(noteIDs) == 0 {
+		err = errors.New("no notes related to " + arg)
+	}
 	return
 }
 

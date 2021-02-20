@@ -18,6 +18,11 @@ body {
     margin: 0 0.5em 0 0.5em;
 }
 
+#note-info {
+    color: #999;
+    font-size: smaller;
+}
+
 .alerts {
     line-height: 0.25em;
     font-size: smaller;
@@ -62,6 +67,14 @@ body {
     color: #999;
     margin-top: 1em;
 }
+
+.LI .Protected {
+    font-size: smaller;
+    color: #666;
+    background-color: lightgreen;
+    margin-left: 0.5em;
+    padding: 0 2px 0 2px;
+}
 .LI .Deleted {
     font-size: smaller;
     color: white;
@@ -69,12 +82,13 @@ body {
     margin-left: 0.5em;
     padding: 0 2px 0 2px;
 }
+
+.LI .Datetime,
+.LI .Tags,
 .LI .ID_Date {
     font-size: smaller;
 }
-.LI .Tags {
-    font-size: smaller;
-}
+
 .LI .Buttons {
     display: none;
     margin-left: 5px;
@@ -105,10 +119,10 @@ body {
     text-decoration: none;
 }
 
-.TagButton {
+.Tag.Btn {
     background-color: lightblue;
 }
-.TagButton:hover {
+.Tag.Btn:hover {
     background-color: steelblue;
 }
 
@@ -129,4 +143,8 @@ body {
 
 .Pointer {
     cursor: pointer;
+}
+
+.GroupsCount {
+    color: grey;
 }

@@ -30,9 +30,9 @@
     view: () => m('form').append([
       'Search by',
       m(ByTags).attr({type:'radio',name:'search-by',value:'tags'}).prop('checked', true),
-      m('label').text('tags').attr({for:ByTags.id.slice(1)}),
+      m('label').text('tags').attr({for:ByTags.row_id}),
       m(ByTitle).attr({type:'radio',name:'search-by',value:'title'}),
-      m('label').text('title').attr({for:ByTitle.id.slice(1)}),
+      m('label').text('title').attr({for:ByTitle.row_id}),
       m(SearchInput).attr({rows:2}).prop({autofocus:true,required:true}),
       m('p').css({textAlign:'right',marginTop:0}).append(
 	m(SubmitBtn).text('search').click(SearchForm.onsubmit)),

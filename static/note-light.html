@@ -14,12 +14,6 @@
     <script src="/public/util2.js?v11"></script>
     <script src="/public/components.js?v11"></script>
   </head>
-  <style>
-    #note-info {
-	color: #999;
-	font-size: smaller;
-    }
-  </style>
   <body>
     <div id="root"></div>
 <script>
@@ -125,7 +119,7 @@
       m('p').append([
 	'Tags:',
 	m(Tags),
-	m(TagGroup).text('group').addClass('Tag TagButton').attr('title', 'search tag group'),
+	m(TagGroup).text('group').addClass('Tag Btn').attr('title', 'search tag group'),
       ]),
     ]),
   };
@@ -139,8 +133,8 @@
     m(Loading),
     m(Alerts),
     m(InfoBlock),
-    m(Markdown).addClass('NoteContents').css('display', 'none'),
-    m(Plaintext).addClass('NoteContents').css('display', 'none'),
+    m(Markdown).addClass('NoteContents').hide(),
+    m(Plaintext).addClass('NoteContents').hide(),
     m(BottomLine),
   ]);
 

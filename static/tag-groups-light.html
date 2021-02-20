@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tag Groups .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v1">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js?v2222"></script>
+    <script src="/public/components.js?v1"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+  
+  const Alerts = CreateAlerts(9);
+
+  const [infoIcon, infoMsg] = CreateInfoPair(
+    'page', '点击 create 按钮创建新笔记，如果没有合适的标签组，可先新增标签组再创建新笔记。');
+
+  const TopBanner = {
+    view: () => m('div').append([
+      m('a').text('uglynotes').attr('href', '/light'),
+      ' .. Tag Groups', m(infoIcon),
+    ]),
+  };
+
+  const TagsInput = cc('textarea');
+  const CheckBtn = cc('button');
+  const SubmitBtn = cc('button');
+  const Form = {
+    view: () => m('form').attr({autocomplete:'off'}).append([
+      m(TagsInput).attr({rows:2,placeholder:'new tag group'}),
+      m('p').css({textAlign:'right',marginTop:0}).append([
+	m(CheckBtn).text('check'),
+	m(SubmitBtn).text('add').hide(),
+      ]),
+    ]),
+  };
+
+  const TagGroups = cc('ul');
+
+  TagGroups.refill = (groups) => {
+    groups.forEach(group => {
+      const groupComp = CreateGroup(group);
+      $(TagGroups.id).prepend(m(groupComp));
+    });
+  };
+
+  function CreateGroup(group) {
+    const updatedAt = dayjs(group.UpdatedAt);
+    const tags = group.Tags.map(CreateTag);
+    const tagsString = addPrefix(group.Tags, '#');
+    const encodedTags = encodeURIComponent(addPrefix(group.Tags));
+    const li = cc('li');
+
+    li.alerts = CreateAlerts();
+
+    li.toggleProtected = () => {
+      const protected = $(li.id).data('protected');
+      const buttonID = protected ? li.id+' .Unprotect' : li.id+' .Protect';
+      const body = new FormData();
+      body.append('protected',  !protected);
+
+      $(buttonID).css({pointerEvents:'none'});
+      ajax({method:'PUT',url:`/api/tag/group/${group.ID}/protected`,body:body,alerts:li.alerts},
+	   () => {
+	     $(li.id).data('protected', !protected);
+	     $(li.id+' .Protected').toggle();
+	     $(li.id+' .Protect').toggle();
+	     $(li.id+' .Unprotect').toggle();
+	   },
+	   null,
+	   () => { $(buttonID).css({pointerEvents:'auto'}); },
+	  );
+    };
+
+    li.toggleDelete = () => {
+      li.alerts.Clear();
+      $(li.id + ' .Delete').toggle();
+      $(li.id + ' .ConfirmBlock').toggle();
+    };
+
+    li.executeDelete = () => {
+      ajax({method:'DELETE', url:'/api/tag/group/'+group.ID,
+	    alerts:li.alerts, buttonID:li.id+' .DeleteYes'},
+	   () => {
+	     $(li.id+' .Protected').hide();
+	     $(li.id+' .Deleted').show();
+	     $(li.id+' .Tags').show();
+	     $(li.id+' .TagButtons').hide();
+	     $(li.id+' .Buttons').hide();
+	     li.alerts.Clear();
+	   });
+    };
+
+    li.view = () => m('li').attr('id', li.raw_id).addClass('LI').data('protected',group.Protected).append([
+      m('span').addClass('Datetime').text(updatedAt.format('YYYY-MM-DD HH:mm:ss')),
+      m('span').addClass('Protected').text('PROTECTED').css({display: group.Protected ? 'inline' : 'none'}),
+      m('span').addClass('Deleted').text('DELETED').hide(),
+      m('br'),
+      m('span').addClass('Tags').text(tagsString).hide(),
+      m('span').addClass('TagButtons').append(tags),
+      m('span').addClass('Buttons').append([
+	m('a').text('group').attr({class:'Tag Btn',title:'search group',href:'/light/search?tags='+encodedTags}),
+	m('a').text('create').attr({class:'Tag Btn',title:'create a new note',href:'/light/note/new?tags='+encodedTags}),
+	m('span').text('protect').addClass('Tag Btn Protect').css({display: group.Protected ? 'none' : 'inline'}).click(li.toggleProtected),
+	m('span').text('unprotect').addClass('Tag Btn Unprotect').css({display: group.Protected ? 'inline' : 'none'}).click(li.toggleProtected),
+	m('span').text('delete').addClass('Tag Btn Delete').click(li.toggleDelete),
+	m('span').addClass('ConfirmBlock').hide().append([
+	  m('span').addClass('ConfirmDelete').text('delete this group?'),
+	  m('button').text('yes').addClass('SlimButton DeleteYes').click(li.executeDelete),
+	  m('button').text('no').addClass('SlimButton').click(li.toggleDelete),
+	]),
+      ]),
+      m(li.alerts),
+    ]);
+    return li;
+  }
+
+  const GroupsCount = cc('p');
+
+  $('#root').append([
+    m(TopBanner),
+    m(infoMsg),
+    m(Spacer),
+    m(Form),
+    m(Loading),
+    m(Alerts),
+    m(TagGroups),
+    m(Spacer),
+    m(GroupsCount).addClass('GroupsCount'),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+    ajax({method:'GET',url:'/api/tag/group/all',alerts:Alerts},
+	 (resp) => {
+	   $(GroupsCount.id).text(`共 ${resp.length} 个标签组`);
+	   TagGroups.refill(resp);
+	 },
+	 null,
+	 () => { Loading.hide(); },
+	);
+  }
+  
+</script>
+  </body>
+</html>

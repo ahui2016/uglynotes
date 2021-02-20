@@ -22,23 +22,10 @@ function m(name) {
   return name.view();
 }
 
-// set a random id to vnode and return the id.
-function random_id(vnode) {
-  vnode.attr('id', Math.round(Math.random() * 100000000));
-  return '#' + vnode.attr('id');
-}
-
-// return a new vnode and its id.
-function m_id(name) {
-  const vnode = m(name);
-  const id = random_id(vnode);
-  return [vnode, id];
-}
-
 // cc creates a component with an id.
 function cc(name, id) {
   if (!id) id = '' + Math.round(Math.random() * 100000000);
-  return {id: '#'+id, view:() => m(name).attr('id', id)};
+  return {id: '#'+id, raw_id: id, view:() => m(name).attr('id', id)};
 }
 
 function disable(id) { $(id).prop('disabled', true); }

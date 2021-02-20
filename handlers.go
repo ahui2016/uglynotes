@@ -95,6 +95,10 @@ func tagGroupsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tag-groups.html")
 }
 
+func tagGroupsPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/tag-groups-light.html")
+}
+
 func converterPage(c *fiber.Ctx) error {
 	return c.SendFile("./public/img-converter.html")
 }

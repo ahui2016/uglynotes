@@ -74,10 +74,10 @@
 	  ')',
 	]),
 	m(MarkdownBtn).attr({type:'radio',name:'note-type',value:'Markdown'}),
-	m('label').text('markdown').attr('for', MarkdownBtn.id.slice(1)),
+	m('label').text('markdown').attr('for', MarkdownBtn.raw_id),
 	'(',
 	m(PreviewBtn).text('preview').attr({accesskey:'p',class:'Pointer'}).click(self.Preview),
-	m(EditBtn).text('edit').attr({accesskey:'e',class:'Pointer',style:'display:none'}).click(self.Edit),
+	m(EditBtn).text('edit').attr({accesskey:'e',class:'Pointer'}).click(self.Edit).hide(),
 	')',
 	m(AlertsForCopy),
       ]);
@@ -189,7 +189,7 @@
       const self = Submit;
       return m('p').append([
 	m(SubmitBtn).text('submit').click(self.submit),
-	m(UpdateBtn).text('update').css('display', 'none').click(self.update),
+	m(UpdateBtn).text('update').click(self.update).hide(),
 	m(aboutShortcutIcon),
 	m(aboutShortcutMsg),
       ]);

@@ -38,7 +38,7 @@
     id: '#the-form',
     passwordID: '#password',
     submitID: '#submit',
-    view: () => m('form').attr('id', 'the-form').prop('autocomplete', false)
+    view: () => m('form').attr({id:'the-form',autocomplete:'off'})
       .append([
 	$('<input type="password" id="password" placeholder="password" required>')
 	  .css('display', 'inline'),

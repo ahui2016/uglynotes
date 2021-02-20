@@ -60,7 +60,6 @@ const Notes = {
   newNote: (note) => {
     const noteComp = {
       id: '',
-      deleteYesID: '',
       alerts: CreateAlerts(),
       deleteURL: `/api/note/${note.ID}/deleted`,
       reallyDeleteURL: `/api/note/${note.ID}`,
@@ -68,22 +67,21 @@ const Notes = {
 	const self = noteComp;
 	const [vnode, id] = m_id('li');
 	self.id = id;
-	self.deleteYesID = id+'DeleteYes';
 	vnode.addClass('LI').append([
 	  m('span').addClass('ID_Date').text(`[id:${note.ID}] ${dayjs(note.UpdatedAt).format('MMM D, HH:mm')}`),
 	  m('span').addClass('Deleted').text('DELETED').css('display', note.Deleted ? 'inline' : 'none'),
 	  m('span').addClass('Buttons').append([
-	    m('button').text('edit').addClass('SlimButton').click(()=>{window.location = `/light/note/edit?id=${note.ID}`}),
-	    m('button').text('delete').addClass('SlimButton DeleteBtn').click(self.showDelete),
-	    m('span').addClass('ConfirmBlock').css('display', 'none').append([
+	    m('a').text('edit').addClass('Tag').attr('href', `/light/note/edit?id=${note.ID}`),
+	    m('span').text('delete').addClass('Tag DeleteBtn').click(self.showDelete),
+	    m('span').addClass('ConfirmBlock').hide().append([
 	      m('span').addClass('ConfirmDelete').text( note.Deleted ? 'delete this note permanently?' : 'delete this note?'),
-	      m('button').text('yes').attr('id', self.deleteYesID.slice(1)).addClass('SlimButton DeleteYes').click(self.executeDelete),
+	      m('button').text('yes').addClass('SlimButton DeleteYes').click(self.executeDelete),
 	      m('button').text('no').addClass('SlimButton').click(self.cancelDelete),
 	    ]),
 	  ]),
 	  m('br'),
 	  m('a').text(note.Title).addClass('TitleLink').attr('href', `/light/note?id=${note.ID}`),
-	  m('span').text(note.Title).addClass('TitleText').css('display', 'none'),
+	  m('span').text(note.Title).addClass('TitleText').hide(),
 	  m('br'),
 	  m('span').addClass('Tags').text(addPrefix(toTagNames(note.Tags), '#')),
 	  self.Alerts,
@@ -103,8 +101,8 @@ const Notes = {
 	const body = new FormData();
 	body.append('deleted', true);
 	const options = note.Deleted
-	      ? {method:'DELETE',url:`/api/note/${note.ID}`,alerts:noteComp.alerts,buttonID:noteComp.deleteYesID}
-	      : {method:'PUT',url:`/api/note/${note.ID}/deleted`,body:body,alerts:noteComp.alerts,buttonID:noteComp.deleteYesID};
+	      ? {method:'DELETE',url:`/api/note/${note.ID}`,alerts:noteComp.alerts,buttonID:noteComp.id + ' .DeleteYes'}
+	      : {method:'PUT',url:`/api/note/${note.ID}/deleted`,body:body,alerts:noteComp.alerts,buttonID:noteComp.id + ' .DeleteYes'};
 	ajax(options, () => {
 	  $(`${noteComp.id} .TitleLink`).hide();
 	  $(`${noteComp.id} .TitleText`).show();
@@ -133,4 +131,17 @@ function CreateTag(name) {
     .addClass('Tag')
     .text(name)
     .attr('href', '/light/search?tags=' + encodeURIComponent(name));
+}
+
+// set a random id to vnode and return the id.
+function random_id(vnode) {
+  vnode.attr('id', Math.round(Math.random() * 100000000));
+  return '#' + vnode.attr('id');
+}
+
+// return a new vnode and its id.
+function m_id(name) {
+  const vnode = m(name);
+  const id = random_id(vnode);
+  return [vnode, id];
 }
