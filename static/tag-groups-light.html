@@ -151,8 +151,6 @@
     return li;
   }
 
-  const GroupsCount = cc('p');
-
   $('#root').append([
     m(TopBanner),
     m(infoMsg),
@@ -163,7 +161,7 @@
     m(Spacer),
     m(TagGroups),
     m(Spacer),
-    m(GroupsCount).addClass('GroupsCount'),
+    m(Count),
     m(BottomLine),
   ]);
 
@@ -172,7 +170,7 @@
   function init() {
     ajax({method:'GET',url:'/api/tag/group/all',alerts:Alerts},
 	 (groups) => {
-	   $(GroupsCount.id).text(`共 ${groups.length} 个标签组`);
+	   $(Count.id).text(`共 ${groups.length} 个标签组`);
 	   TagGroups.refill(groups);
 	 },
 	 null,

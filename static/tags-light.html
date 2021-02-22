@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tags .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js"></script>
+    <script src="/public/components.js?v1"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+  
+  const Alerts = CreateAlerts();
+
+  const TopBanner = {
+    view: () => m('div').append([
+      m('a').text('uglynotes').attr('href', '/light'), ' .. Tags',
+    ]),
+  };
+
+  const ByDate = cc('input');
+  const ByName = cc('input');
+  const SortBy = {
+    view: () => m('div').append([
+      'Sort by',
+      m(ByDate).attr({type:'radio',name:'sort-by',value:'by-date'}).prop('checked',true).click(),
+      m('label').text('date').attr({for:ByDate.raw_id}),
+      m(ByName).attr({type:'radio',name:'sort-by',value:'by-name'}),
+      m('label').text('name').attr({for:ByName.raw_id}),
+    ]),
+  };
+
+  const SortByDate = cc('ul');
+  const SortByName = cc('ul');
+
+  function CreateTagItem(tag) {
+    const createdAt = dayjs(tag.CreatedAt);
+    const li = cc('li');
+
+    li.alerts = CreateAlerts();
+
+    li.toggleConfirm = () => {
+      li.alerts.Clear();
+      $(li.id + ' .delete-btn').toggle();
+      $(li.id + ' .confirm-block').toggle();
+    };
+
+    li.executeDelete = (event) => {
+      event.preventDefault();
+      ajax({method:'DELETE',url:'/api/tag/'+tag.ID,alerts:li.alerts,buttonID:li.id+' .yes-btn'},
+	   () => {
+	     $(li.id+' .Deleted').show();
+	     $(li.id+' .tag-name-link').hide();
+	     $(li.id+' .tag-name-text').show();
+	     $(li.id+' .delete-btn').hide();
+	     $(li.id+' .confirm-block').hide();
+	   });
+    };
+    
+    li.view = () => m('li').addClass('LI').attr('id',li.raw_id).append([
+      m('span').addClass('Datetime').text(createdAt.format('YYYY-MM-DD HH:mm:ss')),
+      m('br'),
+      m('a').addClass('tag-name-link').text(tag.Name).attr({href:'/light/tag?id='+tag.ID}),
+      m('span').addClass('tag-name-text').text(tag.Name).hide(),
+      m('span').text(`(${tag.Count})`),
+      m('span').addClass('Deleted').text('DELETED').hide(),
+      m('span').text('delete').addClass('delete-btn Tag Btn')
+	.css({display: tag.Count ? 'none' : 'true'}).click(li.toggleConfirm),
+      m('span').addClass('confirm-block').hide().append([
+	m('span').addClass('ConfirmDelete').text('delete this tag?'),
+	m('button').text('yes').addClass('yes-btn SlimButton').click(li.executeDelete),
+	m('button').text('no').addClass('SlimButton').click(li.toggleConfirm),
+      ]),
+      m(li.alerts),
+    ]);
+    return li;
+  }
+
+  $('#root').append([
+    m(TopBanner),
+    m(Spacer),
+    m(Loading),
+    m(Alerts),
+    m(SortBy),
+    m(SortByDate),
+    m(SortByName).hide(),
+    m(Spacer),
+    m(Count),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+
+    $('input[name="sort-by"]').change(() => {
+      $(SortByName.id).toggle();
+      $(SortByDate.id).toggle();
+    });
+
+    ajax({method:'GET',url:'/api/tag/all/by-date',alerts:Alerts},
+	 (tags) => {
+	   if (!tags) {
+	     $(Count.id).text(`共 ${0} 个标签`);
+	     return;
+	   }
+	   $(Count.id).text(`共 ${tags.length} 个标签`);
+	   tags.forEach(tag => { appendTagTo(tag, SortByDate.id); });
+	 },
+	 null,
+	 () => { Loading.hide(); });
+
+    ajax({method:'GET',url:'/api/tag/all/by-name',alerts:Alerts},
+	 (tags) => {
+	   tags.forEach(tag => {appendTagTo(tag, SortByName.id); });
+	 });
+  }
+
+  function appendTagTo(tag, parentID) {
+    const tagComp = CreateTagItem(tag);
+    $(parentID).append(m(tagComp));
+  }
+  
+</script>
+  </body>
+</html>

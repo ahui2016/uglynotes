@@ -4,6 +4,11 @@ const Spacer = { view: () => $('<div style="margin-bottom: 2em;"></div>') };
 
 const BottomLine = { view: () => $('<div style="margin-top: 200px;"></div>') };
 
+const Count = {
+  id: '#count',
+  view: () => m('p').attr('id','count').addClass('Count'),
+};
+
 const Loading = {
   view: () => $('<p id="loading" class="alert-info">Loading...</p>'),
   hide: () => { $('#loading').hide(); },

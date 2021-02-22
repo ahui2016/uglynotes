@@ -90,6 +90,9 @@ func tagPage(c *fiber.Ctx) error {
 func tagsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tags.html")
 }
+func tagsPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/tags-light.html")
+}
 
 func tagGroupsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tag-groups.html")
