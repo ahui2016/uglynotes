@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tag .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css?v111111">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js?v222"></script>
+    <script src="/public/components.js?v1"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+  
+  const Alerts = CreateAlerts();
+
+  const TagName = cc('p');
+  
+  const TagNameInput = cc('input');
+  const CheckBtn = cc('button');
+  const SubmitBtn = cc('button');
+  const CancelBtn = cc('button');
+  const RenameForm = cc('form', null, [
+    m(TagNameInput).attr({placeholder:'new name'}).css({display:'inline'}).focus(() => {
+	$(SubmitBtn.id).hide();
+	$(CheckBtn.id).show();
+    }),
+    m(CheckBtn).text('check').css({display:'inline'}),
+    m(SubmitBtn).text('rename').css({display:'inline'}).hide(),
+    m(CancelBtn).text('cancel').css({display:'inline'}),
+  ]);
+
+  const HeadButtons = cc('span', 'head-buttons');
+  const RenameBtnArea = cc('span');
+  const DeleteBtn = cc('a');
+  const ConfirmArea = cc('span');
+  const DeleteYesBtn = cc('button');
+  const TopBanner = {
+    view: () => m('div').append([
+      m('a').text('uglynotes').attr('href', '/light'),
+      ' .. ', m('a').text('Tags').attr('href', '/light/tags'),
+      ' .. Tag',
+      m(HeadButtons).append([
+	'|',
+	m(RenameBtnArea).append([
+	  m('a').text('Rename').click(TopBanner.rename), '|',
+	]),
+	m(DeleteBtn).text('Delete'),
+	m(ConfirmArea).hide().append([
+	  m('span').addClass('ConfirmDelete').text('delete this tag?'),
+	  m(DeleteYesBtn).text('yes'),
+	  m('button').text('no'),
+	]),
+	'|',
+      ]),
+    ]),
+    rename: () => {
+      $(RenameBtnArea.id).hide();
+      $(RenameForm.id).show();
+      window.setTimeout(() => { $(TagNameInput.id).focus(); }, 100);
+    },
+  };
+  
+  $('#root').append([
+    m(TopBanner),
+    m(Spacer),
+    m(Loading),
+    m(TagName).hide(),
+    m(RenameForm).attr({autocomplete:'off'}).hide(),
+    m(Alerts),
+    m(Spacer),
+    m(Notes),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+
+    $(CancelBtn.id).click(event => {
+      event.preventDefault();
+      $(RenameBtnArea.id).show();
+      $(RenameForm.id).hide();
+    });
+
+    $(CheckBtn.id).click(event => {
+      event.preventDefault();
+      const input = $(TagNameInput.id);
+      const tags = tagsStringToSet(input.val());
+      if (tags.size == 0) {
+	input.focus();
+	return;
+      }
+      const tag = getTag(input.val());
+      if (!tag) {
+	input.focus();
+	return;
+      }
+      input.val('#'+tag);
+      $(CheckBtn.id).hide();
+      $(SubmitBtn.id).show();
+    });
+
+    const tag_id = getUrlParam('id');
+
+    ajax({method:'GET',url:`/api/tag/${tag_id}`,alerts:Alerts},
+	 (tag) => {
+	   $(TagName.id).show().text('Tag name: ' +tag.Name );
+	 },
+	 null,
+	 () => { Loading.hide(); });
+
+    ajax({method:'GET',url:`/api/tag/${tag_id}/notes`,alerts:Alerts},
+	 (notes) => {
+	   if (!notes || notes.length == 0) {
+	     Alerts.Insert('找不到相关笔记');
+	     return;
+	   }
+	   Notes.refill(notes);
+	 });
+  }
+
+  // 提取出一个标签。
+  function getTag(tagsString) {
+    let trimmed = tag_replace(tagsString);
+    if (trimmed.length == 0) {
+      return false;
+    }
+    let arr = trimmed.split(/ +/);
+    return arr[0];
+  }
+  
+</script>
+  </body>
+</html>

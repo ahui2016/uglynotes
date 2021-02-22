@@ -54,6 +54,7 @@ func main() {
 	lightPage.Get("/search", searchPageLight)
 	lightPage.Get("/tag/groups", tagGroupsPageLight)
 	lightPage.Get("/tags", tagsPageLight)
+	lightPage.Get("/tag", tagPageLight)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)

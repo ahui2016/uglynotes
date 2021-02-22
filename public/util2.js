@@ -23,9 +23,11 @@ function m(name) {
 }
 
 // cc creates a component with an id.
-function cc(name, id) {
+function cc(name, id, elements) {
   if (!id) id = '' + Math.round(Math.random() * 100000000);
-  return {id: '#'+id, raw_id: id, view:() => m(name).attr('id', id)};
+  const vnode = m(name).attr('id', id);
+  if (elements) vnode.append(elements);
+  return {id: '#'+id, raw_id: id, view: () => vnode};
 }
 
 function disable(id) { $(id).prop('disabled', true); }

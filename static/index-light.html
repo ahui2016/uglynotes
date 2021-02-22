@@ -82,7 +82,7 @@
       Alerts.Insert('info', App.NotFoundMsg);
       return;
     }
-    notes.forEach(note => Notes.append(note));
+    Notes.refill(notes);
   }
   function onAlways() { Loading.hide(); }
   

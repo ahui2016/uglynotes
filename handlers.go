@@ -86,6 +86,9 @@ func noteHistoryPage(c *fiber.Ctx) error {
 func tagPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tag.html")
 }
+func tagPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/tag-light.html")
+}
 
 func tagsPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/tags.html")
