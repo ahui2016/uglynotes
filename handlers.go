@@ -311,7 +311,11 @@ func renameTag(c *fiber.Ctx) error {
 	if err != nil {
 		return err
 	}
-	return db.RenameTag(id, newName)
+	tagID, err := db.RenameTag(id, newName)
+	if err != nil {
+		return err
+	}
+	return jsonMessage(c, tagID)
 }
 
 func getNotesByTag(c *fiber.Ctx) error {

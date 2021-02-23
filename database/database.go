@@ -679,8 +679,34 @@ func (db *DB) getNoteIDs(stmtGet, arg string) (noteIDs []string, err error) {
 }
 
 // RenameTag .
-func (db *DB) RenameTag(id, newName string) error {
-	return db.Exec(stmt.RenameTag, newName, id)
+func (db *DB) RenameTag(id, newName string) (tagID string, err error) {
+	tag, err := db.GetTagByName(newName)
+	if err == sql.ErrNoRows {
+		err = db.Exec(stmt.RenameTag, newName, id)
+		return id, err
+	}
+	if err != nil {
+		return
+	}
+
+	// if err == nil, then add tag.ID to notes.
+	tagID = tag.ID
+	notes, err := db.GetNotesByTagID(id)
+	if err != nil {
+		return
+	}
+	tx := db.mustBegin()
+	defer tx.Rollback()
+
+	for _, note := range notes {
+		_, err = tx.Exec(stmt.InsertNoteTag, note.ID, tagID)
+		if err != nil && !util.ErrorContains(err, "UNIQUE") {
+			return
+		}
+	}
+	_, err = tx.Exec(stmt.DeleteTag, id)
+	tx.Commit()
+	return
 }
 
 // SearchTagGroup 通过标签组搜索笔记。

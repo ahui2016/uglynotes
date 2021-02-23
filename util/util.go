@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 )
 
 // WrapErrors 把多个错误合并为一个错误.
@@ -18,6 +19,22 @@ func WrapErrors(allErrors ...error) (wrapped error) {
 		}
 	}
 	return
+}
+
+// ErrorContains returns NoCaseContains(err.Error(), substr)
+// Returns false if err is nil.
+func ErrorContains(err error, substr string) bool {
+	if err == nil {
+		return false
+	}
+	return noCaseContains(err.Error(), substr)
+}
+
+// noCaseContains reports whether substr is within s case-insensitive.
+func noCaseContains(s, substr string) bool {
+	s = strings.ToLower(s)
+	substr = strings.ToLower(substr)
+	return strings.Contains(s, substr)
 }
 
 // UserHomeDir .

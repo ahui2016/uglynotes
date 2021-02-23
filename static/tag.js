@@ -65,15 +65,21 @@ ok.click(() => {
   const form = new FormData();
   form.append('new-name', new_name);
 
-  ajaxPut(form, '/api/tag/' + tag_id, ok, () => {
+  ajaxPut(form, '/api/tag/' + tag_id, ok, (that) => {
     rename_toggle();
     tagName.text(new_name);
     tagNameBlock.hide();
     $('.alert').hide();
     $('ul').hide();
-    insertSuccessAlert(`正在重命名: ${tag.Name} --> ${new_name}`);
     insertInfoAlert('重命名成功时会自动刷新页面');
-    window.setTimeout(function(){window.location.reload()}, 5000);
+    insertSuccessAlert(`正在重命名: ${tag.Name} --> ${new_name}`);
+
+    const newTagID = that.response.message;
+    if (newTagID == tag_id) {
+      window.setTimeout(function(){window.location.reload()}, 5000);
+    } else {
+      window.setTimeout(() => {window.location = '/html/tag?id='+newTagID}, 5000);
+    }
   });  
 });
 
