@@ -109,7 +109,7 @@
 	     return;
 	   }
 	   $(Count.id).text(`共 ${tags.length} 个标签`);
-	   tags.forEach(tag => { appendTagTo(tag, SortByDate.id); });
+	   tags.forEach(tag => { prependTagTo(tag, SortByDate.id); });
 	 },
 	 null,
 	 () => { Loading.hide(); });
@@ -118,6 +118,11 @@
 	 (tags) => {
 	   tags.forEach(tag => {appendTagTo(tag, SortByName.id); });
 	 });
+  }
+
+  function prependTagTo(tag, parentID) {
+    const tagComp = CreateTagItem(tag);
+    $(parentID).prepend(m(tagComp));
   }
 
   function appendTagTo(tag, parentID) {
