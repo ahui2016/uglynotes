@@ -60,7 +60,7 @@
       ajax({method:'POST', url:'/login', body:body, alerts:Alerts, buttonID:Form.submitID},
 	   () => {
 	     loginSuccess();
-	     window.setTimeout(() => { window.location = '/light/home'; }, 1000);
+	     window.setTimeout(() => { window.location = '/light/home'; }, 100);
 	   });
     },
   };
@@ -75,7 +75,7 @@
 	     Alerts.Insert('success', '已登出');
 	     $(Logout.id).hide();
 	     $(Form.id).show();
-	     window.setTimeout(() => { $(Form.passwordID).focus(); }, 500);
+	     window.setTimeout(() => { $(Form.passwordID).focus(); }, 200);
 	   });
     },
   };

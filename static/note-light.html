@@ -161,7 +161,7 @@
 	const tagGroup = encodeURIComponent(addPrefix(toTagNames(Note.Tags)));
 	$(TagGroup.id).attr('href', '/light/search?tags='+tagGroup);
 	$(EditBtn.id).attr('href', '/light/note/edit?id=' + Note.ID);
-	$(HistoryBtn.id).attr('href', '/html/history?id=' + Note.ID);
+	$(HistoryBtn.id).attr('href', '/light/history?id=' + Note.ID);
 
 	Note.Tags.forEach(tag => { $(Tags.id).append(CreateTag(tag.Name)); });
 

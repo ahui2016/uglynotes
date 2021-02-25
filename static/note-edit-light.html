@@ -118,8 +118,8 @@
     view: function() {
       const self = Textarea;
       return m('div').attr('id', 'textarea').append([
-	m(Contents).attr({accesskey:'c',rows:'10'}).blur(self.updateContents),
-	m(Higher).attr({class:'Pointer',title:'higher',style:'text-align:right;'})
+	m(Contents).attr({accesskey:'c'}).css('height', '250px').blur(self.updateContents),
+	m(Higher).attr({class:'Pointer',title:'higher',style:'text-align:right; margin-top:0;'})
 	  .click(self.higher).html(
 	  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
 	     <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
@@ -147,8 +147,8 @@
       return 'OK';
     },
     higher: function() {
-      const rows = parseInt($(Contents.id).attr('rows'));
-      $(Contents.id).attr('rows', rows + 5);
+      const height = parseInt($(Contents.id).css('height'));
+      $(Contents.id).css('height', height + 100 + 'px');
       $(Contents.id).focus();
     },
   };
@@ -163,7 +163,7 @@
     id: '#tags-area',
     currentTags: [],
     oldTags: [],
-    view: () => m('p').attr('id', 'tags-area').css('margin-top', '-30px').append([
+    view: () => m('p').attr('id', 'tags-area').css('margin-top', '-2em').append([
       m('label').text('Tags:').attr({for:Tags.id}),
       m(Tags).attr({accesskey:'t',rows:'2'}).blur(TagsArea.onblur),
     ]),
@@ -355,7 +355,7 @@
     $('title').text('Edit Note .. uglynotes');
     $(PageTitle.id).text('Edit Note');
     $(ReadonlyMode.id).attr('href', `/light/note?id=${Note.ID}`);
-    $(History.id).attr('href', `/html/history?id=${Note.ID}&version=${Note.Patches.length}`);
+    $(History.id).attr('href', `/light/history?id=${Note.ID}&version=${Note.Patches.length}`);
     $(HeadButtons.id).show();
     $(EditForm.id).show();
     $(SubmitBtn.id).hide();

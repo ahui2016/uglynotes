@@ -79,6 +79,10 @@ func historyPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/history.html")
 }
 
+func historyPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/history-light.html")
+}
+
 func noteHistoryPage(c *fiber.Ctx) error {
 	return c.SendFile("./static/note-history.html")
 }

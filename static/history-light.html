@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>History .. uglynotes</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css" />
+<!--     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">  -->
+    <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
+    <script src="/public/util2.js"></script>
+    <script src="/public/components.js"></script>
+    <style>
+      .d2h-file-collapse {
+	  display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+
+  const id = getUrlParam('id');
+  let note, current_n, max_n;
+
+  const Alerts = CreateAlerts();
+
+  const NoteID = cc('a');
+  const TopBanner = {
+    view: () => m('div').append(['Note [', m(NoteID), '] .. History']),
+  };
+
+  const Diff = cc('div');
+
+  $('#root').append([
+    m(TopBanner),
+    m(Spacer),
+    m(Loading),
+    m(Alerts),
+    m(Diff),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+    ajax({method:'GET',url:'/api/note/'+id,alerts:Alerts},
+	 (resp) => {
+	   note = resp;
+	   $(NoteID.id).text('id:'+id).attr('href','/light/note?id='+id);
+	   max_n = note.Patches.length;
+	   const version = getUrlParam('version');
+	   current_n = version_to_n(version);
+	   gotoHistory(current_n);
+	 },
+	 null,
+	 () => { Loading.hide(); });
+  }
+
+  function version_to_n(version) {
+    if (version == 'last') return max_n;
+    const n = parseInt(version);
+    if (isNaN(n) || n == 0) return 1;
+    if (n > max_n) return max_n;
+    return n
+  }
+
+  function gotoHistory(n) {
+    current_n = n;
+    const diffString = note.Patches[n-1];
+    const diffJson = Diff2Html.parse(diffString);
+    const diffHtml = Diff2Html.html(diffJson, {drawFileList: false});
+    $(Diff.id).html(diffHtml);
+  }
+</script>
+</body>
+</html>
