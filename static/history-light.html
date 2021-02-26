@@ -19,6 +19,14 @@
       .d2h-file-collapse {
 	  display: none;
       }
+      #Number {
+	  width: 3em;
+	  text-align: center;
+      }
+
+      .HistoryButtons input + input {
+	  margin-left: 5px;
+      }
     </style>
   </head>
   <body>
@@ -35,6 +43,39 @@
     view: () => m('div').append(['Note [', m(NoteID), '] .. History']),
   };
 
+  const FirstBtn = cc('input');
+  const PreviousBtn = cc('input');
+  const NumberInput = cc('input', 'Number');
+  const NextBtn = cc('input');
+  const LastBtn = cc('input');
+  const Buttons = {
+    view: () => {
+      const self = Buttons;
+      return m('div').addClass('HistoryButtons').append([
+	m(FirstBtn).attr('type', 'button').val('First').click(self.gotoFirst),
+	m(PreviousBtn).attr('type', 'button').val('Previous'),
+	m(NumberInput).attr('type', 'text').prop('disabled',true).val('1'),
+	m(NextBtn).attr('type', 'button').val('Next').click(self.gotoNext),
+	m(LastBtn).attr('type', 'button').val('Last'),
+	m('input').val('Export').attr({type:'button',title:'导出指定的历史版本'}),
+      ]);
+    },
+    gotoFirst: () => {
+      disable(FirstBtn.id);
+      disable(PreviousBtn.id);
+      enable(NextBtn.id);
+      enable(LastBtn.id);
+      gotoHistory(1);
+    },
+    gotoNext: () => {
+      if (current_n == 1) {
+	enable(FirstBtn.id);
+	enable(PreviousBtn.id);
+      }
+      gotoHistory(current_n + 1)
+    },
+  };
+  
   const Diff = cc('div');
 
   $('#root').append([
@@ -42,6 +83,8 @@
     m(Spacer),
     m(Loading),
     m(Alerts),
+    m(Buttons),
+    m(Spacer),
     m(Diff),
     m(BottomLine),
   ]);
@@ -76,6 +119,15 @@
     const diffJson = Diff2Html.parse(diffString);
     const diffHtml = Diff2Html.html(diffJson, {drawFileList: false});
     $(Diff.id).html(diffHtml);
+    $(NumberInput.id).val(n);
+    if (n <= 1) {
+      disable(FirstBtn.id);
+      disable(PreviousBtn.id);
+    }
+    if (n >= max_n) {
+      disable(NextBtn.id);
+      disable(LastBtn.id);
+    }
   }
 </script>
 </body>
