@@ -14,7 +14,7 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
     <script src="/public/util2.js"></script>
-    <script src="/public/components.js"></script>
+    <script src="/public/components.js?v1"></script>
     <style>
       .d2h-file-collapse {
 	  display: none;
@@ -53,11 +53,13 @@
       const self = Buttons;
       return m('div').addClass('HistoryButtons').append([
 	m(FirstBtn).attr('type', 'button').val('First').click(self.gotoFirst),
-	m(PreviousBtn).attr('type', 'button').val('Previous'),
+	m(PreviousBtn).attr('type', 'button').val('Previous').click(self.gotoPrevious),
 	m(NumberInput).attr('type', 'text').prop('disabled',true).val('1'),
 	m(NextBtn).attr('type', 'button').val('Next').click(self.gotoNext),
-	m(LastBtn).attr('type', 'button').val('Last'),
-	m('input').val('Export').attr({type:'button',title:'导出指定的历史版本'}),
+	m(LastBtn).attr('type', 'button').val('Last').click(self.gotoLast),
+	m('input').val('Export').click(self.exportHistory).attr({
+	  type: 'button', title: '导出指定的历史版本',
+	}),
       ]);
     },
     gotoFirst: () => {
@@ -74,18 +76,55 @@
       }
       gotoHistory(current_n + 1)
     },
+    gotoPrevious: () => {
+      if (current_n == max_n) {
+	enable(NextBtn.id);
+	enable(LastBtn.id);
+      }
+      gotoHistory(current_n - 1);
+    },
+    gotoLast: () => {
+      disable(NextBtn.id);
+      disable(LastBtn.id);
+      enable(FirstBtn.id);
+      enable(PreviousBtn.id);
+      gotoHistory(max_n);
+    },
+    exportHistory: () => {
+      const filename = `note-${id}-history-${current_n}`;
+      const contents = note.Patches.slice(0, current_n).reduce(
+	(patched, patch) => {
+	  return patched = Diff.applyPatch(patched, patch)}, "");
+      const downloadElem = createDownloadMsg(filename, contents);
+      Alerts.InsertElem(downloadElem);
+    },
   };
+
+  function createDownloadMsg(filename, contents) {
+    return m('p').addClass('alert alert-info').append([
+      m('span').text(dayjs().format('HH:mm:ss')),
+      m('span').text('已导出，请点击下载：'),
+      m('a').text(filename).attr({
+	download: filename,
+	href: 'data:text/plain;charset=utf-8,' + encodeURIComponent(contents),
+      }),
+    ]);
+  }
   
-  const Diff = cc('div');
+  const DiffArea = cc('div');
+
+  const Size = cc('p');
 
   $('#root').append([
     m(TopBanner),
     m(Spacer),
     m(Loading),
+    m(Buttons).hide(),
     m(Alerts),
-    m(Buttons),
     m(Spacer),
-    m(Diff),
+    m(DiffArea),
+    m(Spacer),
+    m(Size).css('color', 'grey'),
     m(BottomLine),
   ]);
 
@@ -95,14 +134,19 @@
     ajax({method:'GET',url:'/api/note/'+id,alerts:Alerts},
 	 (resp) => {
 	   note = resp;
+	   $('.HistoryButtons').show();
 	   $(NoteID.id).text('id:'+id).attr('href','/light/note?id='+id);
 	   max_n = note.Patches.length;
 	   const version = getUrlParam('version');
 	   current_n = version_to_n(version);
 	   gotoHistory(current_n);
+	   $(Size.id).text(`共 ${max_n} 个历史版本，合计 ${fileSizeToString(note.Size)}`);
 	 },
 	 null,
-	 () => { Loading.hide(); });
+	 () => {
+	   Loading.hide();
+	   $(NoteID.id).text('id:'+id);
+	 });
   }
 
   function version_to_n(version) {
@@ -118,7 +162,7 @@
     const diffString = note.Patches[n-1];
     const diffJson = Diff2Html.parse(diffString);
     const diffHtml = Diff2Html.html(diffJson, {drawFileList: false});
-    $(Diff.id).html(diffHtml);
+    $(DiffArea.id).html(diffHtml);
     $(NumberInput.id).val(n);
     if (n <= 1) {
       disable(FirstBtn.id);

@@ -33,17 +33,19 @@ function CreateAlerts(max) {
   const alerts = {
     ID: '',
     Count: 0,
-    Insert: (msgType, msg) => {
-      const elem = $(alerts.ID);
-      elem.prepend(
-	m('p').addClass(`alert alert-${msgType}`)
-	  .append(m('span').text(dayjs().format('HH:mm:ss')))
-	  .append(m('span').text(msg))
-      );
+    InsertElem: (elem) => {
+      $(alerts.ID).prepend(elem);
       alerts.Count++;
       if (alerts.Count > max) {
 	$(`${alerts.ID} p:last-of-type`).remove();
       }
+    },
+    Insert: (msgType, msg) => {
+      const elem = m('p').addClass(`alert alert-${msgType}`).append([
+	m('span').text(dayjs().format('HH:mm:ss')),
+	m('span').text(msg),
+      ]);
+      alerts.InsertElem(elem);
     },
     Clear: () => {
       $(alerts.ID).html('');

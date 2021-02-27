@@ -40,10 +40,7 @@ function version_to_n(version) {
 }
 
 function showHistorySize(note) {
-  const initialValue = 0
-  let size = note.Patches.reduce(
-    (sum, patch) => { return sum + patch.length }, initialValue);
-  size = fileSizeToString(size);
+  size = fileSizeToString(note.Size);
   $('#history-size').text(`共 ${note.Patches.length} 个历史版本，合计 ${size}`);
 }
 
