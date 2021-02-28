@@ -13,6 +13,13 @@
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
     <script src="/public/util2.js?v11"></script>
     <script src="/public/components.js?v11"></script>
+
+    <style>
+      .plaintext {
+	  white-space: pre-wrap;
+	  white-space: -moz-pre-wrap;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -41,7 +48,7 @@
       const self = TopBanner;
       return m('div').append([
 	m(NoteID),
-	m(HeadButtons).css('display', 'none').append([
+	m(HeadButtons).addClass('all-about-note').append([
 	  '|',
 	  m('a').attr('id', 'copy').text('Copy'), '|',
 	  m(EditBtnBlock).append([m(EditBtn).text('Edit'), '|']),
@@ -75,8 +82,7 @@
     },
     DoDelete: () => {
       ajax(DelOptions, () => {
-	$(HeadButtons.id).hide();
-	$(InfoBlock.id).hide();
+	$('.all-about-note').hide();
 	Alerts.Insert('success', DelResultMsg);
       });
     },
@@ -102,24 +108,26 @@
     },
   };
 
+  const Tags = cc('span');
+  const TagGroup = cc('a');
+  const TagsArea = {
+    id: '#tags-area',
+    view: () => m('p').addClass('all-about-note').attr('id', 'tags-area').append([
+      m(Tags),
+      m(TagGroup).text('group').addClass('Tag Btn').attr('title', 'search tag group'),
+    ]),
+  };
+
   const CreatedAt = cc('span');
   const UpdatedAt = cc('span');
   const TypeAndSize = cc('span');
-  const Tags = cc('span');
-  const TagGroup = cc('a');
   
   const InfoBlock = {
-    id: '#info-block',
-    view: () => m('div').attr('id', 'info-block').css('display', 'none').append([
+    view: () => m('div').addClass('all-about-note').css('textAlign', 'right').append([
       m('p').attr('id', 'note-info').append([
-	m(CreatedAt), m('br'),
-	m(UpdatedAt), m('br'),
+	'Created at: ', m(CreatedAt), m('br'),
+	'Updated at: ', m(UpdatedAt), m('br'),
 	m(TypeAndSize),
-      ]),
-      m('p').append([
-	'Tags:',
-	m(Tags),
-	m(TagGroup).text('group').addClass('Tag Btn').attr('title', 'search tag group'),
       ]),
     ]),
   };
@@ -132,9 +140,11 @@
     m(Spacer),
     m(Loading),
     m(Alerts),
+    m(TagsArea),
+    m(Markdown).addClass('NoteContents all-about-note'),
+    m(Plaintext).addClass('NoteContents all-about-note plaintext'),
+    m(Spacer),
     m(InfoBlock),
-    m(Markdown).addClass('NoteContents').hide(),
-    m(Plaintext).addClass('NoteContents').hide(),
     m(BottomLine),
   ]);
 
@@ -144,6 +154,8 @@
     const id = getUrlParam('id');
 
     $(NoteID.id).text(`Note [id:${id}]`);
+    $('.all-about-note').hide();
+    
     ajax(
       {method:'GET', url:'/api/note/'+id, alerts:Alerts},
       (resp) => {
@@ -152,8 +164,7 @@
 	  (patched, patch) => Diff.applyPatch(patched, patch), "");
 	DelOptions = {
 	  method:'PUT',url:`/api/note/${id}/deleted`,body:bodyForDel,alerts:Alerts,buttonID:DeleteYes.id};
-	$(HeadButtons.id).show();
-	$(InfoBlock.id).show();
+	$('.all-about-note').show();
 	$(CreatedAt.id).text(dayjs(Note.CreatedAt).format('YYYY-MM-DD HH:mm:ss'));
 	$(UpdatedAt.id).text(dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss'));
 	const size = fileSizeToString(Note.Size);
@@ -169,8 +180,10 @@
 	  const dirty = marked(Note.Contents);
 	  const clean = DOMPurify.sanitize(dirty);
 	  $(Markdown.id).show().html(clean);
+	  $(Plaintext.id).remove();
 	} else {
 	  $(Plaintext.id).show().text(Note.Contents);
+	  $(Markdown.id).remove();
 	}
 	
 	if (Note.Deleted) {
