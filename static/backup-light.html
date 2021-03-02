@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Backup .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js"></script>
+    <script src="/public/components.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+<script>
+
+  const Alerts = CreateAlerts();
+
+  const TopBanner = {
+    view: () => m('p').text('uglynotes .. Backup'),
+  };
+
+  const DownloadDB = {
+    view: () => m('p').append([
+      '下载整个数据库(sqlite): ',
+      m('a').attr({href:'/api/backup/db',download:'uglynotes.db'}).text('uglynotes.db'),
+    ])
+  };
+
+  const exportBtn = cc('button');
+  const jsonLink = cc('a');
+  const DownloadJSON = {
+    view: () => m('p').append([
+      m(exportBtn).text('导出JSON').click(() => {
+	ajax({method:'GET',url:'/api/backup/export',alerts:Alerts,buttonID:exportBtn.id},
+	     () => {
+	       $(exportBtn.id).hide();
+	       $(jsonLink.id).show();
+	       Alerts.Insert('success', '导出成功, 请点击下载');
+	     });
+      }),
+      m(jsonLink).attr({href:'/api/backup/json',download:'uglynotes.json'})
+	.text('uglynotes.json').hide(),
+    ]),
+  };
+  
+  $('#root').append([
+    m(TopBanner),
+    m(Spacer),
+    m(DownloadDB),
+    m(Alerts),
+    m(DownloadJSON),
+    m(BottomLine),
+  ]);
+
+
+</script>
+  </body>
+</html>
