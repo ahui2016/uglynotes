@@ -20,12 +20,13 @@
     'page', '请在 Groups 页面通过标签组来创建新笔记');
 
   const PageTitle = cc('span');
+  const HeadButtons = cc('div', 'head-buttons');
   const TopBanner = {
     view: () => m('div').append([
       'uglynotes .. ',
       m(PageTitle).text('Index'),
       m(infoIcon),
-      m('div').attr('id', 'head-buttons').append([
+      m(HeadButtons).append([
 	'|',
 	m('a').text('Tags').attr('href', '/light/tags'), '|',
 	m('a').text('Groups').attr('href', '/light/tag/groups'), '|',
@@ -73,6 +74,8 @@
       notFoundMsg = '数据库中没有标记为"已删除"的笔记';
       $(PageTitle.id).text('Recycle Bin');
       $('title').text('Recycle Bin .. uglynotes');
+      $(infoIcon.id).hide();
+      $(HeadButtons.id).hide();
     }
     ajax({method:'GET',url:url,alerts:Alerts}, onSuccess, null, onAlways);
     NotesSize.init();

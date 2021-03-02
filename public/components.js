@@ -22,7 +22,8 @@ function CreateInfoPair(name, msg) {
     toggle: () => { $(infoMsg.id).toggle(); },
   };
   const infoIcon = {
-    view: () => $(`<img src="/public/info-circle.svg" class="IconButton" alt="info" title="显示/隐藏说明">`)
+    id: `#about-${name}-icon`,
+    view: () => $(`<img id= "about-${name}-icon" src="/public/info-circle.svg" class="IconButton" alt="info" title="显示/隐藏说明">`)
       .click(infoMsg.toggle),
   };
   return [infoIcon, infoMsg];

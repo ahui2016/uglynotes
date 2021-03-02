@@ -311,6 +311,7 @@
 	    Alerts.Insert('danger', `the note(id:${param_id}) is deleted`);
 	    return;
 	  }
+	  $(History.id).attr('href', `/light/history?id=${Note.ID}&version=last`);
 	  enterEditMode();
 	  restartAutoSubmit();
 
@@ -355,7 +356,6 @@
     $('title').text('Edit Note .. uglynotes');
     $(PageTitle.id).text('Edit Note');
     $(ReadonlyMode.id).attr('href', `/light/note?id=${Note.ID}`);
-    $(History.id).attr('href', `/light/history?id=${Note.ID}&version=${Note.Patches.length}`);
     $(HeadButtons.id).show();
     $(EditForm.id).show();
     $(SubmitBtn.id).hide();
