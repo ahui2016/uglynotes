@@ -5,7 +5,7 @@
 
 ## 重要更新
 
-- 2021-03-01 (change: 前端采用 water.css) 详见 Releases.md
+- 2021-03-01 (change: 前端采用mj.js 和 water.css) 详见 Releases.md
 - 2021-02-03 (change: 数据库改用 sqlite)
 - 2021-01-25 (add: 快捷键)
 - 2021-01-23 (add: 备份/导出)

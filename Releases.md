@@ -1,12 +1,13 @@
 # Releases 新版说明
 
 
-## 2021-03-01 (change: 前端采用 water.css 重写) 
+## 2021-03-01 (change: 前端采用 mj.js 和 water.css 重写) 
 
 **推荐程度**: 前端变好看了一点点，建议抽空升级。
 
 - 旧版暂时还可以访问 http://note.ai42.xyz/home , 但今后有可能完全删除旧版页面。
 - 新版 http://note.ai42.xyz/light/home
+- 关于 mj.js 请看这里 https://github.com/ahui2016/mj.js
 
 ### 高级功能
 
