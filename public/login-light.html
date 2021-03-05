@@ -60,7 +60,7 @@
       ajax({method:'POST', url:'/login', body:body, alerts:Alerts, buttonID:Form.submitID},
 	   () => {
 	     loginSuccess();
-	     window.setTimeout(() => { window.location = '/light/home'; }, 100);
+	     window.setTimeout(() => { window.location = '/'; }, 100);
 	   });
     },
   };

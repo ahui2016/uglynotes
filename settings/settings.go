@@ -8,6 +8,9 @@ type Settings struct {
 	Password         string
 	Address          string
 
+	// FirstPage 是指登入网站时跳转的第一个页面。
+	FirstPage string
+
 	// MaxAge for session
 	// 有效单位是 "s", "m", "h"
 	MaxAge string
@@ -49,6 +52,7 @@ func Default() Settings {
 		PasswordMaxTry:   100,
 		Password:         "abc",
 		Address:          "127.0.0.1:80",
+		FirstPage:        "/light/home",
 		MaxAge:           "2400h", // 24 * 100 = 100 days
 		NoteTitleLimit:   200,
 		NoteSizeLimit:    1 << 19, // 512 KB

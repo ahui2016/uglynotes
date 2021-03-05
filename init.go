@@ -64,10 +64,10 @@ func setPaths() {
 
 func setConfig() {
 	configJSON, err := ioutil.ReadFile(settingsFile)
+	config = settings.Config
 
 	// 找不到文件或内容为空
 	if err != nil || len(configJSON) == 0 {
-		config = settings.Default()
 		configJSON, err := json.MarshalIndent(config, "", "    ")
 		util.Panic(err)
 		util.Panic(ioutil.WriteFile(settingsFile, configJSON, 0600))
@@ -75,6 +75,5 @@ func setConfig() {
 	}
 
 	// settingsFile 有内容
-	util.Panic(json.Unmarshal(configJSON, &settings.Config))
-	config = settings.Config
+	util.Panic(json.Unmarshal(configJSON, &config))
 }

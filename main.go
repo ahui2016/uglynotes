@@ -29,7 +29,7 @@ func main() {
 	app.Static("/static", "./static")
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Redirect("/light/home")
+		return c.Redirect(config.FirstPage)
 	})
 	app.Use("/home", checkLoginHTML)
 	app.Get("/home", homePage)

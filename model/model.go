@@ -55,9 +55,9 @@ type Note struct {
 	Size      int
 	Tags      []tagset.Tag
 	Deleted   bool
-	RemindAt  string `storm:"index"`
-	CreatedAt string `storm:"index"` // ISO8601
-	UpdatedAt string `storm:"index"`
+	RemindAt  string // ISO8601 
+	CreatedAt string
+	UpdatedAt string 
 }
 
 func NoteFrom(oldNote OldNote) Note {

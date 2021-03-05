@@ -11,7 +11,6 @@
     <script src="/public/components.js?v1"></script>
   </head>
   <body>
-    <div id="root"></div>
 <script>
   
   const Alerts = CreateAlerts();
@@ -23,7 +22,8 @@
   const HeadButtons = cc('div', 'head-buttons');
   const TopBanner = {
     view: () => m('div').append([
-      'uglynotes .. ',
+      m('a').text('uglynotes').attr({href:'/light/home'}),
+      ' .. ',
       m(PageTitle).text('Index'),
       m(infoIcon),
       m(HeadButtons).append([
@@ -51,7 +51,7 @@
     }
   };
 
-  $('#root').append([
+  $('body').append([
     m(TopBanner),
     m(infoMsg),
     m(Spacer),

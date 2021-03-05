@@ -75,7 +75,7 @@ $ ./uglynotes -config /path/to/settings.json &
 - **Alt-Shift-C**: 笔记编辑框(contents)
 - **Alt-Shift-T**: 标签编辑框(tags)
 
-其中预览和编辑需要先选中笔记类型为 markdown 才能使用, 在 Chrome 里可以使用 **Alt-C** 和 **Alt-T** 分别跳到笔记编辑框和标签编辑框。 Mac 用户请用 option 键代替 alt 键。
+在 Chrome 里可以使用 **Alt-C** 和 **Alt-T** 分别跳到笔记编辑框和标签编辑框。 Mac 用户请用 option 键代替 alt 键。
 
 另外，当光标在笔记编辑框时，按 Tab 键可跳到标签编辑框，再按 Shift + Tab 可跳回到笔记编辑框。
 
