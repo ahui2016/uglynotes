@@ -79,9 +79,10 @@ func NoteFrom(oldNote OldNote) Note {
 }
 
 // NewNote .
-func NewNote(id, title, patch string, noteType NoteType, tagNames []string) (
+func NewNote(id, title, patch, remindAt string, noteType NoteType, tagNames []string) (
 	*Note, error) {
 	note := newNote(id, noteType)
+	note.RemindAt = remindAt
 	err1 := note.AddPatchSetTitle(patch, title)
 	err2 := note.SetNewTags(tagNames)
 	return note, util.WrapErrors(err1, err2)

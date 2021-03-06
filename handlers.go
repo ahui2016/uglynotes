@@ -207,12 +207,13 @@ func newNoteHandler(c *fiber.Ctx) error {
 func createNote(c *fiber.Ctx) (*Note, error) {
 	noteType, err1 := getNoteType(c)
 	title, err2 := getFormValue(c, "title")
-	tags, err3 := getTags(c)
+	remindAt, err3 := getRemindAt(c)
+	tags, err4 := getTags(c)
 	patch := c.FormValue("patch") // 不能 TrimSpace!!
-	if err := util.WrapErrors(err1, err2, err3); err != nil {
+	if err := util.WrapErrors(err1, err2, err3, err4); err != nil {
 		return nil, err
 	}
-	return db.NewNote(title, patch, noteType, tags)
+	return db.NewNote(title, patch, remindAt, noteType, tags)
 }
 
 func changeType(c *fiber.Ctx) error {

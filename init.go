@@ -76,4 +76,9 @@ func setConfig() {
 
 	// settingsFile 有内容
 	util.Panic(json.Unmarshal(configJSON, &config))
+	
+	// 为了与前端 day.js 输出的格式保持一致
+	if config.ISO8601 == "2006-01-02T15:04:05.999+00:00" {
+		config.ISO8601 = "2006-01-02T15:04:05.999Z"
+	}
 }

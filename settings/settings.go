@@ -31,6 +31,7 @@ type Settings struct {
 
 	// ISO8601 需要根据服务器的具体时区来设定正确的时区
 	// 比如，如果是北京时间，则应设为 "2006-01-02T15:04:05.999+08:00"
+	// 特殊情况如果采用时区 +00:00 请设为 "2006-01-02T15:04:05.999Z" (为了与前端 day.js 输出的格式保持一致)
 	ISO8601 string
 
 	// HistoryLimit 限制每篇笔记可保留的历史版本数量上限。
@@ -58,7 +59,7 @@ func Default() Settings {
 		NoteSizeLimit:    1 << 19, // 512 KB
 		MaxBodySize:      1 << 19,
 		DatabaseCapacity: 1 << 20 * 10, // 10MB
-		ISO8601:          "2006-01-02T15:04:05.999+00:00",
+		ISO8601:          "2006-01-02T15:04:05.999Z",
 		TagGroupLimit:    100,
 	}
 }

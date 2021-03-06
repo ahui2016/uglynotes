@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="/public/style-light.css?v11">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
+    <script>dayjs.extend(window.dayjs_plugin_utc)</script>
     <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
@@ -178,6 +180,32 @@
     },
   };
 
+  const ReminderBtn = cc('button');
+  const ReminderDate = cc('input');
+  const Reminder = cc('div', null, [
+    m('label').text('Reminder:').attr({for:ReminderDate.id}),
+    m(ReminderDate).attr({type:'date'}).val(dayjs().format('YYYY-MM-DD')).css({
+      display:'inline',
+      marginLeft:'0.5em',
+      verticalAlign:'middle',
+    }),
+    m('img').attr({src:'/public/x-circle.svg',title:'cancel'}).css({cursor:'pointer'}).click(toggleReminder),
+  ]);
+
+  Reminder.oldValue = '';
+  Reminder.value = () => {
+    if ($(Reminder.id).css('display') == 'none') {
+      return '';
+    }
+    return $(ReminderDate.id).val();
+  };
+
+  function toggleReminder(event) {
+    if (event) event.preventDefault();
+    $(ReminderBtn.id).toggle();
+    $(Reminder.id).toggle();
+  }
+
   const [aboutShortcutIcon, aboutShortcutMsg] = CreateInfoPair(
     'shortcut', `本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
       预览、编辑、文本框。(详情请看 Releases.md)`);
@@ -206,7 +234,11 @@
       const contents = Textarea.currentContents();
       const patch = Diff.createPatch(" ", "", contents);
       const note_type = TypeSelector.currentType();
+      let remind_at = Reminder.value();
+      if (remind_at) remind_at = dayjs(remind_at).toISOString();
+
       const body = new FormData();
+      body.append('remind-at', remind_at);
       body.append('note-type', note_type);
       body.append('title', contents.substring(0, NoteTitleLimit));
       body.append('patch', patch);
@@ -217,6 +249,7 @@
 	(resp) => {
 	  // onSuccess
 	  Note = resp;
+	  Reminder.oldValue = remind_at;
 	  TypeSelector.oldType = note_type;
 	  TagsArea.oldTags = TagsArea.currentTags;
 	  Textarea.oldContents = contents;
@@ -286,6 +319,8 @@
       m(Textarea),
       m(Preview),
       m(TagsArea),
+      m(ReminderBtn).text('Reminder').attr({title:'set reminder'}).click(toggleReminder),
+      m(Reminder).hide(),
       m(Submit),
     ]),
   };
@@ -314,6 +349,13 @@
 	  }
 	  enterEditMode();
 	  restartAutoSubmit();
+
+	  // init reminder
+	  if (Note.RemindAt) {
+	    toggleReminder();
+	    Reminder.oldValue = dayjs(Note.RemindAt).format('YYYY-MM-DD');
+	    $(ReminderDate.id).val(Reminder.oldValue)
+	  }
 
 	  // init note type
 	  TypeSelector.oldType = Note.Type;

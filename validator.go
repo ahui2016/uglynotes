@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/ahui2016/uglynotes/model"
 	"github.com/gofiber/fiber/v2"
@@ -28,6 +29,12 @@ func getNoteType(c *fiber.Ctx) (NoteType, error) {
 	noteTypeString, err := getFormValue(c, "note-type")
 	noteType := model.NewNoteType(noteTypeString)
 	return noteType, err
+}
+
+func getRemindAt(c *fiber.Ctx) (remindAt string, err error) {
+	remindAt = c.FormValue("remind-at")
+	_, err = time.Parse(config.ISO8601, remindAt)
+	return
 }
 
 func getTags(c *fiber.Ctx) ([]string, error) {

@@ -151,7 +151,7 @@ func insertNote(tx TX, note *Note) (err error) {
 		note.Title,
 		note.Size,
 		note.Deleted,
-		"",
+		note.RemindAt,
 		note.CreatedAt,
 		note.UpdatedAt,
 	)
@@ -346,9 +346,9 @@ func mustParseDuration(s string) time.Duration {
 
 // NewNote .
 func (db *DB) NewNote(
-	title, patch string, noteType NoteType, tagNames []string) (*Note, error) {
+	title, patch, remindAt string, noteType NoteType, tagNames []string) (*Note, error) {
 	id := db.mustGetNextID()
-	return model.NewNote(id, title, patch, noteType, tagNames)
+	return model.NewNote(id, title, patch, remindAt, noteType, tagNames)
 }
 
 // Insert .
