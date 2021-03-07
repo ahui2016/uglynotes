@@ -580,6 +580,10 @@ func (db *DB) ChangeType(id string, noteType NoteType) error {
 	return db.Exec(stmt.ChangeNoteType, noteType, id)
 }
 
+func (db *DB) ChangeReminder(id, remindAt string) error {
+	return db.Exec(stmt.SetReminder, remindAt, id)
+}
+
 // UpdateTags .
 func (db *DB) UpdateTags(id string, tagNames []string) error {
 	oldTags, err := db.getSimpleTagsByNote(id)

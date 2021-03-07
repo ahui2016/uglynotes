@@ -13,7 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
-    <script src="/public/util2.js?v111"></script>
+    <script src="/public/util2.js?v20210306"></script>
     <script src="/public/components.js?v1"></script>
   </head>
   <style>
@@ -234,8 +234,7 @@
       const contents = Textarea.currentContents();
       const patch = Diff.createPatch(" ", "", contents);
       const note_type = TypeSelector.currentType();
-      let remind_at = Reminder.value();
-      if (remind_at) remind_at = dayjs(remind_at).toISOString();
+      const remind_at = toISO8601(Reminder.value());
 
       const body = new FormData();
       body.append('remind-at', remind_at);
@@ -249,7 +248,7 @@
 	(resp) => {
 	  // onSuccess
 	  Note = resp;
-	  Reminder.oldValue = remind_at;
+	  Reminder.oldValue = Reminder.value();
 	  TypeSelector.oldType = note_type;
 	  TagsArea.oldTags = TagsArea.currentTags;
 	  Textarea.oldContents = contents;
@@ -271,6 +270,25 @@
 	     () => {
 	       TypeSelector.oldType = note_type;
 	       Alerts.Insert('success', '笔记类型更新成功: ' + note_type);
+	     },
+	     () => { stopAutoSubmit(); },
+	    );
+      }
+
+      // 更新提醒日期
+      const remind_at = Reminder.value();
+      console.log(toISO8601(remind_at))
+      if (remind_at != Reminder.oldValue) {
+	const body = new FormData();
+	body.append('remind-at', toISO8601(remind_at));
+	ajax({method:'PUT',url:`/api/note/${Note.ID}/reminder`,body:body,alerts:Alerts,buttonID:UpdateBtn.id},
+	     () => {
+	       Reminder.oldValue = remind_at;
+	       if (!remind_at) {
+		 Alerts.Insert('success', '已取消提醒');
+	       } else {
+		 Alerts.Insert('success', '更新提醒日期成功: ' + remind_at);
+	       }
 	     },
 	     () => { stopAutoSubmit(); },
 	    );
@@ -434,6 +452,11 @@
     Alerts.Insert('danger', msg);
     AlertsForCopy.Insert('danger', msg);
     $(infoMsg.id).show()
+  }
+
+  function toISO8601(dt) {
+    if (!dt) return "";
+    return dayjs(dt).utcOffset(TimeZone).format();
   }
   
 </script>

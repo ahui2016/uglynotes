@@ -80,6 +80,7 @@ func main() {
 	api.Put("/note/:id/deleted", setNoteDeleted)
 	api.Delete("/note/:id", deleteNoteForever)
 	api.Put("/note/:id/type", changeType)
+	api.Put("/note/:id/reminder", changeReminder)
 	api.Put("/note/:id/tags", updateNoteTags)
 
 	api.Get("/tag/all/:sortby", allTagsSorted)

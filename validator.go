@@ -33,6 +33,9 @@ func getNoteType(c *fiber.Ctx) (NoteType, error) {
 
 func getRemindAt(c *fiber.Ctx) (remindAt string, err error) {
 	remindAt = c.FormValue("remind-at")
+	if remindAt == "" {
+		return
+	}
 	_, err = time.Parse(config.ISO8601, remindAt)
 	return
 }

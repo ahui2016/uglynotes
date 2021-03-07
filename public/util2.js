@@ -1,18 +1,22 @@
 "use strict";
 
 // 创建历史版本的间隔时间
-const DelayOfAutoUpdate = 1000 * 60 * 5 // 5分钟
+const DelayOfAutoUpdate = 1000 * 60 * 5; // 5分钟
 
 // 自动保存（自动更新）次数的上限
-const AutoUpdateLimit = 100
+const AutoUpdateLimit = 100;
 
 // NoteTitleLimit 限制标题的长度。
 // 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
-const NoteTitleLimit = 200
+const NoteTitleLimit = 200;
 
 // NoteSizeLimit 限制每篇笔记的体积。
 // 注意：该限制还需要在 settings.go 中设置（为了做后端限制）
-const NoteSizeLimit = 1 << 19 // 512 KB
+const NoteSizeLimit = 1 << 19; // 512 KB
+
+// 时区设置，比如，如果是北京时间则应设置为 8。
+// 注意：时区设置要与后端的时区设置保持一致。
+const TimeZone = 0;
 
 // make a new vnode by name, or return its view.
 function m(name) {

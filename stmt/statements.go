@@ -113,6 +113,7 @@ const UpdateTitleSizeNow = `UPDATE note SET title=?, size=?, updated_at=?
 const SetNoteDeleted = `UPDATE note SET deleted=? WHERE id=?;`
 const DeleteNote = `DELETE FROM note WHERE id=?;`
 const ChangeNoteType = `UPDATE note SET type=? WHERE id=?;`
+const SetReminder = `UPDATE note SET remind_at=? WHERE id=?;`
 const SetTypeTitle = `UPDATE note SET type=?, title=? WHERE id=?;`
 
 const GetTag = `SELECT * FROM tag WHERE id=?;`

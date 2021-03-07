@@ -225,6 +225,15 @@ func changeType(c *fiber.Ctx) error {
 	return db.ChangeType(id, noteType)
 }
 
+func changeReminder(c *fiber.Ctx) error {
+	id := c.Params("id")
+	remindAt, err := getRemindAt(c)
+	if err != nil {
+		return err
+	}
+	return db.ChangeReminder(id, remindAt)
+}
+
 func updateNoteTags(c *fiber.Ctx) error {
 	id := c.Params("id")
 
