@@ -277,7 +277,6 @@
 
       // 更新提醒日期
       const remind_at = Reminder.value();
-      console.log(toISO8601(remind_at))
       if (remind_at != Reminder.oldValue) {
 	const body = new FormData();
 	body.append('remind-at', toISO8601(remind_at));

@@ -471,6 +471,13 @@ func (db *DB) AllDeletedNotes() (notes []*Note, err error) {
 	return db.getNotes(stmtGetDeletedNotes)
 }
 
+
+func (db *DB) AllReminders() (notes []*Note, err error) {
+	stmtGetReminders := mustPrepare(db.DB, stmt.GetReminders)
+	defer stmtGetReminders.Close()
+	return db.getNotes(stmtGetReminders)
+}
+
 func (db *DB) getNotes(stmtGet *Stmt) (notes []*Note, err error) {
 	rows, err := stmtGet.Query()
 	if err != nil {

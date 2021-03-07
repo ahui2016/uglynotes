@@ -121,6 +121,10 @@ func searchPageLight(c *fiber.Ctx) error {
 	return c.SendFile("./static/search-light.html")
 }
 
+func reminderPageLight(c *fiber.Ctx) error {
+	return c.SendFile("./static/reminder-light.html")
+}
+
 func downloadDatabase(c *fiber.Ctx) error {
 	return c.SendFile(dbPath)
 }
@@ -171,6 +175,14 @@ func getAllNotes(c *fiber.Ctx) error {
 
 func getDeletedNotes(c *fiber.Ctx) error {
 	notes, err := db.AllDeletedNotes()
+	if err != nil {
+		return err
+	}
+	return c.JSON(notes)
+}
+
+func getAllReminders(c *fiber.Ctx) error {
+	notes, err := db.AllReminders()
 	if err != nil {
 		return err
 	}

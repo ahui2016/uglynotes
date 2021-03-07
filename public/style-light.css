@@ -89,9 +89,13 @@ body {
     font-size: smaller;
 }
 
+.ConfirmBlock {
+    color: blue;
+    margin-left: 5px;
+}
+
 .ConfirmDelete {
     color: red;
-    margin-left: 5px;
 }
 
 .Tag {

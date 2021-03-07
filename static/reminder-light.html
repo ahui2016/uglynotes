@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Reminder .. uglynotes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
+    <link rel="stylesheet" href="/public/style-light.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="/public/util2.js"></script>
+    <script src="/public/components.js"></script>
+  </head>
+  <body>
+<script>
+  
+  const Alerts = CreateAlerts();
+
+  const [infoIcon, infoMsg] = CreateInfoPair(
+    'page', 'Reminder(提醒事项) 本质上也是笔记，请在 Groups 页面通过标签组来创建新的提醒事项/笔记。 点击 remove 按钮可取消提醒（但不会删除笔记）。');
+
+  const HeadButtons = cc('div', 'head-buttons');
+  const TopBanner = {
+    view: () => m('div').append([
+      m('a').text('uglynotes').attr({href:'/light/home'}),
+      ' .. Reminder',
+      m(infoIcon),
+      m(HeadButtons).append([
+	'|',
+	m('a').text('Tag Groups').attr('href', '/light/tag/groups'),
+	'|',
+      ]),
+    ]),
+  };
+
+  // 今天的提醒
+  const Today = cc('div', null, [
+    m('h3').text('Today'),
+    m('hr'),
+    m('ul').addClass('list'),
+  ]);
+
+  Today.add = (reminder) => {
+    $(Today.id + ' .list').prepend(m(reminder));
+  };
+
+  // 未来及过期提醒
+  const [infoIcon2, infoMsg2] = CreateInfoPair(
+    'all', '显示/隐藏未来的、以及过期的提醒事项。');
+
+  const NotTodayBtn = cc('button');
+  const NotToday = cc('div', null, [
+    m('h3').text('All').css({display:'inline'}),
+    m('button').text('show').addClass('SlimButton not-today').click(() => {
+      $('.not-today').toggle();
+    }),
+    m('button').text('hide').addClass('SlimButton not-today').hide().click(() => {
+      $('.not-today').toggle();
+    }),
+    m(infoIcon2),
+    m(infoMsg2).css({display:'inline', marginLeft:'0.5em'}).hide(),
+    m('br'),
+    m('hr').addClass('not-today').hide(),
+    m('ul').addClass('list not-today').hide(),
+  ]);
+
+  NotToday.add = (reminder) => {
+    $(NotToday.id + ' .list').prepend(m(reminder));
+  };
+
+  $('body').append([
+    m(TopBanner),
+    m(infoMsg),
+    m(Spacer),
+    m(Loading),
+    m(Alerts),
+    m(Spacer),
+    m(Today).hide(),
+    m(Spacer),
+    m(NotToday).hide(),
+    m(BottomLine),
+  ]);
+
+  init();
+
+  function init() {
+    ajax({method:'GET',url:'/api/note/reminder',alerts:Alerts}, (notes) => {
+      notes.forEach(note => {
+	const reminder = NewReminderItem(note);
+	const today = dayjs().format('YYYY-MM-DD');
+	const remind_at = dayjs(note.RemindAt).format('YYYY-MM-DD');
+	if (remind_at == today) {
+	  $(Today.id).show();
+	  Today.add(reminder);
+	} else {
+	  $(NotToday.id).show();
+	  NotToday.add(reminder);
+	}
+      });
+    }, null, () => {
+      Loading.hide();
+    });
+  }
+  
+  function NewReminderItem(note) {
+    const self = cc('li', note.ID);
+    const remind_at = dayjs(note.RemindAt).format('MMM D, YYYY');
+
+    self.alerts = CreateAlerts();
+    
+    self.toggleConfirm = () => {
+      $(self.id + ' .ConfirmBlock').toggle();
+      $(self.id + ' .RemoveBtn').toggle();
+    };
+
+    self.executeRemove = () => {
+      $(self.id + ' .Deleted').show();
+      $(self.id + ' .Buttons').hide();
+      $(self.id + ' .TitleLink').hide();
+      $(self.id + ' .TitleText').show();
+    }
+    
+    self.view = () => m('li').attr({id: self.raw_id}).addClass('LI Reminder').append([
+      m('span').addClass('RemindAt').text(remind_at),
+      m('span').addClass('Deleted').text('REMOVED').hide(),
+      m('span').addClass('Buttons').append([
+	m('a').text('edit').addClass('Tag Btn').attr('href', `/light/note/edit?id=${note.ID}`),
+	m('span').text('remove').addClass('Tag Btn RemoveBtn').click(self.toggleConfirm),
+	m('span').addClass('ConfirmBlock').hide().append([
+	  m('span').text('remove this reminder?'),
+	  m('button').text('yes').addClass('SlimButton Yes').click(self.executeRemove),
+	  m('button').text('no').addClass('SlimButton').click(self.toggleConfirm),
+	]),
+      ]),
+      m('br'),
+      m('a').text(note.Title).addClass('TitleLink').attr('href', `/light/note?id=${note.ID}`),
+      m('span').text(note.Title).addClass('TitleText').hide(),
+      m('br'),
+      m('span').addClass('Tags').text(addPrefix(toTagNames(note.Tags), '#')),
+      self.alerts,
+    ]);
+
+    return self;
+  }
+
+</script>
+  </body>
+</html>

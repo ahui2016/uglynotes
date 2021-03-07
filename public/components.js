@@ -20,6 +20,7 @@ function CreateInfoPair(name, msg) {
     id: `#about-${name}-msg`,
     view: () => $(`<div id="about-${name}-msg" class="InfoMessage" style="display:none">${msg}</div>`),
     toggle: () => { $(infoMsg.id).toggle(); },
+    setMsg: (msg) => { $(infoMsg.id).text(msg); },
   };
   const infoIcon = {
     id: `#about-${name}-icon`,

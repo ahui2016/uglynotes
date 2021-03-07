@@ -56,6 +56,7 @@ func main() {
 	lightPage.Get("/tags", tagsPageLight)
 	lightPage.Get("/tag", tagPageLight)
 	lightPage.Get("/history", historyPageLight)
+	lightPage.Get("/reminder", reminderPageLight)
 
 	htmlPage := app.Group("/html", checkLoginHTML)
 	htmlPage.Get("/index", indexPage)
@@ -72,6 +73,7 @@ func main() {
 	api := app.Group("/api", checkLoginJSON)
 	api.Get("/note/all", getAllNotes)
 	api.Get("/note/deleted", getDeletedNotes)
+	api.Get("/note/reminder", getAllReminders)
 	api.Get("/note/all/size", notesSizeHandler)
 
 	api.Post("/note", newNoteHandler)
