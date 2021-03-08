@@ -1,6 +1,14 @@
 # Releases 新版说明
 
 
+## 2021-03-08 (add: 提醒事项 reminder 功能)
+
+- 在编辑笔记页面新增 Reminder 按钮，可设置提醒日期。
+- 设置了提醒日期的笔记会显示在 Reminder 列表中。
+- 在 home 页面和 index 页面增加了提醒事项的入口。
+- 如果在 settings.json 中设置 `FirstPage: "/light/reminder"` 可把提醒事项页面设为首页。
+
+
 ## 2021-03-01 (change: 前端采用 mj.js 和 water.css 重写) 
 
 **推荐程度**: 前端变好看了一点点，建议抽空升级。

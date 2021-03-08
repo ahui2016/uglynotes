@@ -16,7 +16,7 @@
   const Alerts = CreateAlerts();
 
   const [infoIcon, infoMsg] = CreateInfoPair(
-    'page', 'Reminder(提醒事项) 本质上也是笔记，请在 Groups 页面通过标签组来创建新的提醒事项/笔记。 点击 remove 按钮可取消提醒（但不会删除笔记）。');
+    'page', 'Reminder(提醒事项) 本质上也是笔记，请在 Tag Groups 页面通过标签组来创建新的提醒事项/笔记。 点击 remove 按钮可取消提醒（但不会删除笔记）。');
 
   const HeadButtons = cc('div', 'head-buttons');
   const TopBanner = {
@@ -84,6 +84,10 @@
 
   function init() {
     ajax({method:'GET',url:'/api/note/reminder',alerts:Alerts}, (notes) => {
+      if (!notes || notes.length == 0) {
+	Alerts.Insert('info', '没有提醒事项');
+	$(infoIcon.id).click();
+      }
       notes.forEach(note => {
 	const reminder = NewReminderItem(note);
 	const today = dayjs().format('YYYY-MM-DD');
@@ -113,10 +117,15 @@
     };
 
     self.executeRemove = () => {
-      $(self.id + ' .Deleted').show();
-      $(self.id + ' .Buttons').hide();
-      $(self.id + ' .TitleLink').hide();
-      $(self.id + ' .TitleText').show();
+      const body = new FormData();
+      body.append('remind-at', '');
+      ajax({method:'PUT',url:`/api/note/${note.ID}/reminder`,body:body,buttonID:`${self.id} .Yes`},
+	   () => {
+	     $(self.id + ' .Deleted').show();
+	     $(self.id + ' .Buttons').hide();
+	     $(self.id + ' .TitleLink').hide();
+	     $(self.id + ' .TitleText').show();
+	   });
     }
     
     self.view = () => m('li').attr({id: self.raw_id}).addClass('LI Reminder').append([

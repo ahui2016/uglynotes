@@ -391,7 +391,7 @@
 	  TagsArea.oldTags = TagsArea.currentTags;
 	  TagsArea.resetTags();
 
-	  Alerts.Insert('success', '已获取笔记 id: ' + Note.ID);
+	  Alerts.Insert('success', `已获取笔记【${Note.Title}】`);
 	  Alerts.Insert('success', '已进入编辑模式');
 	  window.setTimeout(() => {$(Contents.id).focus()}, 500);
 	},

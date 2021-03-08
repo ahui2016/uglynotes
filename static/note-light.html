@@ -118,6 +118,7 @@
     ]),
   };
 
+  const RemindAt = cc('span');
   const CreatedAt = cc('span');
   const UpdatedAt = cc('span');
   const TypeAndSize = cc('span');
@@ -125,6 +126,7 @@
   const InfoBlock = {
     view: () => m('div').addClass('all-about-note').css('textAlign', 'right').append([
       m('p').attr('id', 'note-info').append([
+	m(RemindAt),
 	'Created at: ', m(CreatedAt), m('br'),
 	'Updated at: ', m(UpdatedAt), m('br'),
 	m(TypeAndSize),
@@ -165,6 +167,13 @@
 	DelOptions = {
 	  method:'PUT',url:`/api/note/${id}/deleted`,body:bodyForDel,alerts:Alerts,buttonID:DeleteYes.id};
 	$('.all-about-note').show();
+	if (Note.RemindAt) {
+	  const remind_at = dayjs(Note.RemindAt).format('YYYY-MM-DD HH:mm:ss');
+	  $(RemindAt.id).append([
+	    `Remind at: ${remind_at}`,
+	    m('br'),
+	  ]);
+	}
 	$(CreatedAt.id).text(dayjs(Note.CreatedAt).format('YYYY-MM-DD HH:mm:ss'));
 	$(UpdatedAt.id).text(dayjs(Note.UpdatedAt).format('YYYY-MM-DD HH:mm:ss'));
 	const size = fileSizeToString(Note.Size);
