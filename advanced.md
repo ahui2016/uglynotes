@@ -17,7 +17,7 @@
 
 ## 网站首页（登入后自动跳转的页面）
 
-网站首页可自由设置，比如在 settings.json 文件中设置 `FirstPage: "/light/reminder"` 可把提醒事项页面设为首页，默认首页是 `FirstPage: "/light/home"`, 设置后需要重启程序生效。
+网站首页可自由设置，比如在 settings.json 文件中设置 `"FirstPage": "/light/reminder"` 可把提醒事项页面设为首页，默认首页是 `"FirstPage": "/light/home"`, 设置后需要重启程序生效。
 
 关于如何设置 settings.json 的更多信息请看 README.md 中的 “密码等的设置” 章节。
 
