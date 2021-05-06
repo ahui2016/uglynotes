@@ -1,6 +1,10 @@
 package tagset
 
-import "sort"
+import (
+	"sort"
+
+	"github.com/ahui2016/uglynotes/util"
+)
 
 type Set struct {
 	Map map[string]string // map[id][name]
@@ -54,7 +58,23 @@ func (set *Set) Slice() (tags []Tag) {
 	return
 }
 
-func UniqueSort(tags []Tag) (result []Tag) {
+func SortByID(tags []Tag) []Tag {
+	sort.Slice(tags, func(i, j int) bool {
+		return tags[i].ID < tags[j].ID
+	})
+	return tags
+}
+
+func SortByIDToString(tags []Tag) string {
+	var sorted []string
+	for _, tag := range SortByID(tags) {
+		sorted = append(sorted, tag.ID)
+	}
+	blob := util.MustMarshal(sorted)
+	return string(blob)
+}
+
+func UniqueSortName(tags []Tag) (result []Tag) {
 	if len(tags) == 0 {
 		return
 	}

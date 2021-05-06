@@ -86,7 +86,8 @@ func main() {
 	api.Put("/note/:id/tags", updateNoteTags)
 
 	api.Get("/tag/all/:sortby", allTagsSorted)
-	api.Get("/tag/:id/notes", getNotesByTag)
+	// api.Get("/tag/:id/notes", getNotesByTag)
+	api.Get("/tag/:id/groups", getTagGroups)
 	api.Get("/tag/name/:name", getTagByName)
 	api.Get("/tag/:id", getTagByID)
 	api.Put("/tag/:id", renameTag)

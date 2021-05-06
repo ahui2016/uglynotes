@@ -29,6 +29,7 @@ type (
 	TagGroup   = model.TagGroup
 	IncreaseID = model.IncreaseID
 	Set        = stringset.Set
+	SimpleTag  = tagset.Tag
 	Stmt       = sql.Stmt
 )
 
@@ -388,7 +389,7 @@ func (db *DB) GetByID(id string) (note Note, err error) {
 	return
 }
 
-func (db *DB) getSimpleTagsByNote(id string) ([]tagset.Tag, error) {
+func (db *DB) getSimpleTagsByNote(id string) ([]SimpleTag, error) {
 	rows, err := db.DB.Query(stmt.GetTagsByNote, id)
 	if err != nil {
 		return nil, err
@@ -397,9 +398,9 @@ func (db *DB) getSimpleTagsByNote(id string) ([]tagset.Tag, error) {
 	return scanSimpleTags(rows)
 }
 
-func scanSimpleTags(rows *sql.Rows) (tags []tagset.Tag, err error) {
+func scanSimpleTags(rows *sql.Rows) (tags []SimpleTag, err error) {
 	for rows.Next() {
-		var tag tagset.Tag
+		var tag SimpleTag
 		err = rows.Scan(&tag.ID, &tag.Name)
 		if err != nil {
 			return
@@ -470,7 +471,6 @@ func (db *DB) AllDeletedNotes() (notes []*Note, err error) {
 	defer stmtGetDeletedNotes.Close()
 	return db.getNotes(stmtGetDeletedNotes)
 }
-
 
 func (db *DB) AllReminders() (notes []*Note, err error) {
 	stmtGetReminders := mustPrepare(db.DB, stmt.GetReminders)
@@ -644,6 +644,21 @@ func (db *DB) AddPatchSetTitle(id, patch, title string) (
 // SetTagGroupProtected .
 func (db *DB) SetTagGroupProtected(groupID string, protected bool) error {
 	return db.Exec(stmt.SetTagGroupProtected, protected, groupID)
+}
+
+func (db *DB) GetGroupsByTagID(tagID string) (groups [][]SimpleTag, err error) {
+	notes, err := db.GetNotesByTagID(tagID)
+	if err != nil {
+		return nil, err
+	}
+	set := make(map[string][]SimpleTag) // [tagIDs]tags
+	for _, note := range notes {
+		set[tagset.SortByIDToString(note.Tags)] = note.Tags
+	}
+	for _, simpleTags := range set {
+		groups = append(groups, simpleTags)
+	}
+	return
 }
 
 func (db *DB) GetNotesByTagID(tagID string) ([]*Note, error) {

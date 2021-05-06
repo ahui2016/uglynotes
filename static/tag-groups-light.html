@@ -61,11 +61,11 @@
       const body = new FormData();
       body.append('tags', JSON.stringify(Array.from(TagsInput.currentTagsSet)));
       ajax({method:'POST',url:'/api/tag/group',body:body,
-	    alerts:Alerts,buttonID:SubmitBtn.id,},
-	   (group) => {
-	     TagGroups.prepend(group);
-	     Alerts.Insert('success', '添加了新标签组: ' + addPrefix(group.Tags, '#'));
-	   });
+            alerts:Alerts,buttonID:SubmitBtn.id,},
+          (group) => {
+            TagGroups.prepend(group);
+            Alerts.Insert('success', '添加了新标签组: ' + addPrefix(group.Tags, '#'));
+          });
     },
   };
 
@@ -169,13 +169,12 @@
 
   function init() {
     ajax({method:'GET',url:'/api/tag/group/all',alerts:Alerts},
-	 (groups) => {
-	   $(Count.id).text(`共 ${groups.length} 个标签组`);
-	   TagGroups.refill(groups);
-	 },
-	 null,
-	 () => { Loading.hide(); },
-	);
+      (groups) => {
+        $(Count.id).text(`共 ${groups.length} 个标签组`);
+        TagGroups.refill(groups);
+      }, null, () => {
+        Loading.hide();
+      });
   }
   
 </script>

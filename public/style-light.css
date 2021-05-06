@@ -98,6 +98,16 @@ body {
     color: red;
 }
 
+.TagText {
+    margin-left: 0.5em;
+
+    background: ghostwhite;
+    color: #666;
+    padding: 2.5px 5px;
+    border-radius: 6px;
+    font-family: monospace;
+}
+
 .Tag {
     margin-left: 0.5em;
 

@@ -4,169 +4,198 @@
     <meta charset="utf-8">
     <title>Tag .. uglynotes</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
-    <link rel="stylesheet" href="/public/style-light.css?v111111">
+    <link rel="stylesheet" href="/public/style-light.css?v1111112">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="/public/util2.js?v222"></script>
-    <script src="/public/components.js?v1"></script>
+    <script src="/public/components.js?v12"></script>
   </head>
   <body>
     <div id="root"></div>
 <script>
 
-  const tag_id = getUrlParam('id');
-  let tag_name;
+const tag_id = getUrlParam('id');
+let tag_name;
 
-  const Alerts = CreateAlerts();
+const Alerts = CreateAlerts();
 
-  const TagName = cc('p');
-  
-  const TagNameInput = cc('input');
-  const CheckBtn = cc('button');
-  const RenameBtn = cc('button');
-  const CancelBtn = cc('button');
-  const RenameForm = cc('form', null, [
-    m(TagNameInput).attr({placeholder:'new name'}).css({display:'inline'}).focus(() => {
-	$(RenameBtn.id).hide();
-	$(CheckBtn.id).show();
-    }),
-    m(CheckBtn).text('check').css({display:'inline'}),
-    m(RenameBtn).text('rename').css({display:'inline'}).hide(),
-    m(CancelBtn).text('cancel').css({display:'inline'}),
-  ]);
+const TagName = cc('p');
 
-  const HeadButtons = cc('span', 'head-buttons');
-  const RenameBtnArea = cc('span');
-  const DeleteBtn = cc('a');
-  const ConfirmArea = cc('span');
-  const DeleteYesBtn = cc('button');
-  const TopBanner = {
-    view: () => m('div').append([
-      m('a').text('uglynotes').attr('href', '/light'),
-      ' .. ', m('a').text('Tags').attr('href', '/light/tags'),
-      ' .. Tag',
-      m(HeadButtons).append([
-	'|',
-	m(RenameBtnArea).append([
-	  m('a').text('Rename').click(TopBanner.rename), '|',
-	]),
-	m(DeleteBtn).text('Delete').click(TopBanner.toggleComfirmArea),
-	m(ConfirmArea).hide().append([
-	  m('span').addClass('ConfirmDelete').text('delete this tag?'),
-	  m(DeleteYesBtn).addClass('SlimButton').text('yes').click(TopBanner.executeDelete),
-	  m('button').addClass('SlimButton').text('no').click(TopBanner.toggleComfirmArea),
-	]),
-	'|',
-      ]),
+const TagNameInput = cc('input');
+const CheckBtn = cc('button');
+const RenameBtn = cc('button');
+const CancelBtn = cc('button');
+const RenameForm = cc('form', null, [
+  m(TagNameInput).attr({placeholder:'new name'}).css({display:'inline'}).focus(() => {
+$(RenameBtn.id).hide();
+$(CheckBtn.id).show();
+  }),
+  m(CheckBtn).text('check').css({display:'inline'}),
+  m(RenameBtn).text('rename').css({display:'inline'}).hide(),
+  m(CancelBtn).text('cancel').css({display:'inline'}),
+]);
+
+const HeadButtons = cc('span', 'head-buttons');
+const RenameBtnArea = cc('span');
+const DeleteBtn = cc('a');
+const ConfirmArea = cc('span');
+const DeleteYesBtn = cc('button');
+const TopBanner = {
+  view: () => m('div').append([
+    m('a').text('uglynotes').attr('href', '/light'),
+    ' .. ', m('a').text('Tags').attr('href', '/light/tags'),
+    ' .. Tag',
+    m(HeadButtons).append([
+'|',
+m(RenameBtnArea).append([
+  m('a').text('Rename').click(TopBanner.rename), '|',
+]),
+m(DeleteBtn).text('Delete').click(TopBanner.toggleComfirmArea),
+m(ConfirmArea).hide().append([
+  m('span').addClass('ConfirmDelete').text('delete this tag?'),
+  m(DeleteYesBtn).addClass('SlimButton').text('yes').click(TopBanner.executeDelete),
+  m('button').addClass('SlimButton').text('no').click(TopBanner.toggleComfirmArea),
+]),
+'|',
     ]),
-    rename: () => {
-      toggleRenameArea();
-      window.setTimeout(() => { $(TagNameInput.id).focus(); }, 100);
-    },
-    toggleComfirmArea: () => {
-      $(DeleteBtn.id).toggle();
-      $(ConfirmArea.id).toggle();
-    },
-    executeDelete: (event) => {
-      event.preventDefault();
-      ajax({method:'DELETE',url:'/api/tag/'+tag_id,alerts:Alerts,buttonID:DeleteYesBtn.id},
-	   () => {
-	     $(HeadButtons.id).hide();
-	     $(RenameForm.id).hide();
-	     $(Notes.id).hide();
-	     Alerts.Insert('success', `已删除标签: ${tag_name}`);
-	   });
-    },
-  };
-  
-  $('#root').append([
-    m(TopBanner),
-    m(Spacer),
-    m(Loading),
-    m(TagName).hide(),
-    m(RenameForm).attr({autocomplete:'off'}).hide(),
-    m(Alerts),
-    m(Spacer),
-    m(Notes),
-    m(BottomLine),
-  ]);
-
-  init();
-
-  function init() {
-
-    ajax({method:'GET',url:`/api/tag/${tag_id}`,alerts:Alerts},
-	 (tag) => {
-	   tag_name = tag.Name;
-	   $(TagName.id).show().text('Tag name: ' +tag.Name );
-	 },
-	 null,
-	 () => { Loading.hide(); });
-
-    $(CancelBtn.id).click(event => {
-      event.preventDefault();
-      toggleRenameArea();
+  ]),
+  rename: () => {
+    toggleRenameArea();
+    window.setTimeout(() => { $(TagNameInput.id).focus(); }, 100);
+  },
+  toggleComfirmArea: () => {
+    $(DeleteBtn.id).toggle();
+    $(ConfirmArea.id).toggle();
+  },
+  executeDelete: (event) => {
+    event.preventDefault();
+    ajax({method:'DELETE',url:'/api/tag/'+tag_id,alerts:Alerts,buttonID:DeleteYesBtn.id},
+    () => {
+      $(HeadButtons.id).hide();
+      $(RenameForm.id).hide();
+      $(Notes.id).hide();
+      Alerts.Insert('success', `已删除标签: ${tag_name}`);
     });
+  },
+};
 
-    $(CheckBtn.id).click(event => {
-      event.preventDefault();
-      const input = $(TagNameInput.id);
-      const tag = getTag(input.val());
-      if (!tag) {
-	input.focus();
-	return;
-      }
-      input.val('#'+tag);
-      $(CheckBtn.id).hide();
-      $(RenameBtn.id).show();
-    });
+const GroupList = cc('ul');
+GroupList.prepend = (tags) => {
+  const item = createTagGroup(tags);
+  $(GroupList.id).prepend(m(item));
+  item.init();
+};
 
-    $(RenameBtn.id).click(event => {
-      event.preventDefault();
-      const new_name = getTag($(TagNameInput.id).val());
-      const body = new FormData();
-      body.append('new-name', new_name);
-      ajax({method: 'PUT', url: '/api/tag/' + tag_id, body: body,
-	    alerts: Alerts, buttonID: RenameBtn.id},
-	   (resp) => {
-	     const newTagID = resp.message;
-	     toggleRenameArea();
-	     $(Notes.id).hide();
-	     Alerts.Insert('info', '重命名成功时会自动刷新页面');
-	     Alerts.Insert('success', `正在重命名: ${tag_name} --> ${new_name}`);
-	     if (newTagID == tag_id) {
-	       window.setTimeout(function(){window.location.reload()}, 5000);
-	     } else {
-	       window.setTimeout(() => {window.location = '/light/tag?id='+newTagID}, 5000);
-	     }
-	   });
-    });
+$('#root').append([
+  m(TopBanner),
+  m(Spacer),
+  m(Loading),
+  m(TagName).hide(),
+  m(RenameForm).attr({autocomplete:'off'}).hide(),
+  m(Alerts),
+  m(Spacer),
+  m(GroupList),
+  m(BottomLine),
+]);
 
-    ajax({method:'GET',url:`/api/tag/${tag_id}/notes`,alerts:Alerts},
-	 (notes) => {
-	   if (!notes || notes.length == 0) {
-	     Alerts.Insert('找不到相关笔记');
-	     return;
-	   }
-	   Notes.refill(notes);
-	 });
-  }
+init();
 
-  function toggleRenameArea () {
-    $(RenameBtnArea.id).toggle();
-    $(RenameForm.id).toggle();
-  }
-  
-  // 提取出一个标签。
-  function getTag(tagsString) {
-    let trimmed = tag_replace(tagsString);
-    if (trimmed.length == 0) {
-      return false;
+function init() {
+
+  ajax({method:'GET',url:`/api/tag/${tag_id}`,alerts:Alerts},
+      (tag) => {
+        tag_name = tag.Name;
+        $(TagName.id).show().text('Tag name: ' +tag.Name );
+      }, null, () => {
+        Loading.hide();
+      });
+
+  $(CancelBtn.id).click(event => {
+    event.preventDefault();
+    toggleRenameArea();
+  });
+
+  $(CheckBtn.id).click(event => {
+    event.preventDefault();
+    const input = $(TagNameInput.id);
+    const tag = getTag(input.val());
+    if (!tag) {
+      input.focus();
+      return;
     }
-    let arr = trimmed.split(/ +/);
-    return arr[0];
+    input.val('#'+tag);
+    $(CheckBtn.id).hide();
+    $(RenameBtn.id).show();
+  });
+
+  $(RenameBtn.id).click(event => {
+    event.preventDefault();
+    const new_name = getTag($(TagNameInput.id).val());
+    const body = new FormData();
+    body.append('new-name', new_name);
+    ajax({method: 'PUT', url: '/api/tag/' + tag_id, body: body,
+    alerts: Alerts, buttonID: RenameBtn.id},
+    (resp) => {
+      const newTagID = resp.message;
+      toggleRenameArea();
+      $(Notes.id).hide();
+      Alerts.Insert('info', '重命名成功时会自动刷新页面');
+      Alerts.Insert('success', `正在重命名: ${tag_name} --> ${new_name}`);
+      if (newTagID == tag_id) {
+        window.setTimeout(function(){window.location.reload()}, 5000);
+      } else {
+        window.setTimeout(() => {window.location = '/light/tag?id='+newTagID}, 5000);
+      }
+    });
+  });
+
+  ajax({method:'GET',url:`/api/tag/${tag_id}/groups`,alerts:Alerts},
+      (groups) => {
+        if (!groups || groups.length == 0) {
+          Alerts.Insert('找不到与该标签相关的笔记');
+          return;
+        }
+        groups.forEach(GroupList.prepend);
+      });
+}
+
+function toggleRenameArea () {
+  $(RenameBtnArea.id).toggle();
+  $(RenameForm.id).toggle();
+}
+
+// 提取出一个标签。
+function getTag(tagsString) {
+  let trimmed = tag_replace(tagsString);
+  if (trimmed.length == 0) {
+    return false;
   }
-  
+  let arr = trimmed.split(/ +/);
+  return arr[0];
+}
+
+function createTagGroup(tags) {
+  const self = cc('li');
+
+  // self.view = () => m('li').attr({id: self.raw_id}).addClass('TagGroup');
+
+  self.init = () => {
+    tags.forEach(tag => {
+      let item = CreateTag2(tag);
+      if (tag.ID == tag_id) {
+        item = m('span').text(tag.Name).addClass('TagText');
+      }
+      $(self.id).append(item);
+    });
+    const tagGroup = encodeURIComponent(addPrefix(toTagNames(tags)));
+    const group = m('a').text('search').addClass('Tag Btn')
+      .attr({title:'search tag group', href:'/light/search?tags='+tagGroup});
+    $(self.id).append(group);
+  }
+
+  return self;
+}
+
 </script>
   </body>
 </html>

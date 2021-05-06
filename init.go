@@ -23,8 +23,6 @@ var (
 	dataDir    string // 数据库文件夹
 	dbPath     string // 数据库文件
 	exportPath string // 数据库导出文件
-
-	dbPath2 string
 )
 
 var (
@@ -46,6 +44,7 @@ func init() {
 	util.MustMkdir(dataDir)
 
 	// open the db here, close the db in main().
+	log.Print("database:", dbPath)
 	err := db.Open(dbPath)
 	util.Panic(err)
 	log.Print(dbPath)
@@ -76,7 +75,7 @@ func setConfig() {
 
 	// settingsFile 有内容
 	util.Panic(json.Unmarshal(configJSON, &config))
-	
+
 	// 为了与前端 day.js 输出的格式保持一致
 	if config.ISO8601 == "2006-01-02T15:04:05.999+00:00" {
 		config.ISO8601 = "2006-01-02T15:04:05.999Z"

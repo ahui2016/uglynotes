@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js"></script>
     <script src="/public/util2.js?v11"></script>
-    <script src="/public/components.js?v11"></script>
+    <script src="/public/components.js?v112"></script>
 
     <style>
       .plaintext {
@@ -114,7 +114,7 @@
     id: '#tags-area',
     view: () => m('p').addClass('all-about-note').attr('id', 'tags-area').append([
       m(Tags),
-      m(TagGroup).text('group').addClass('Tag Btn').attr('title', 'search tag group'),
+      m(TagGroup).text('search').addClass('Tag Btn').attr('title', 'search tag group'),
     ]),
   };
 
@@ -183,7 +183,7 @@
 	$(EditBtn.id).attr('href', '/light/note/edit?id=' + Note.ID);
 	$(HistoryBtn.id).attr('href', '/light/history?id=' + Note.ID);
 
-	Note.Tags.forEach(tag => { $(Tags.id).append(CreateTag(tag.Name)); });
+	Note.Tags.forEach(tag => { $(Tags.id).append(CreateTag2(tag)); });
 
 	if (Note.Type == 'Markdown') {
 	  const dirty = marked(Note.Contents);

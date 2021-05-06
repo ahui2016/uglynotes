@@ -344,12 +344,22 @@ func renameTag(c *fiber.Ctx) error {
 	return jsonMessage(c, tagID)
 }
 
+/*
 func getNotesByTag(c *fiber.Ctx) error {
 	notes, err := db.GetNotesByTagID(c.Params("id"))
 	if err != nil {
 		return err
 	}
 	return c.JSON(notes)
+}
+*/
+
+func getTagGroups(c *fiber.Ctx) error {
+	groups, err := db.GetGroupsByTagID(c.Params("id"))
+	if err != nil {
+		return err
+	}
+	return c.JSON(groups)
 }
 
 func allTagsSorted(c *fiber.Ctx) (err error) {

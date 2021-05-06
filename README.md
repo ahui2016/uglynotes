@@ -5,7 +5,8 @@
 
 ## 重要更新
 
-- 2021-03-08 (add: 提醒事项 reminder 功能)  详见 Releases.md
+- 2021-05-06 (change: 标签页面列出相关标签组) 详见 Releases.md
+- 2021-03-08 (add: 提醒事项 reminder 功能)
 - 2021-03-01 (change: 前端采用 mj.js 和 water.css)
 - 2021-02-03 (change: 数据库改用 sqlite)
 - 2021-01-25 (add: 快捷键)

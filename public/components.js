@@ -142,6 +142,13 @@ function CreateTag(name) {
     .attr('href', '/light/search?tags=' + encodeURIComponent(name));
 }
 
+function CreateTag2(tag) {
+  return m('a')
+    .addClass('Tag')
+    .text(tag.Name)
+    .attr('href', '/light/tag?id=' + tag.ID);
+}
+
 // set a random id to vnode and return the id.
 function random_id(vnode) {
   vnode.attr('id', Math.round(Math.random() * 100000000));
