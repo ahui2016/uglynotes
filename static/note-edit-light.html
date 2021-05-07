@@ -150,9 +150,13 @@
       return 'OK';
     },
     higher: function() {
-      const height = parseInt($(Contents.id).css('height'));
-      $(Contents.id).css('height', height + 100 + 'px');
+      const contentsElem = $(Contents.id);
+      contentsElem.css('height', contentsElem.prop('scrollHeight'));
+      contentsElem.on('input', () => {
+        contentsElem.css('height', contentsElem.prop('scrollHeight'));
+      });
       $(Contents.id).focus();
+      return;
     },
   };
 
