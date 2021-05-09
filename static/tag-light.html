@@ -25,6 +25,9 @@ let tag_name;
 
 const Alerts = CreateAlerts();
 
+const [infoIcon, infoMsg] = CreateInfoPair(
+    'page', '如果删除标签可能导致一篇笔记完全没有标签，会提示删除失败，并返回文件 ID。');
+
 const TagName = cc('p');
 
 const TagNameInput = cc('input');
@@ -51,6 +54,7 @@ const TopBanner = {
     m('a').text('uglynotes').attr('href', '/light'),
     ' .. ', m('a').text('Tags').attr('href', '/light/tags'),
     ' .. Tag',
+    m(infoIcon),
     m(HeadButtons).append([
 '|',
 m(RenameBtnArea).append([
@@ -94,6 +98,7 @@ GroupList.prepend = (tags) => {
 
 $('#root').append([
   m(TopBanner),
+  m(infoMsg),
   m(Spacer),
   m(Loading),
   m(TagName).hide(),
@@ -194,9 +199,12 @@ function createTagGroup(tags) {
       $(self.id).append(item);
     });
     const tagGroup = encodeURIComponent(addPrefix(toTagNames(tags)));
-    const group = m('a').text('search').addClass('Tag Btn')
+    const groupBtn = m('a').text('search').addClass('Tag Btn')
       .attr({title:'search tag group', href:'/light/search?tags='+tagGroup});
-    $(self.id).append(group);
+    $(self.id).append(groupBtn);
+	  const createBtn = m('a').text('create')
+      .attr({class:'Tag Btn',title:'create a new note',href:'/light/note/new?tags='+tagGroup});
+    $(self.id).append(createBtn);
   }
 
   return self;

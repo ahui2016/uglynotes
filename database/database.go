@@ -803,5 +803,25 @@ func (db *DB) getNoteSize(id string) (size int, err error) {
 
 // DeleteTag .
 func (db *DB) DeleteTag(id string) error {
+	if err := db.checkBeforeDeleteTag(id); err != nil {
+		return err
+	}
 	return db.Exec(stmt.DeleteTag, id)
+}
+
+func (db *DB) checkBeforeDeleteTag(tagID string) error {
+	noteIDs, err := db.getNoteIDs(stmt.GetNotesByTagID, tagID)
+	if err != nil {
+		return err
+	}
+	for _, id := range noteIDs {
+		tags, err := db.getSimpleTagsByNote(id)
+		if err != nil {
+			return err
+		}
+		if len(tags) == 1 {
+			return fmt.Errorf("file [id:%s] has only one tag [%s]", id, tags[0].Name)
+		}
+	}
+	return nil
 }
