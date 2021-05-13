@@ -39,11 +39,11 @@ function CreateAlerts(max) {
       $(alerts.ID).prepend(elem);
       alerts.Count++;
       if (alerts.Count > max) {
-	$(`${alerts.ID} p:last-of-type`).remove();
+	$(`${alerts.ID} div:last-of-type`).remove();
       }
     },
     Insert: (msgType, msg) => {
-      const elem = m('p').addClass(`alert alert-${msgType}`).append([
+      const elem = m('div').addClass(`alert alert-${msgType}`).append([
 	m('span').text(dayjs().format('HH:mm:ss')),
 	m('span').text(msg),
       ]);

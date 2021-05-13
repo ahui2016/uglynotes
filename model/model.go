@@ -55,9 +55,9 @@ type Note struct {
 	Size      int
 	Tags      []tagset.Tag
 	Deleted   bool
-	RemindAt  string // ISO8601 
+	RemindAt  string // ISO8601
 	CreatedAt string
-	UpdatedAt string 
+	UpdatedAt string
 }
 
 func NoteFrom(oldNote OldNote) Note {
@@ -141,27 +141,9 @@ func (note *Note) resetSize(patchSize int) error {
 func (note *Note) SetTitle(contents string) {
 	title := firstLineLimit(contents, config.NoteTitleLimit)
 	if note.Type == Markdown {
-		if mdTitle := getMarkdownTitle(title); mdTitle != "" {
-			title = mdTitle
-		}
+		title = getMarkdownTitle(title)
 	}
 	note.Title = title
-}
-
-func diffGNU(s string) string {
-	i := strings.Index(s, "@@")
-	re := regexp.MustCompile(`\\ .*`)
-	return re.ReplaceAllString(s[i:], "")
-}
-
-func patchApply(patch string, text string) (string, error) {
-	dmp := diffmatchpatch.New()
-	patches, err := dmp.PatchFromText(diffGNU(patch))
-	if err != nil {
-		return "", err
-	}
-	patched, _ := dmp.PatchApply(patches, text)
-	return patched, nil
 }
 
 // SetNewTags 对标签进行一些验证和处理（例如除重和排序）。
@@ -215,7 +197,7 @@ func firstLineLimit(s string, limit int) string {
 		s = s[:limit]
 	}
 	s += "\n"
-	i := strings.Index(s, "\n")
+	i := firstLineBreak(s)
 	firstLine := s[:i]
 	for len(firstLine) > 0 {
 		if utf8.ValidString(firstLine) {
@@ -229,6 +211,19 @@ func firstLineLimit(s string, limit int) string {
 	return firstLine
 }
 
+// firstLineBreak 获取第一个 \r\n 或第一个 \n 的位置
+func firstLineBreak(s string) int {
+	i := strings.Index(s, "\n")
+	i2 := strings.Index(s, "\r\n")
+	if i2 < 0 {
+		return i
+	}
+	if i > i2 {
+		i = i2
+	}
+	return i
+}
+
 func getMarkdownTitle(s string) string {
 	reTitle := regexp.MustCompile(`(^#{1,6}|>|1.|-|\*) (.+)`)
 	matches := reTitle.FindStringSubmatch(s)
@@ -236,7 +231,7 @@ func getMarkdownTitle(s string) string {
 	if len(matches) >= 3 {
 		return matches[2]
 	}
-	return ""
+	return s
 }
 
 // TagGroup 标签组，其中 Tags 应该除重和排序。

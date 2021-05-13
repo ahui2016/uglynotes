@@ -24,15 +24,14 @@ body {
 }
 
 .alerts {
-    line-height: 0.25em;
     font-size: smaller;
 }
 
-.alerts p:first-of-type {
+.alerts div:first-of-type {
     font-size: larger;
 }
 
-.alerts p:nth-of-type(n+4) {
+.alerts div:nth-of-type(n+4) {
     color: gray;
 }
 
