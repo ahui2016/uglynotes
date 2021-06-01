@@ -7,6 +7,7 @@
 
     <title>Home .. uglynotes</title>
  
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.3/dayjs.min.js"></script>
     <script src="/public/util2.js"></script>
     <style>
@@ -17,6 +18,12 @@
   color: #000;
   background-color: #ddd;
 }
+#today {
+  color: darkorange;
+  background-color: lightyellow;
+  display: none;
+  cursor: default;
+}
     </style>
   </head>
   <body>
@@ -25,7 +32,10 @@
 
     <div id="navi">
       <p><a href="/light/note/new?tags=%E4%B8%8D%E9%87%8D%E8%A6%81%20%E5%BE%85%E5%A4%84%E7%90%86">New Note</a> - 创建新笔记</p>
-      <p><a href="/light/reminder">Reminder</a> - 提醒事项</p>
+      <p>
+        <a href="/light/reminder">Reminder</a> - 提醒事项
+        <abbr id="today" title="today has events">today</abbr>
+      </p>
       <p><a href="/light/index">Index</a> - 笔记列表</p>
       <p><a href="/light/search">Search</a> - 搜索</p>
       <p><a href="/light/tags">Tags</a> - 标签列表</p>
@@ -34,7 +44,7 @@
       <p><a href="/static/backup-light.html">Backup</a> - 备份/导出</p>
       <p><a href="/converter" target="_blank">Converter</a> - 图片压缩转码</p>
       <p style="color: #666;">
-        uglynotes version: 2021-05-09<br>
+        uglynotes version: 2021-06-01<br>
         <a id="repository" href="https://github.com/ahui2016/uglynotes" target="_blank">
           github.com/ahui2016/uglynotes
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
@@ -46,9 +56,28 @@
     </div>
 
     <script>
-      function importnotes() {
-	ajax({method:'GET', url:'/import-notes'}, () => {console.log('OK')});
+
+init();
+
+function init() {
+  ajax({method:'GET',url:'/api/note/reminder'}, (notes) => {
+    if (!notes || notes.length == 0) {
+      return;
+    }
+    notes.forEach(note => {
+      const today = dayjs().format('YYYY-MM-DD');
+      const remind_at = dayjs(note.RemindAt).format('YYYY-MM-DD');
+      if (remind_at == today) {
+        $('#today').show();
       }
+    });
+  });
+}
+
+function importnotes() {
+	ajax({method:'GET', url:'/import-notes'}, () => {console.log('OK')});
+}
+
     </script>
   </body>
 </html>
