@@ -5,6 +5,7 @@
     "PasswordMaxTry": 100,
     "Password": "abc",
     "Address": "127.0.0.1:80",
+    "FirstPage": "/light/index",
     "MaxAge": "2400h",
     "NoteTitleLimit": 200,
     "NoteSizeLimit": 524288,

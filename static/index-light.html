@@ -1,93 +1,220 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>Index .. uglynotes</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
-    <link rel="stylesheet" href="/public/style-light.css?v111111">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
+    />
+    <link rel="stylesheet" href="/public/style-light.css?v111111" />
     <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="/public/util2.js?v222"></script>
     <script src="/public/components.js?v11"></script>
+
+    <style>
+      .SubmitLine {
+        text-align: right;
+      }
+    </style>
   </head>
   <body>
-<script>
-  
-  const Alerts = CreateAlerts();
+    <script>
+      let Note = {};
 
-  const [infoIcon, infoMsg] = CreateInfoPair(
-    'page', '请在 Tag Groups 页面通过标签组来创建新笔记。点击 delete 按钮可删除笔记，被删除的笔记进入回收站，可恢复。');
+      const Alerts = CreateAlerts();
 
-  const PageTitle = cc('span');
-  const HeadButtons = cc('div', 'head-buttons');
-  const TopBanner = {
-    view: () => m('div').append([
-      m('a').text('uglynotes').attr({href:'/light/home'}),
-      ' .. ',
-      m(PageTitle).text('Index'),
-      m(infoIcon),
-      m(HeadButtons).append([
-	'|',
-	m('a').text('Tag Groups').attr('href', '/light/tag/groups'), '|',
-	m('a').text('Reminder').attr('href', '/light/reminder'),
-	'|',
-      ]),
-    ]),
-  };
+      const [infoIcon, infoMsg] = CreateInfoPair(
+        "page",
+        "请在 Tag Groups 页面通过标签组来创建新笔记。点击 delete 按钮可删除笔记，被删除的笔记进入回收站，可恢复。"
+      );
 
-  const NotesSize = {
-    id: '#notes-size',
-    view: () => m('p').attr('id', 'notes-size').css('color', 'grey'),
-    init: () => {
-      ajax({method:'GET', url:'/api/note/all/size', alerts:Alerts},
-	   (resp) => {
-	     const total_size = resp.TotalSize;
-	     const capacity = resp.Capacity;
-	     const used = fileSizeToString(total_size, 0);
-	     const available = fileSizeToString(capacity - total_size, 0);
-	     $(NotesSize.id).text(`已用: ${used}, 剩余可用: ${available}`);
-	   });
-    }
-  };
+      const PageTitle = cc("span");
+      const HeadButtons = cc("div", "head-buttons");
+      const TopBanner = {
+        view: () =>
+          m("div").append([
+            m("a").text("uglynotes").attr({ href: "/light/home" }),
+            " .. ",
+            m(PageTitle).text("Index"),
+            m(infoIcon),
+            m(HeadButtons).append([
+              "|",
+              m("a").text("Tag Groups").attr("href", "/light/tag/groups"),
+              "|",
+              m("a").text("Reminder").attr("href", "/light/reminder"),
+              "|",
+            ]),
+          ]),
+      };
 
-  $('body').append([
-    m(TopBanner),
-    m(infoMsg),
-    m(Spacer),
-    m(Loading),
-    m(Alerts),
-    m(Notes),
-    m(Spacer),
-    m(NotesSize),
-    m(BottomLine),
-  ]);
+      const NotesSize = {
+        id: "#notes-size",
+        view: () => m("p").attr("id", "notes-size").css("color", "grey"),
+        init: () => {
+          ajax(
+            { method: "GET", url: "/api/note/all/size", alerts: Alerts },
+            (resp) => {
+              const total_size = resp.TotalSize;
+              const capacity = resp.Capacity;
+              const used = fileSizeToString(total_size, 0);
+              const available = fileSizeToString(capacity - total_size, 0);
+              $(NotesSize.id).text(`已用: ${used}, 剩余可用: ${available}`);
+            }
+          );
+        },
+      };
 
-  init();
+      const Contents = cc("textarea", "contents");
+      const Higher = cc("p");
 
-  function init() {
-    const filter = getUrlParam('filter');
-    let url = '/api/note/all';
-    let notFoundMsg = '数据库中没有笔记';
-    if (filter == 'deleted') {
-      url = '/api/note/deleted';
-      notFoundMsg = '数据库中没有标记为"已删除"的笔记';
-      $(PageTitle.id).text('Recycle Bin');
-      $('title').text('Recycle Bin .. uglynotes');
-      infoMsg.setMsg('这里是回收站，点击 delete 按钮可彻底删除笔记，被删除的笔记不可恢复。');
-      $(HeadButtons.id).hide();
-    }
-    ajax({method:'GET',url:url,alerts:Alerts}, onSuccess, null, onAlways);
-    NotesSize.init();
-  }
-  function onSuccess(notes) {
-    if (!notes || notes.length == 0) {
-      Alerts.Insert('info', App.NotFoundMsg);
-      return;
-    }
-    Notes.refill(notes);
-  }
-  function onAlways() { Loading.hide(); }
-  
-</script>
+      const Textarea = {
+        id: "#textarea",
+        currentContents: () => $(Contents.id).val().trim(),
+        oldContents: "",
+        view: function () {
+          const self = Textarea;
+          return m("div")
+            .attr("id", "textarea")
+            .append([
+              m(Contents)
+                .attr({ accesskey: "c" })
+                .css("height", "80px")
+                .blur(self.updateContents),
+            ]);
+        },
+        checkContents: () => {
+          const self = Textarea;
+          const currentContents = self.currentContents();
+          if (currentContents == "") {
+            // 有 event 表示点击了按钮，这种情况要给用户提示。
+            // 如果没有 event 则是后台自动运行，不需要提示。
+            if (event) Alerts.Insert("info", "笔记内容不可空白");
+            return "NG";
+          }
+          if (currentContents.length > NoteSizeLimit) {
+            Alerts.Insert(
+              "danger",
+              "超过笔记体积上限: " + fileSizeToString(NoteSizeLimit)
+            );
+            return "NG";
+          }
+          return "OK";
+        },
+      };
+
+      const SubmitBtn = cc("button");
+
+      const Submit = {
+        view: function () {
+          const self = Submit;
+          return m("p").addClass("SubmitLine").append([
+            m(SubmitBtn).text("submit").click(self.submit),
+          ]);
+        },
+        submit: function (event) {
+          if (event) event.preventDefault();
+
+          const contents = Textarea.currentContents();
+          if (!contents) {
+            $(Contents.id).focus();
+            return;
+          }
+          const patch = Diff.createPatch(" ", "", contents);
+          const note_type = "Markdown";
+
+          const body = new FormData();
+          body.append("note-type", note_type);
+          body.append("title", contents.substring(0, NoteTitleLimit));
+          body.append("patch", patch);
+          body.append("tags", JSON.stringify(["简捷记录", "待处理"]));
+
+          ajax(
+            {
+              method: "POST",
+              url: "/api/note",
+              body: body,
+              alerts: Alerts,
+              buttonID: SubmitBtn.id,
+            },
+            (resp) => {
+              // onSuccess
+              Note = resp;
+              $(Contents.id).val('')
+              Textarea.oldContents = '';
+              Alerts.Insert("success", "新笔记创建成功 id:" + Note.ID);
+              const elem = Notes.newNote(Note);
+              $(Notes.id).prepend(m(elem));
+            },
+          );
+        },
+      };
+
+      const EditForm = {
+        id: "#edit-form",
+        view: () =>
+          m("form")
+            .attr({
+              id: "edit-form",
+              autocomplete: "off",
+            })
+            .append([m(Textarea), m(Submit)]),
+      };
+
+      $("body").append([
+        m(TopBanner),
+        m(infoMsg),
+        m(Spacer),
+        m(Loading),
+        m(EditForm),
+        m(Alerts),
+        m(Notes),
+        m(Spacer),
+        m(NotesSize),
+        m(BottomLine),
+      ]);
+
+      init();
+
+      function init() {
+        const filter = getUrlParam("filter");
+        let url = "/api/note/all";
+        let notFoundMsg = "数据库中没有笔记";
+        if (filter == "deleted") {
+          url = "/api/note/deleted";
+          notFoundMsg = '数据库中没有标记为"已删除"的笔记';
+          $(PageTitle.id).text("Recycle Bin");
+          $("title").text("Recycle Bin .. uglynotes");
+          infoMsg.setMsg(
+            "这里是回收站，点击 delete 按钮可彻底删除笔记，被删除的笔记不可恢复。"
+          );
+          $(HeadButtons.id).hide();
+        }
+        ajax(
+          { method: "GET", url: url, alerts: Alerts },
+          onSuccess,
+          null,
+          onAlways
+        );
+        NotesSize.init();
+      }
+
+      function onSuccess(notes) {
+        if (!notes || notes.length == 0) {
+          Alerts.Insert("info", App.NotFoundMsg);
+          return;
+        }
+        Notes.refill(notes);
+        window.setTimeout(() => {
+            $(Contents.id).focus();
+          }, 1000)
+      }
+
+      function onAlways() {
+        Loading.hide();
+      }
+    </script>
   </body>
 </html>

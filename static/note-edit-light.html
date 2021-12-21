@@ -1,14 +1,19 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <title>New Note .. uglynotes</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css">
-    <link rel="stylesheet" href="/public/style-light.css?v11">
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/water.css@2/out/light.css"
+    />
+    <link rel="stylesheet" href="/public/style-light.css?v11" />
     <script src="https://cdn.jsdelivr.net/npm/jquery@3/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/plugin/utc.js"></script>
-    <script>dayjs.extend(window.dayjs_plugin_utc)</script>
+    <script>
+      dayjs.extend(window.dayjs_plugin_utc);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/diff@5.0.0/dist/diff.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@1.2.7/lib/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dompurify@2.2.6/dist/purify.min.js"></script>
@@ -18,449 +23,578 @@
   </head>
   <style>
     .NoteContents {
-	background-color: #FFFBFB;
+      background-color: #fffbfb;
     }
   </style>
   <body>
     <div id="root"></div>
-<script>
+    <script>
+      let Note = {};
+      let AutoSubmitID;
+      let Stopped = true;
 
-  let Note = {};
-  let AutoSubmitID;
-  let Stopped = true;
-  
-  const Alerts = CreateAlerts(9);
+      const Alerts = CreateAlerts(9);
 
-  const AlertsForCopy = CreateAlerts();
+      const AlertsForCopy = CreateAlerts();
 
-  const [infoIcon, infoMsg] = CreateInfoPair(
-    'page', `注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前),
+      const [infoIcon, infoMsg] = CreateInfoPair(
+        "page",
+        `注意：在修改了笔记或标签后，在离开本页面前(比如在点击浏览器的后退键前),
 请点击一次 update 按钮，以确保修改内容被保存到服务器。另外要注意当错误提示“已停止自动保存”时
-请按 F12 进入控制台执行 restartAutoSubmit() 即可重新启用自动保存功能。`);
+请按 F12 进入控制台执行 restartAutoSubmit() 即可重新启用自动保存功能。`
+      );
 
-  const PageTitle = cc('span');
-  const HeadButtons = cc('span', 'head-buttons');
-  const ReadonlyMode = cc('a');
-  const History = cc('a');
+      const PageTitle = cc("span");
+      const HeadButtons = cc("span", "head-buttons");
+      const ReadonlyMode = cc("a");
+      const History = cc("a");
 
-  const TopBanner = {
-    view: () =>  m('div').append([
-      m(PageTitle).text('New Note'),
-      m(infoIcon),
-      ' .. ',
-      $('<a href="/converter" title="image converter" target="_blank">Converter</a>'),
-      m(HeadButtons).css('display', 'none').append([
-	'|',
-	m(ReadonlyMode).text('readonly-mode').attr('target', '_blank'), '|',
-	m(History).text('History').attr('target', '_blank'),
-	'|',
-      ]),
-    ]),
-  };
+      const TopBanner = {
+        view: () =>
+          m("div").append([
+            m(PageTitle).text("New Note"),
+            m(infoIcon),
+            " .. ",
+            $(
+              '<a href="/converter" title="image converter" target="_blank">Converter</a>'
+            ),
+            m(HeadButtons)
+              .css("display", "none")
+              .append([
+                "|",
+                m(ReadonlyMode).text("readonly-mode").attr("target", "_blank"),
+                "|",
+                m(History).text("History").attr("target", "_blank"),
+                "|",
+              ]),
+          ]),
+      };
 
-  const PlaintextBtnArea = cc('span');
-  const MarkdownBtn = cc('input');
-  const PreviewBtn = cc('a');
-  const EditBtn = cc('a');
-  const TypeSelector = {
-    oldType: 'plaintext',
-    currentType: () => $('input[name="note-type"]:checked').val(),
-    view: () => {
-      const self = TypeSelector;
-      return m('p').append([
-	m(PlaintextBtnArea).append([
-	  $('<input type="radio" id="plaintext" name="note-type" value="Plaintext" checked>'),
-	  m('label').text('plaintext').attr('for', 'plaintext'),
-	  '(',
-	  $('<a id="copy" class="Pointer" data-clipboard-target="#contents">copy</a>'),
-	  ')',
-	]),
-	m(MarkdownBtn).attr({type:'radio',name:'note-type',value:'Markdown'}),
-	m('label').text('markdown').attr('for', MarkdownBtn.raw_id),
-	'(',
-	m(PreviewBtn).text('preview').attr({accesskey:'p',class:'Pointer'}).click(self.Preview),
-	m(EditBtn).text('edit').attr({accesskey:'e',class:'Pointer'}).click(self.Edit).hide(),
-	')',
-	m(AlertsForCopy),
-      ]);
-    },
-    Preview: function(event) {
-      const contents = $('#contents').val().trim();
-      if (contents == '') {
-	AlertsForCopy.Insert('info', 'No contents to preview.');
-	return;
-      }
-      const dirty = marked(contents);
-      const clean = DOMPurify.sanitize(dirty);
-      $(Preview.id).show().html(clean);
-      $(Textarea.id).hide();
-      $(PreviewBtn.id).hide();
-      $(EditBtn.id).show();
-      $(PlaintextBtnArea.id).hide();
-      $(MarkdownBtn.id).prop('checked', true);
-      $(TagsArea.id).css('margin-top', 'auto');
-    },
-    Edit: function() {
-      $(Preview.id).hide();
-      $(PreviewBtn.id).show();
-      $(EditBtn.id).hide();
-      $(PlaintextBtnArea.id).show();
-      $(TagsArea.id).css('margin-top', '-30px');
-      $(Textarea.id).show();
-      $(Contents.id).focus();
-    },
-  };
+      const PlaintextBtnArea = cc("span");
+      const MarkdownBtn = cc("input");
+      const PreviewBtn = cc("a");
+      const EditBtn = cc("a");
+      const TypeSelector = {
+        oldType: "plaintext",
+        currentType: () => $('input[name="note-type"]:checked').val(),
+        view: () => {
+          const self = TypeSelector;
+          return m("p").append([
+            m(PlaintextBtnArea).append([
+              $(
+                '<input type="radio" id="plaintext" name="note-type" value="Plaintext" checked>'
+              ),
+              m("label").text("plaintext").attr("for", "plaintext"),
+              "(",
+              $(
+                '<a id="copy" class="Pointer" data-clipboard-target="#contents">copy</a>'
+              ),
+              ")",
+            ]),
+            m(MarkdownBtn).attr({
+              type: "radio",
+              name: "note-type",
+              value: "Markdown",
+            }),
+            m("label").text("markdown").attr("for", MarkdownBtn.raw_id),
+            "(",
+            m(PreviewBtn)
+              .text("preview")
+              .attr({ accesskey: "p", class: "Pointer" })
+              .click(self.Preview),
+            m(EditBtn)
+              .text("edit")
+              .attr({ accesskey: "e", class: "Pointer" })
+              .click(self.Edit)
+              .hide(),
+            ")",
+            m(AlertsForCopy),
+          ]);
+        },
+        Preview: function (event) {
+          const contents = $("#contents").val().trim();
+          if (contents == "") {
+            AlertsForCopy.Insert("info", "No contents to preview.");
+            return;
+          }
+          const dirty = marked(contents);
+          const clean = DOMPurify.sanitize(dirty);
+          $(Preview.id).show().html(clean);
+          $(Textarea.id).hide();
+          $(PreviewBtn.id).hide();
+          $(EditBtn.id).show();
+          $(PlaintextBtnArea.id).hide();
+          $(MarkdownBtn.id).prop("checked", true);
+          $(TagsArea.id).css("margin-top", "auto");
+        },
+        Edit: function () {
+          $(Preview.id).hide();
+          $(PreviewBtn.id).show();
+          $(EditBtn.id).hide();
+          $(PlaintextBtnArea.id).show();
+          $(TagsArea.id).css("margin-top", "-30px");
+          $(Textarea.id).show();
+          $(Contents.id).focus();
+        },
+      };
 
-  const Contents = cc('textarea', 'contents');
-  const Higher = cc('p');
+      const Contents = cc("textarea", "contents");
+      const Higher = cc("p");
 
-  const Textarea = {
-    id: '#textarea',
-    currentContents: () => $(Contents.id).val().trim(),
-    oldContents: '',
-    view: function() {
-      const self = Textarea;
-      return m('div').attr('id', 'textarea').append([
-	m(Contents).attr({accesskey:'c'}).css('height', '250px').blur(self.updateContents),
-	m(Higher).attr({class:'Pointer',title:'编辑框高度自适应',style:'text-align:right; margin-top:0;'})
-	  .click(self.higher).html(
-	  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
+      const Textarea = {
+        id: "#textarea",
+        currentContents: () => $(Contents.id).val().trim(),
+        oldContents: "",
+        view: function () {
+          const self = Textarea;
+          return m("div")
+            .attr("id", "textarea")
+            .append([
+              m(Contents)
+                .attr({ accesskey: "c" })
+                .css("height", "250px")
+                .blur(self.updateContents),
+              m(Higher)
+                .attr({
+                  class: "Pointer",
+                  title: "编辑框高度自适应",
+                  style: "text-align:right; margin-top:0;",
+                })
+                .click(self.higher)
+                .html(
+                  `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrows-expand" viewBox="0 0 16 16">
 	     <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zM7.646.146a.5.5 0 0 1 .708 0l2 2a.5.5 0 0 1-.708.708L8.5 1.707V5.5a.5.5 0 0 1-1 0V1.707L6.354 2.854a.5.5 0 1 1-.708-.708l2-2zM8 10a.5.5 0 0 1 .5.5v3.793l1.146-1.147a.5.5 0 0 1 .708.708l-2 2a.5.5 0 0 1-.708 0l-2-2a.5.5 0 0 1 .708-.708L7.5 14.293V10.5A.5.5 0 0 1 8 10z"/>
 	   </svg>`
-	),
+                ),
+            ]);
+        },
+        checkContents: () => {
+          const self = Textarea;
+          const currentContents = self.currentContents();
+          if (currentContents == "") {
+            // 有 event 表示点击了按钮，这种情况要给用户提示。
+            // 如果没有 event 则是后台自动运行，不需要提示。
+            if (event) Alerts.Insert("info", "笔记内容不可空白");
+            return "NG";
+          }
+          if (currentContents.length > NoteSizeLimit) {
+            Alerts.Insert(
+              "danger",
+              "超过笔记体积上限: " + fileSizeToString(NoteSizeLimit)
+            );
+            return "NG";
+          }
+          if (currentContents == self.oldContents) {
+            if (event) Alerts.Insert("info", "笔记内容没有变化");
+            return "NG";
+          }
+          return "OK";
+        },
+        higher: function () {
+          const contentsElem = $(Contents.id);
+          contentsElem.css("height", contentsElem.prop("scrollHeight"));
+          contentsElem.on("input", () => {
+            contentsElem.css("height", contentsElem.prop("scrollHeight"));
+          });
+          contentsElem.focus();
+        },
+      };
+
+      const Preview = {
+        id: "#preview",
+        view: () => m("div").attr({ id: "preview", class: "NoteContents" }),
+      };
+
+      const Tags = cc("textarea");
+      const TagsArea = {
+        id: "#tags-area",
+        currentTags: [],
+        oldTags: [],
+        view: () =>
+          m("p")
+            .attr("id", "tags-area")
+            .css("margin-top", "-2em")
+            .append([
+              m("label").text("Tags:").attr({ for: Tags.id }),
+              m(Tags).attr({ accesskey: "t", rows: "2" }).blur(TagsArea.onblur),
+            ]),
+        onblur: function (event) {
+          console.log(event.currentTarget.value);
+          TagsArea.currentTags = tagsStringToSet(event.currentTarget.value);
+          event.currentTarget.value = addPrefix(TagsArea.currentTags, "#");
+        },
+        resetTags: () => {
+          $(Tags.id).val(addPrefix(TagsArea.currentTags, "#"));
+        },
+      };
+
+      const ReminderBtn = cc("button");
+      const ReminderDate = cc("input");
+      const Reminder = cc("div", null, [
+        m("label").text("Reminder:").attr({ for: ReminderDate.id }),
+        m(ReminderDate)
+          .attr({ type: "date" })
+          .val(dayjs().format("YYYY-MM-DD"))
+          .css({
+            display: "inline",
+            marginLeft: "0.5em",
+            verticalAlign: "middle",
+          }),
+        m("img")
+          .attr({ src: "/public/x-circle.svg", title: "cancel" })
+          .css({ cursor: "pointer" })
+          .click(toggleReminder),
       ]);
-    },
-    checkContents: () => {
-      const self = Textarea;
-      const currentContents = self.currentContents();
-      if (currentContents == '') {
-        // 有 event 表示点击了按钮，这种情况要给用户提示。
-        // 如果没有 event 则是后台自动运行，不需要提示。
-        if (event) Alerts.Insert('info', '笔记内容不可空白');
-        return 'NG';
-      }
-      if (currentContents.length > NoteSizeLimit) {
-	Alerts.Insert('danger', '超过笔记体积上限: ' + fileSizeToString(NoteSizeLimit));
-	return 'NG';
-      }
-      if (currentContents == self.oldContents) {
-	if (event) Alerts.Insert('info', '笔记内容没有变化');
-	return 'NG';
-      }
-      return 'OK';
-    },
-    higher: function() {
-      const contentsElem = $(Contents.id);
-      contentsElem.css('height', contentsElem.prop('scrollHeight'));
-      contentsElem.on('input', () => {
-        contentsElem.css('height', contentsElem.prop('scrollHeight'));
-      });
-      contentsElem.focus();
-    },
-  };
 
-  const Preview = {
-    id: '#preview',
-    view: () => m('div').attr({id:'preview',class:'NoteContents'}),
-  };
+      Reminder.oldValue = "";
+      Reminder.value = () => {
+        if ($(Reminder.id).css("display") == "none") {
+          return "";
+        }
+        return $(ReminderDate.id).val();
+      };
 
-  const Tags = cc('textarea');
-  const TagsArea = {
-    id: '#tags-area',
-    currentTags: [],
-    oldTags: [],
-    view: () => m('p').attr('id', 'tags-area').css('margin-top', '-2em').append([
-      m('label').text('Tags:').attr({for:Tags.id}),
-      m(Tags).attr({accesskey:'t',rows:'2'}).blur(TagsArea.onblur),
-    ]),
-    onblur: function(event) {
-      console.log(event.currentTarget.value);
-      TagsArea.currentTags = tagsStringToSet(event.currentTarget.value);
-      event.currentTarget.value = addPrefix(TagsArea.currentTags, '#');
-    },
-    resetTags: () => {
-      $(Tags.id).val(addPrefix(TagsArea.currentTags, '#'));
-    },
-  };
-
-  const ReminderBtn = cc('button');
-  const ReminderDate = cc('input');
-  const Reminder = cc('div', null, [
-    m('label').text('Reminder:').attr({for:ReminderDate.id}),
-    m(ReminderDate).attr({type:'date'}).val(dayjs().format('YYYY-MM-DD')).css({
-      display:'inline',
-      marginLeft:'0.5em',
-      verticalAlign:'middle',
-    }),
-    m('img').attr({src:'/public/x-circle.svg',title:'cancel'}).css({cursor:'pointer'}).click(toggleReminder),
-  ]);
-
-  Reminder.oldValue = '';
-  Reminder.value = () => {
-    if ($(Reminder.id).css('display') == 'none') {
-      return '';
-    }
-    return $(ReminderDate.id).val();
-  };
-
-  function toggleReminder(event) {
-    if (event) event.preventDefault();
-    $(ReminderBtn.id).toggle();
-    $(Reminder.id).toggle();
-  }
-
-  const [aboutShortcutIcon, aboutShortcutMsg] = CreateInfoPair(
-    'shortcut', `本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
-      预览、编辑、文本框。(详情请看 Releases.md)`);
-
-  const SubmitBtn = cc('button');
-  const UpdateBtn = cc('button');
-
-  const Submit = {
-    view: function() {
-      const self = Submit;
-      return m('p').append([
-	m(SubmitBtn).text('submit').click(self.submit),
-	m(UpdateBtn).text('update').click(self.update).hide(),
-	m(aboutShortcutIcon),
-	m(aboutShortcutMsg),
-      ]);
-    },
-    submit: function(event) {
-      if (event) event.preventDefault();
-      if (Textarea.checkContents() == 'NG') return;
-      if (TagsArea.currentTags.size < 2) {
-	Alerts.Insert('至少需要 2 个标签才能创建笔记');
-	return;
+      function toggleReminder(event) {
+        if (event) event.preventDefault();
+        $(ReminderBtn.id).toggle();
+        $(Reminder.id).toggle();
       }
 
-      const contents = Textarea.currentContents();
-      const patch = Diff.createPatch(" ", "", contents);
-      const note_type = TypeSelector.currentType();
-      const remind_at = toISO8601(Reminder.value());
-
-      const body = new FormData();
-      body.append('remind-at', remind_at);
-      body.append('note-type', note_type);
-      body.append('title', contents.substring(0, NoteTitleLimit));
-      body.append('patch', patch);
-      body.append('tags', JSON.stringify(Array.from(TagsArea.currentTags)));
-
-      ajax(
-	{method:'POST',url:'/api/note',body:body,alerts:Alerts,buttonID:SubmitBtn.id},
-	(resp) => {
-	  // onSuccess
-	  Note = resp;
-	  Reminder.oldValue = Reminder.value();
-	  TypeSelector.oldType = note_type;
-	  TagsArea.oldTags = TagsArea.currentTags;
-	  Textarea.oldContents = contents;
-	  enterEditMode();
-	  Alerts.Insert('success', '新笔记创建成功 id:' + Note.ID);
-	},
-	() => { stopAutoSubmit(); }, // onFail
+      const [aboutShortcutIcon, aboutShortcutMsg] = CreateInfoPair(
+        "shortcut",
+        `本页有快捷键 Alt + Shift + 字母，其中字母可以是 p, e 或 c, 分别表示
+      预览、编辑、文本框。(详情请看 Releases.md)`
       );
-    },
-    update: function(event) {
-      if (event) event.preventDefault();
 
-      // 更新笔记类型
-      const note_type = TypeSelector.currentType();
-      if (note_type != TypeSelector.oldType) {
-	const body = new FormData();
-	body.append('note-type', note_type);
-	ajax({method:'PUT', url:`/api/note/${Note.ID}/type`, body:body, alerts:Alerts, buttonID:UpdateBtn.id},
-	     () => {
-	       TypeSelector.oldType = note_type;
-	       Alerts.Insert('success', '笔记类型更新成功: ' + note_type);
-	     },
-	     () => { stopAutoSubmit(); },
-	    );
+      const SubmitBtn = cc("button");
+      const UpdateBtn = cc("button");
+
+      const Submit = {
+        view: function () {
+          const self = Submit;
+          return m("p").append([
+            m(SubmitBtn).text("submit").click(self.submit),
+            m(UpdateBtn).text("update").click(self.update).hide(),
+            m(aboutShortcutIcon),
+            m(aboutShortcutMsg),
+          ]);
+        },
+        submit: function (event) {
+          if (event) event.preventDefault();
+          if (Textarea.checkContents() == "NG") return;
+          if (TagsArea.currentTags.size < 2) {
+            Alerts.Insert("至少需要 2 个标签才能创建笔记");
+            return;
+          }
+
+          const contents = Textarea.currentContents();
+          const patch = Diff.createPatch(" ", "", contents);
+          const note_type = TypeSelector.currentType();
+          const remind_at = toISO8601(Reminder.value());
+
+          const body = new FormData();
+          body.append("remind-at", remind_at);
+          body.append("note-type", note_type);
+          body.append("title", contents.substring(0, NoteTitleLimit));
+          body.append("patch", patch);
+          body.append("tags", JSON.stringify(Array.from(TagsArea.currentTags)));
+
+          ajax(
+            {
+              method: "POST",
+              url: "/api/note",
+              body: body,
+              alerts: Alerts,
+              buttonID: SubmitBtn.id,
+            },
+            (resp) => {
+              // onSuccess
+              Note = resp;
+              Reminder.oldValue = Reminder.value();
+              TypeSelector.oldType = note_type;
+              TagsArea.oldTags = TagsArea.currentTags;
+              Textarea.oldContents = contents;
+              enterEditMode();
+              Alerts.Insert("success", "新笔记创建成功 id:" + Note.ID);
+            },
+            () => {
+              stopAutoSubmit();
+            } // onFail
+          );
+        },
+        update: function (event) {
+          if (event) event.preventDefault();
+
+          // 更新笔记类型
+          const note_type = TypeSelector.currentType();
+          if (note_type != TypeSelector.oldType) {
+            const body = new FormData();
+            body.append("note-type", note_type);
+            ajax(
+              {
+                method: "PUT",
+                url: `/api/note/${Note.ID}/type`,
+                body: body,
+                alerts: Alerts,
+                buttonID: UpdateBtn.id,
+              },
+              () => {
+                TypeSelector.oldType = note_type;
+                Alerts.Insert("success", "笔记类型更新成功: " + note_type);
+              },
+              () => {
+                stopAutoSubmit();
+              }
+            );
+          }
+
+          // 更新提醒日期
+          const remind_at = Reminder.value();
+          if (remind_at != Reminder.oldValue) {
+            const body = new FormData();
+            body.append("remind-at", toISO8601(remind_at));
+            ajax(
+              {
+                method: "PUT",
+                url: `/api/note/${Note.ID}/reminder`,
+                body: body,
+                alerts: Alerts,
+                buttonID: UpdateBtn.id,
+              },
+              () => {
+                Reminder.oldValue = remind_at;
+                if (!remind_at) {
+                  Alerts.Insert("success", "已取消提醒");
+                } else {
+                  Alerts.Insert("success", "更新提醒日期成功: " + remind_at);
+                }
+              },
+              () => {
+                stopAutoSubmit();
+              }
+            );
+          }
+
+          // 更新标签
+          if (!setsAreEqual(TagsArea.currentTags, TagsArea.oldTags)) {
+            if (TagsArea.currentTags.size < 2) {
+              Alerts.Insert("danger", "至少需要 2 个标签");
+              return;
+            }
+            const body = new FormData();
+            body.append(
+              "tags",
+              JSON.stringify(Array.from(TagsArea.currentTags))
+            );
+
+            ajax(
+              {
+                method: "PUT",
+                url: `/api/note/${Note.ID}/tags`,
+                body: body,
+                alerts: Alerts,
+                buttonID: UpdateBtn.id,
+              },
+              () => {
+                TagsArea.oldTags = TagsArea.currentTags;
+                Alerts.Insert(
+                  "success",
+                  "标签更新成功: " + addPrefix(TagsArea.currentTags, "#")
+                );
+              },
+              () => {
+                stopAutoSubmit();
+              }
+            );
+          }
+
+          // 更新笔记内容
+          if (Textarea.checkContents() == "NG") return;
+          let contents = Textarea.currentContents();
+          const patch = Diff.createPatch(" ", Textarea.oldContents, contents);
+          const body = new FormData();
+          body.append("title", contents.substring(0, NoteTitleLimit));
+          body.append("patch", patch);
+
+          ajax(
+            {
+              method: "PATCH",
+              url: `/api/note/${Note.ID}`,
+              body: body,
+              alerts: Alerts,
+              buttonID: UpdateBtn.id,
+            },
+            () => {
+              Textarea.oldContents = contents;
+              Note.Patches.push(patch);
+              Alerts.Insert(
+                "success",
+                `笔记内容更新，产生第 ${Note.Patches.length} 个历史版本`
+              );
+            },
+            () => {
+              stopAutoSubmit();
+            }
+          );
+        },
+      };
+
+      const EditForm = {
+        id: "#edit-form",
+        view: () =>
+          m("form")
+            .attr({
+              id: "edit-form",
+              autocomplete: "off",
+              style: "display:none",
+            })
+            .append([
+              m(TypeSelector),
+              m(Textarea),
+              m(Preview),
+              m(TagsArea),
+              m(ReminderBtn)
+                .text("Reminder")
+                .attr({ title: "set reminder" })
+                .click(toggleReminder),
+              m(Reminder).hide(),
+              m(Submit),
+            ]),
+      };
+
+      $("#root").append([
+        m(TopBanner),
+        m(infoMsg),
+        m(Spacer),
+        m(Loading),
+        m(EditForm),
+        m(Alerts),
+        m(BottomLine),
+      ]);
+
+      init();
+
+      function init() {
+        if (document.location.pathname == "/light/note/edit") {
+          const param_id = getUrlParam("id");
+          ajax(
+            { method: "GET", url: `/api/note/${param_id}`, alerts: Alerts },
+            (resp) => {
+              Note = resp;
+              if (Note.Deleted) {
+                Alerts.Insert("danger", `the note(id:${param_id}) is deleted`);
+                return;
+              }
+              enterEditMode();
+              restartAutoSubmit();
+
+              // init reminder
+              if (Note.RemindAt) {
+                toggleReminder();
+                Reminder.oldValue = dayjs(Note.RemindAt).format("YYYY-MM-DD");
+                $(ReminderDate.id).val(Reminder.oldValue);
+              }
+
+              // init note type
+              TypeSelector.oldType = Note.Type;
+              if (Note.Type == "Markdown") {
+                $(MarkdownBtn.id).prop("checked", true);
+              }
+
+              // init note contents
+              contents = Note.Patches.reduce(
+                (patched, patch) => Diff.applyPatch(patched, patch),
+                ""
+              );
+              Textarea.oldContents = contents;
+              $(Contents.id).val(contents);
+
+              // init tags
+              TagsArea.currentTags = new Set(toTagNames(Note.Tags));
+              TagsArea.oldTags = TagsArea.currentTags;
+              TagsArea.resetTags();
+
+              Alerts.Insert("success", `已获取笔记【${Note.Title}】`);
+              Alerts.Insert("success", "已进入编辑模式");
+              window.setTimeout(() => {
+                $(Contents.id).focus();
+              }, 500);
+            },
+            () => {
+              stopAutoSubmit();
+            },
+            () => {
+              Loading.hide();
+            }
+          );
+        }
+        if (document.location.pathname == "/light/note/new") {
+          const param_tags = getUrlParam("tags");
+          if (param_tags) {
+            TagsArea.currentTags = tagsStringToSet(param_tags);
+            TagsArea.resetTags();
+          }
+          Loading.hide();
+          $(EditForm.id).show();
+          restartAutoSubmit();
+          window.setTimeout(() => {
+            $(Contents.id).focus();
+          }, 500);
+        }
       }
 
-      // 更新提醒日期
-      const remind_at = Reminder.value();
-      if (remind_at != Reminder.oldValue) {
-	const body = new FormData();
-	body.append('remind-at', toISO8601(remind_at));
-	ajax({method:'PUT',url:`/api/note/${Note.ID}/reminder`,body:body,alerts:Alerts,buttonID:UpdateBtn.id},
-	     () => {
-	       Reminder.oldValue = remind_at;
-	       if (!remind_at) {
-		 Alerts.Insert('success', '已取消提醒');
-	       } else {
-		 Alerts.Insert('success', '更新提醒日期成功: ' + remind_at);
-	       }
-	     },
-	     () => { stopAutoSubmit(); },
-	    );
+      function enterEditMode() {
+        $("title").text("Edit Note .. uglynotes");
+        $(PageTitle.id).text("Edit Note");
+        $(ReadonlyMode.id).attr("href", `/light/note?id=${Note.ID}`);
+        $(History.id).attr("href", `/light/history?id=${Note.ID}&version=last`);
+        $(HeadButtons.id).show();
+        $(EditForm.id).show();
+        $(SubmitBtn.id).hide();
+        $(UpdateBtn.id).show();
       }
 
-      // 更新标签
-      if (!setsAreEqual(TagsArea.currentTags, TagsArea.oldTags)) {
-	if (TagsArea.currentTags.size < 2) {
-	  Alerts.Insert('danger', '至少需要 2 个标签');
-	  return;
-	}
-	const body = new FormData();
-	body.append('tags', JSON.stringify(Array.from(TagsArea.currentTags)));
+      const clipboard = CreateClipboard(AlertsForCopy, () =>
+        $(Contents.id).val()
+      );
 
-	ajax({method:'PUT', url:`/api/note/${Note.ID}/tags`, body:body, alerts:Alerts, buttonID:UpdateBtn.id},
-	     () => {
-	       TagsArea.oldTags = TagsArea.currentTags;
-	       Alerts.Insert('success', '标签更新成功: ' + addPrefix(TagsArea.currentTags, '#'));
-	     }, () => { stopAutoSubmit(); }
-	    );
+      function submit_or_update() {
+        if (!Note.ID) {
+          Submit.submit();
+        } else {
+          Submit.update();
+        }
       }
 
-      // 更新笔记内容
-      if (Textarea.checkContents() == 'NG') return;
-      let contents = Textarea.currentContents();
-      const patch = Diff.createPatch(" ", Textarea.oldContents, contents);
-      const body = new FormData();
-      body.append('title', contents.substring(0, NoteTitleLimit));
-      body.append('patch', patch);
-
-      ajax({method:'PATCH', url:`/api/note/${Note.ID}`, body:body, alerts:Alerts, buttonID:UpdateBtn.id},
-	   () => {
-	     Textarea.oldContents = contents;
-	     Note.Patches.push(patch);
-	     Alerts.Insert('success', `笔记内容更新，产生第 ${Note.Patches.length} 个历史版本`);
-	   },
-	   () => { stopAutoSubmit(); }
-	  );
-    },
-  };
-  
-  const EditForm = {
-    id: '#edit-form',
-    view: () =>  m('form').attr({id:'edit-form',autocomplete:'off', style:'display:none'}).append([
-      m(TypeSelector),
-      m(Textarea),
-      m(Preview),
-      m(TagsArea),
-      m(ReminderBtn).text('Reminder').attr({title:'set reminder'}).click(toggleReminder),
-      m(Reminder).hide(),
-      m(Submit),
-    ]),
-  };
-
-  $('#root').append([
-    m(TopBanner),
-    m(infoMsg),
-    m(Spacer),
-    m(Loading),
-    m(EditForm),
-    m(Alerts),
-    m(BottomLine),
-  ]);
-
-  init();
-
-  function init() {
-    if (document.location.pathname == '/light/note/edit') {
-      const param_id = getUrlParam('id');
-      ajax(
-	{method:'GET', url:`/api/note/${param_id}`, alerts:Alerts}, (resp) => {
-	  Note = resp;
-	  if (Note.Deleted) {
-	    Alerts.Insert('danger', `the note(id:${param_id}) is deleted`);
-	    return;
-	  }
-	  enterEditMode();
-	  restartAutoSubmit();
-
-	  // init reminder
-	  if (Note.RemindAt) {
-	    toggleReminder();
-	    Reminder.oldValue = dayjs(Note.RemindAt).format('YYYY-MM-DD');
-	    $(ReminderDate.id).val(Reminder.oldValue)
-	  }
-
-	  // init note type
-	  TypeSelector.oldType = Note.Type;
-	  if (Note.Type == 'Markdown') {
-	    $(MarkdownBtn.id).prop('checked', true);
-	  }
-
-	  // init note contents
-	  contents = Note.Patches.reduce(
-	    (patched, patch) => Diff.applyPatch(patched, patch), "");
-	  Textarea.oldContents = contents;
-	  $(Contents.id).val(contents);
-
-	  // init tags
-	  TagsArea.currentTags = new Set(toTagNames(Note.Tags));
-	  TagsArea.oldTags = TagsArea.currentTags;
-	  TagsArea.resetTags();
-
-	  Alerts.Insert('success', `已获取笔记【${Note.Title}】`);
-	  Alerts.Insert('success', '已进入编辑模式');
-	  window.setTimeout(() => {$(Contents.id).focus()}, 500);
-	},
-	() => { stopAutoSubmit(); },
-	() => { Loading.hide(); });
-    }
-    if (document.location.pathname == '/light/note/new') {
-      const param_tags = getUrlParam('tags');
-      if (param_tags) {
-	TagsArea.currentTags = tagsStringToSet(param_tags);
-	TagsArea.resetTags();
+      function restartAutoSubmit(delay) {
+        if (!delay) {
+          delay = DelayOfAutoUpdate;
+        } else {
+          delay *= 1000;
+        }
+        if (!Stopped) stopAutoSubmit();
+        AutoSubmitID = window.setInterval(submit_or_update, delay);
+        Stopped = false;
+        const msg = "启用自动保存功能: OK";
+        console.log(msg);
+        Alerts.Insert("success", msg);
+        AlertsForCopy.Clear();
+        $(infoMsg.id).hide();
       }
-      Loading.hide();
-      $(EditForm.id).show();
-      restartAutoSubmit();
-      window.setTimeout(() => {$(Contents.id).focus()}, 500);
-    }
-  }
 
-  function enterEditMode() {
-    $('title').text('Edit Note .. uglynotes');
-    $(PageTitle.id).text('Edit Note');
-    $(ReadonlyMode.id).attr('href', `/light/note?id=${Note.ID}`);
-    $(History.id).attr('href', `/light/history?id=${Note.ID}&version=last`);
-    $(HeadButtons.id).show();
-    $(EditForm.id).show();
-    $(SubmitBtn.id).hide();
-    $(UpdateBtn.id).show();
-  }
+      function stopAutoSubmit() {
+        window.clearInterval(AutoSubmitID);
+        Stopped = true;
+        const msg = "已停止自动保存，请手动执行 restartAutoSubmit()";
+        Alerts.Insert("danger", msg);
+        AlertsForCopy.Insert("danger", msg);
+        $(infoMsg.id).show();
+      }
 
-  const clipboard = CreateClipboard(AlertsForCopy, () => $(Contents.id).val());
-
-  function submit_or_update() {
-    if (!Note.ID) { Submit.submit(); } else { Submit.update(); }
-  }
-
-  function restartAutoSubmit(delay) {
-    if (!delay) {
-      delay = DelayOfAutoUpdate;
-    } else {
-      delay *= 1000;
-    }
-    if (!Stopped) stopAutoSubmit();
-    AutoSubmitID = window.setInterval(submit_or_update, delay);
-    Stopped = false;
-    const msg = '启用自动保存功能: OK';
-    console.log(msg);
-    Alerts.Insert('success', msg);
-    AlertsForCopy.Clear();
-    $(infoMsg.id).hide();
-  }
-
-  function stopAutoSubmit() {
-    window.clearInterval(AutoSubmitID);
-    Stopped = true;
-    const msg = '已停止自动保存，请手动执行 restartAutoSubmit()';
-    Alerts.Insert('danger', msg);
-    AlertsForCopy.Insert('danger', msg);
-    $(infoMsg.id).show()
-  }
-
-  function toISO8601(dt) {
-    if (!dt) return "";
-    return dayjs(dt).utcOffset(TimeZone).format();
-  }
-  
-</script>
+      function toISO8601(dt) {
+        if (!dt) return "";
+        return dayjs(dt).utcOffset(TimeZone).format();
+      }
+    </script>
   </body>
-  </html>
+</html>
